@@ -1,9 +1,10 @@
 extern crate hlua;
-use super::graphics::draw_game;
 use hlua::Lua;
 
 use super::turn;
 use super::player::Player;
+use super::map_mirroring::conditionally_reverse_coordinates;
+use super::graphics::draw_game;
 
 pub const MAP_SIZE: i32 = 9;
 pub const INITIAL_WALL_COUNT: i32 = 10;
@@ -105,13 +106,15 @@ impl Game {
 		}
 	}
 
-	pub fn serialize_walls(&self) -> String {
-		return format!("{}{}{}", "{", self.walls.iter().map(|wall| serialize_wall(wall)).collect::<Vec<String>>().join("\n"), "}")
+	pub fn serialize_walls(&self, reverse: bool) -> String {
+		return format!("{}{}{}", "{", self.walls.iter().map(|wall| serialize_wall(wall, reverse)).collect::<Vec<String>>().join("\n"), "}")
 	}
 }
 
-pub fn serialize_wall(wall: &Wall) -> String {
-	return format!("{{x1={}, y1={}, x2={}, y2={}}},", wall.x1, wall.y1, wall.x2, wall.y2);
+pub fn serialize_wall(wall: &Wall, reverse: bool) -> String {
+	let (x1, y1) = conditionally_reverse_coordinates((wall.x1, wall.y1), reverse);
+	let (x2, y2) = conditionally_reverse_coordinates((wall.x2, wall.y2), reverse);
+	return format!("{{x1={}, y1={}, x2={}, y2={}}},", x1, y1, x2, y2);
 }
 
 // Converts a string like ["x1,y1,x2,y2" -> Wall]

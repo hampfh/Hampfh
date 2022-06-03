@@ -28,7 +28,7 @@ pub fn reverse_coordinate(coordinate: i32) -> i32 {
 }
 
 pub fn conditionally_reverse_move(player_move: Option<Move>, condition: bool) -> Option<Move> {
-	if player_move.is_none() || !condition { return player_move; } 
+	if !condition || player_move.is_none() { return player_move; } 
 	else { return Some(reverse_move(player_move.unwrap())); }
 }
 

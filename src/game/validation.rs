@@ -37,3 +37,25 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 
 	Ok(())
 }
+
+pub fn tile_occupied(game: &Game, x: i32, y: i32) -> bool {
+	// Check if wall exists on tile
+	for wall in &game.walls {
+		if wall.x1 == x && wall.y1 == y {
+			return true;
+		}
+		else if wall.x2 == x && wall.y2 == y {
+			return true;
+		}
+	}
+	
+	// Check if a player stands on the tile
+	if game.player_one.x == x && game.player_one.y == y {
+		return true;
+	}
+	else if game.player_two.x == x && game.player_two.y == y {
+		return true;
+	}
+
+	return false;
+}

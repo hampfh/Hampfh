@@ -16,14 +16,19 @@ impl Player {
 		}
 	}
 
-	pub fn move_player(&mut self, player_move: &Move) {
-		match player_move {
-			Move::Up => self.y -= 1,
-			Move::Down => self.y += 1,
-			Move::Left => self.x -= 1,
-			Move::Right => self.x += 1,
-			_ => ()
-		}
+	pub fn set_new_coordinates(&mut self, x: i32, y: i32) {
+		self.x = x;
+		self.y = y;
+	}
+
+	pub fn move_player(&self, player_move: &Move) -> (i32, i32) {
+		return match player_move {
+			Move::Up => (self.x, self.y - 1),
+			Move::Down => (self.x, self.y + 1),
+			Move::Left => (self.x - 1, self.y),
+			Move::Right => (self.x + 1, self.y),
+			_ => (self.x, self.y)
+		};
 	}
 
 	pub fn decrement_wall_count(&mut self) {
