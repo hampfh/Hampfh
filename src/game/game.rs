@@ -16,8 +16,16 @@ pub struct Wall {
 	pub y2: i32
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum GameState {
+	Running,
+	PlayerOneWon,
+	PlayerTwoWon,
+}
+
 #[derive(Debug)]
 pub struct Game {
+	pub game_state: GameState,
 	pub player_one: Player,
 	pub player_two: Player,
  
@@ -42,6 +50,7 @@ pub enum Move {
 impl Game {
 	pub fn new() -> Game {
 		Game {
+			game_state: GameState::Running,
 			player_one: Player::new(MAP_SIZE / 2 + 1, MAP_SIZE - 1, INITIAL_WALL_COUNT),
 			player_two: Player::new(MAP_SIZE / 2 + 1, 0, INITIAL_WALL_COUNT),
 			walls: Vec::new(),
@@ -52,7 +61,7 @@ impl Game {
 		}
 	}
 
-	pub fn start(&mut self, program1: String, program2: String) {
+	pub fn start(&mut self, program1: String, program2: String) -> GameState {
 		// Run programs for the first time
 
 		// TODO make sure programs to not run longer than 1 second
@@ -60,10 +69,11 @@ impl Game {
 		self.player_two_sandbox.execute::<()>(&program2).unwrap();
 
 		self.game_loop();
+		return self.game_state.clone()
 	}
 
 	pub fn game_loop(&mut self) {
-		loop {
+		while self.game_state == GameState::Running {
 			self.update();
 			self.winner();
 		}
@@ -86,8 +96,13 @@ impl Game {
 		return (self.player_one.x, self.player_one.y);
 	}
 
-	pub fn winner(&self) {
-		// TODO check if player one or two has won
+	pub fn winner(&mut self) {
+		if self.player_one.y == 0 {
+			self.game_state = GameState::PlayerOneWon;
+		}
+		else if self.player_two.y == MAP_SIZE - 1 {
+			self.game_state = GameState::PlayerTwoWon;
+		}
 	}
 
 	pub fn serialize_walls(&self) -> String {

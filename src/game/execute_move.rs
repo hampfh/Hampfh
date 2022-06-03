@@ -3,7 +3,7 @@ use super::player::Player;
 
 pub fn execute_move(game: &mut Game, player_move: &Move) {
 
-	let mut active_player = get_active_player(game);
+	let active_player = get_active_player(game);
 
 	match &*player_move {
 		Move::Wall(wall) => {
@@ -12,11 +12,12 @@ pub fn execute_move(game: &mut Game, player_move: &Move) {
 		},
 		other => active_player.move_player(other)
 	}
+	println!("{:?} {:?}", game.player_one, game.player_two);
 }
 
-fn get_active_player(game: &Game) -> Player {
+fn get_active_player(game: &mut Game) -> &mut Player {
 	if game.player_one_turn {
-		return game.player_one.clone();
+		return &mut game.player_one;
 	}
-	return game.player_two.clone();
+	return &mut game.player_two;
 }

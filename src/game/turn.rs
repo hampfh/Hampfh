@@ -20,9 +20,10 @@ pub fn on_turn(game: &mut Game) -> Result<(), String> {
 
 	// TODO (Security) here we should add a timeout for the script to run
 	let raw_player_move: Option<String> = active_sandbox.get("ExternalGlobalVarResult");
-	println!("Player move {}", raw_player_move.clone().unwrap());
+	println!("Raw Player move {}", raw_player_move.clone().unwrap());
 
 	let mut player_move = convert_player_move_from_string_to_object(raw_player_move);
+	println!("Raw Player move {:?}", player_move.clone().unwrap());
 
 	if should_reverse_player_move(game, &player_move) {
 		player_move = Some(reverse_move(player_move.unwrap()));
@@ -40,6 +41,12 @@ pub fn on_turn(game: &mut Game) -> Result<(), String> {
 
 	execute_move(game, &player_move.unwrap());
 	game.player_one_turn = !game.player_one_turn;
+	if game.player_one_turn {
+		println!("Player 1 turn");
+	}
+	else {
+		println!("Player 2 turn");
+	}
 
 	Ok(())
 }
@@ -48,7 +55,7 @@ fn should_reverse_player_move(game: &Game, player_move: &Option<Move>) -> bool {
 	return 
 		!game.player_one_turn && player_move.is_some() && 
 		// We compare the enums ONLY, we do not care what reason the fail has
-		std::mem::discriminant(&player_move.clone().unwrap()) == std::mem::discriminant(&Move::Invalid { reason: String::new() });
+		std::mem::discriminant(&player_move.clone().unwrap()) != std::mem::discriminant(&Move::Invalid { reason: String::new() });
 }
 
 fn get_lua_starting_script(game: &Game, last_move: String, x: i32, y: i32) -> String {

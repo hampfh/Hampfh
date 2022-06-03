@@ -1,5 +1,5 @@
 mod game;
-use game::game::Game;
+use game::game::{Game, GameState};
 
 fn main() {
     println!("Hello, world!") ;
@@ -8,7 +8,11 @@ fn main() {
         .expect("Something went wrong reading the file");
 
     let mut app = Game::new();
-    app.start(program.clone(), program);
+    match app.start(program.clone(), program) {
+        GameState::PlayerOneWon => println!("Player 1 won"),
+        GameState::PlayerTwoWon => println!("Player 2 won"),
+        _ => ()
+    }
 }
 
 
