@@ -1,5 +1,8 @@
-fn valid_move(game: &mut Game, player_move: Move) {
-	match player_move {
+use super::game::{Game, Move, Player};
+
+pub fn execute_move(game: &mut Game, player_move: &Move) {
+
+	match &*player_move {
 		Move::Up => {
 			if game.player_one.y > 0 {
 				game.player_one.y -= 1;
@@ -21,11 +24,18 @@ fn valid_move(game: &mut Game, player_move: Move) {
 			}
 		},
 		Move::Wall(wall) => {
-			game.walls.push(wall);
+			game.walls.push(wall.clone());
 			game.player_one.wall_count -= 1;
 		},
-		_ => {
-			panic!("Invalid move");
+		Move::Invalid { reason } => {
+			println!("{}", reason);
 		}
 	}
+}
+
+fn get_active_player(game: &Game) -> Player {
+	if game.player_one_turn {
+		return game.player_one.clone();
+	}
+	return game.player_two.clone();
 }

@@ -1,5 +1,5 @@
-
-mod game_administrator;
+mod game;
+use game::game::Game;
 
 fn main() {
     println!("Hello, world!") ;
@@ -13,7 +13,7 @@ fn main() {
     let result: i32 = lua.get("result").unwrap();
     println!("result: {}", result);
 
-    let mut app = game_administrator::Game::new();
+    let mut app = Game::new();
     app.start(program.clone(), program);
 }
 
