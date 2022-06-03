@@ -26,3 +26,13 @@ pub fn reverse_move(player_move: Move) -> Move {
 pub fn reverse_coordinate(coordinate: i32) -> i32 {
 	return (MAP_SIZE - 1) - coordinate;
 }
+
+pub fn conditionally_reverse_move(player_move: Option<Move>, condition: bool) -> Option<Move> {
+	if player_move.is_none() || !condition { return player_move; } 
+	else { return Some(reverse_move(player_move.unwrap())); }
+}
+
+pub fn conditionally_reverse_coordinates(coordinates: (i32, i32), condition: bool) -> (i32, i32) {
+	if !condition { return (coordinates.0, coordinates.1); } 
+	else { return (reverse_coordinate(coordinates.0), reverse_coordinate(coordinates.1)); }
+}

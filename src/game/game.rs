@@ -1,16 +1,12 @@
 extern crate hlua;
+use super::graphics::draw_game;
 use hlua::Lua;
-use crate::game::turn;
+
+use super::turn;
+use super::player::Player;
 
 pub const MAP_SIZE: i32 = 9;
 pub const INITIAL_WALL_COUNT: i32 = 10;
-
-#[derive(Debug, Clone)]
-pub struct Player {
-	pub x: i32,
-	pub y: i32,
-	pub wall_count: i32
-}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Wall {
@@ -46,16 +42,8 @@ pub enum Move {
 impl Game {
 	pub fn new() -> Game {
 		Game {
-			player_one: Player {
-				x: MAP_SIZE / 2 + 1,
-				y: MAP_SIZE - 1,
-				wall_count: INITIAL_WALL_COUNT
-			},
-			player_two: Player {
-				x: MAP_SIZE / 2,
-				y: 0,
-				wall_count: INITIAL_WALL_COUNT
-			},
+			player_one: Player::new(MAP_SIZE / 2 + 1, MAP_SIZE - 1, INITIAL_WALL_COUNT),
+			player_two: Player::new(MAP_SIZE / 2 + 1, 0, INITIAL_WALL_COUNT),
 			walls: Vec::new(),
 			player_one_sandbox: Lua::new(),
 			player_two_sandbox: Lua::new(),
@@ -86,6 +74,9 @@ impl Game {
 		if result.is_err() {
 			// TODO manage error
 		}
+
+		draw_game(self);
+		std::thread::sleep(std::time::Duration::from_millis(1000));
 	}
 
 	pub fn get_enemy_coords(&self) -> (i32, i32) {
