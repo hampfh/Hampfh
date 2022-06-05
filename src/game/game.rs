@@ -121,3 +121,14 @@ pub fn deserialize_wall(input: &str) -> Move {
 		y2: result[3]
 	});
 }
+
+/**
+ * Returns a tuple, the first player is always the active one
+ * the second is the non-active player
+ */
+pub fn get_active_player(game: &mut Game) -> (&mut Player, &Player) {
+	if game.player_one_turn {
+		return (&mut game.player_one, &game.player_two);
+	}
+	return (&mut game.player_two, &game.player_one);
+}

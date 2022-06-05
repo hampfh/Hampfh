@@ -1,3 +1,4 @@
+use crate::game::game::get_active_player;
 use super::player::Player;
 use super::board::{serialize_board, populate_board};
 use super::game::{self, Game, Move};
@@ -42,9 +43,12 @@ pub fn on_turn(game: &mut Game) -> Result<(), String> {
 			return Err(reason);
 		}
 	}
-
-	execute_move(game, &player_move.unwrap());
+	
+	let mut walls = game.walls.clone();
+	let (active_player, other) = get_active_player(game);
+	execute_move(&mut walls, active_player, &other, &player_move.unwrap());
 	game.player_one_turn = !game.player_one_turn;
+
 	if game.player_one_turn {
 		println!("Player 1 turn");
 	}

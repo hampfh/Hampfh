@@ -1,4 +1,5 @@
-use super::game::{Game, Move};
+use super::player::Player;
+use super::game::{MAP_SIZE, Game, Move, Wall};
 
 pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 
@@ -38,9 +39,23 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 	Ok(())
 }
 
-pub fn tile_occupied(game: &Game, x: i32, y: i32) -> bool {
+pub fn valid_tile(walls: &Vec<Wall>, player_one: &Player, player_two: &Player, x: i32, y: i32) -> (bool, Option<String>) {
+	if tile_occupied(walls, player_one, player_two, x, y) {
+		return (false, Some("Tile is occupied".to_string()));
+	} 
+	if out_of_bounds(x, y) {
+		return (false, Some("Tile is out of bounds".to_string()));
+	}
+	return (true, None);
+}
+
+pub fn out_of_bounds(x: i32, y: i32) -> bool {
+	return x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE
+}
+
+pub fn tile_occupied(walls: &Vec<Wall>, player_one: &Player, player_two: &Player, x: i32, y: i32) -> bool {
 	// Check if wall exists on tile
-	for wall in &game.walls {
+	for wall in walls {
 		if wall.x1 == x && wall.y1 == y {
 			return true;
 		}
@@ -50,10 +65,10 @@ pub fn tile_occupied(game: &Game, x: i32, y: i32) -> bool {
 	}
 	
 	// Check if a player stands on the tile
-	if game.player_one.x == x && game.player_one.y == y {
+	if player_one.x == x && player_one.y == y {
 		return true;
 	}
-	else if game.player_two.x == x && game.player_two.y == y {
+	else if player_two.x == x && player_two.y == y {
 		return true;
 	}
 
