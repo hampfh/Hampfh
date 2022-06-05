@@ -5,8 +5,13 @@ use super::player::Player;
 pub fn execute_move(game: &mut Game, player_move: &Move) {
 	match &*player_move {
 		Move::Wall(wall) => {
+			let player = get_active_player(game);
+			if player.0.wall_count <= 0 {
+				return;
+			}
+			
+			player.0.decrement_wall_count();
 			game.walls.push(wall.clone());
-			game.player_one.decrement_wall_count()
 		},
 		other => {
 			
@@ -26,6 +31,10 @@ pub fn execute_move(game: &mut Game, player_move: &Move) {
 	println!("{:?} {:?}", game.player_one, game.player_two);
 }
 
+/**
+ * Returns a tuple, the first player is always the active one
+ * the second is the non-active player
+ */
 fn get_active_player(game: &mut Game) -> (&mut Player, &Player) {
 	if game.player_one_turn {
 		return (&mut game.player_one, &game.player_two);

@@ -27,7 +27,7 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 			}
 		},
 		Move::Wall(wall) => {
-			game.walls.push(wall.clone());
+			//game.walls.push(wall.clone());
 			
 		},
 		Move::Invalid { reason } => {

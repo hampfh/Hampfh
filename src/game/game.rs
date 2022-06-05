@@ -3,7 +3,6 @@ use hlua::Lua;
 
 use super::turn;
 use super::player::Player;
-use super::map_mirroring::conditionally_reverse_coordinates;
 use super::graphics::draw_game;
 
 pub const MAP_SIZE: i32 = 9;
@@ -52,8 +51,8 @@ impl Game {
 	pub fn new() -> Game {
 		Game {
 			game_state: GameState::Running,
-			player_one: Player::new(MAP_SIZE / 2 + 1, MAP_SIZE - 1, INITIAL_WALL_COUNT),
-			player_two: Player::new(MAP_SIZE / 2 + 1, 0, INITIAL_WALL_COUNT),
+			player_one: Player::new(MAP_SIZE / 2, MAP_SIZE - 1, INITIAL_WALL_COUNT),
+			player_two: Player::new(MAP_SIZE / 2, 0, INITIAL_WALL_COUNT),
 			walls: Vec::new(),
 			player_one_sandbox: Lua::new(),
 			player_two_sandbox: Lua::new(),
@@ -84,17 +83,11 @@ impl Game {
 		let result = turn::on_turn(self);
 		if result.is_err() {
 			// TODO manage error
+			println!("Error: {:?}", result.err().unwrap());
 		}
 
 		draw_game(self);
 		std::thread::sleep(std::time::Duration::from_millis(1000));
-	}
-
-	pub fn get_enemy_coords(&self) -> (i32, i32) {
-		if self.player_one_turn {
-			return (self.player_two.x, self.player_two.y);
-		}
-		return (self.player_one.x, self.player_one.y);
 	}
 
 	pub fn winner(&mut self) {
@@ -105,24 +98,14 @@ impl Game {
 			self.game_state = GameState::PlayerTwoWon;
 		}
 	}
-
-	pub fn serialize_walls(&self, reverse: bool) -> String {
-		return format!("{}{}{}", "{", self.walls.iter().map(|wall| serialize_wall(wall, reverse)).collect::<Vec<String>>().join("\n"), "}")
-	}
-}
-
-pub fn serialize_wall(wall: &Wall, reverse: bool) -> String {
-	let (x1, y1) = conditionally_reverse_coordinates((wall.x1, wall.y1), reverse);
-	let (x2, y2) = conditionally_reverse_coordinates((wall.x2, wall.y2), reverse);
-	return format!("{{x1={}, y1={}, x2={}, y2={}}},", x1, y1, x2, y2);
 }
 
 // Converts a string like ["x1,y1,x2,y2" -> Wall]
-pub fn deserialize_wall(wall: &str) -> Move {
+pub fn deserialize_wall(input: &str) -> Move {
 
-	let splits = wall.split(",").map(|s| s.trim()).collect::<Vec<&str>>();
+	let splits = input.split(",").map(|s| s.trim()).collect::<Vec<&str>>();
 	if splits.len() != 4 as usize {
-		return Move::Invalid { reason: "Wall must contain exactly 4 values".to_string() };
+		return Move::Invalid { reason: format!("Invalid return format, expected 4 values, got: [{}]", input) };
 	}
 	let result = splits.iter().map(|x| x.trim()).map(|x| x.parse::<i32>().unwrap_or_else(|_| -1)).collect::<Vec<i32>>();
 

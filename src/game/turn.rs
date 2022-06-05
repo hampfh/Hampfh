@@ -1,13 +1,12 @@
-use super::game::{self, Game, Move, Wall};
+use super::player::Player;
+use super::board::{serialize_board, populate_board};
+use super::game::{self, Game, Move};
 use super::execute_move::execute_move;
-use super::map_mirroring::{reverse_move, conditionally_reverse_coordinates, conditionally_reverse_move};
+use super::map_mirroring::{reverse_move, conditionally_reverse_player, conditionally_reverse_walls};
 use super::validation::valid_move;
 
 pub fn on_turn(game: &mut Game) -> Result<(), String> {
-	let reverse = !game.player_one_turn;
-	let (x, y) = conditionally_reverse_coordinates(game.get_enemy_coords(), reverse);
-	let last_move = playermove_to_string(&conditionally_reverse_move(game.last_move.clone(), reverse));
-	let starting_script = get_lua_starting_script(last_move, x, y, game.serialize_walls(reverse));
+	let starting_script = get_lua_starting_script(create_lua_game_object(&game));
 
 	let active_sandbox = if game.player_one_turn {
 		&mut game.player_one_sandbox
@@ -28,7 +27,7 @@ pub fn on_turn(game: &mut Game) -> Result<(), String> {
 		},
 		_ => ()
 	};
-	println!("Raw Player move {:?}", player_move.clone().unwrap());
+	println!("Player move {:?}", player_move.clone().unwrap());
 
 	if should_reverse_player_move(game, &player_move) {
 		player_move = Some(reverse_move(player_move.unwrap()));
@@ -63,26 +62,35 @@ fn should_reverse_player_move(game: &Game, player_move: &Option<Move>) -> bool {
 		std::mem::discriminant(&player_move.clone().unwrap()) != std::mem::discriminant(&Move::Invalid { reason: String::new() });
 }
 
-fn get_lua_starting_script(last_move: String, x: i32, y: i32, walls: String) -> String {
+fn get_lua_starting_script(game_object: String) -> String {
 	return format!(
-		"ExternalGlobalVarResult = onTurn({}, {}, {}, {})", 
-		last_move, 
-		x, 
-		y, 
-		walls
+		"ExternalGlobalVarResult = onTurn({})", 
+		game_object
 	);
 }
 
-fn playermove_to_string(last_move: &Option<Move>) -> String {
-	return match last_move.clone() {
-		Some(Move::Up) => "0".to_string(),
-		Some(Move::Left) => "1".to_string(),
-		Some(Move::Down) => "2".to_string(),
-		Some(Move::Right) => "3".to_string(),
-		Some(Move::Wall(wall)) => game::serialize_wall(&wall, false), // We don't flip the map here since that is handled earlier
-		Some(Move::Invalid { reason: _ }) => "nil".to_string(),
-		None => "nil".to_string() 
+fn create_lua_game_object(game: &Game) -> String {
+	let reverse = !game.player_one_turn;
+
+	let walls = conditionally_reverse_walls(&game.walls.clone(), reverse);
+
+	let serialized_board = serialize_board(populate_board(game, &walls));
+	let (serialized_player, serialized_opponent) = match game.player_one_turn {
+		true => (
+			serialize_player(&conditionally_reverse_player(&game.player_one, reverse)), 
+			serialize_player(&conditionally_reverse_player(&game.player_two, reverse))
+		),
+		false => (
+			serialize_player(&conditionally_reverse_player(&game.player_two, reverse)), 
+			serialize_player(&conditionally_reverse_player(&game.player_one, reverse))
+		)
 	};
+
+	return format!("{{player={}, opponent={}, board={}}}", serialized_player, serialized_opponent, serialized_board);
+}
+
+fn serialize_player(player: &Player) -> String {
+	return format!("{{x={}, y={}, wall_count={}}}", player.x, player.y, player.wall_count)	
 }
 
 fn convert_player_move_from_string_to_object(raw_player_move: Option<String>) -> Option<Move> {
