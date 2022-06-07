@@ -26,19 +26,19 @@ fn add_walkable_tiles(game: &mut Game, pos: &Pos) -> Vec<Pos> {
 	let mut directions = Vec::new();
 
 	// UP
-	if valid_tile(&walls, &player_one, &player_two, pos.0, pos.1 - 1).0 {
+	if valid_tile(&walls, &player_one, &player_two, pos.0, pos.1 - 1).is_ok() {
 		directions.push(Pos(pos.0, pos.1 - 1));
 	}
 	// RIGHT
-	if valid_tile(&walls, &player_one, &player_two, pos.0 + 1, pos.1).0 {
+	if valid_tile(&walls, &player_one, &player_two, pos.0 + 1, pos.1).is_ok() {
 		directions.push(Pos(pos.0 + 1, pos.1));
 	}
 	// DOWN
-	if valid_tile(&walls, &player_one, &player_two, pos.0, pos.1 + 1).0 {
+	if valid_tile(&walls, &player_one, &player_two, pos.0, pos.1 + 1).is_ok() {
 		directions.push(Pos(pos.0, pos.1 + 1));
 	}
 	// LEFT
-	if valid_tile(&walls, &player_one, &player_two, pos.0 - 1, pos.1).0 {
+	if valid_tile(&walls, &player_one, &player_two, pos.0 - 1, pos.1).is_ok() {
 		directions.push(Pos(pos.0 - 1, pos.1));
 	}
 

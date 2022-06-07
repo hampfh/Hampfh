@@ -58,8 +58,7 @@ impl Game {
 				Wall { x1: 0, y1: 5, x2: 1, y2: 5 }, 
 				Wall { x1: 2, y1: 5, x2: 3, y2: 5 }, 
 				Wall { x1: 4, y1: 5, x2: 5, y2: 5 },
-				Wall { x1: 6, y1: 5, x2: 7, y2: 5 },
-				Wall { x1: 8, y1: 5, x2: 8, y2: 6 }
+				Wall { x1: 6, y1: 5, x2: 7, y2: 5 }
 			),
 			player_one_sandbox: Lua::new(),
 			player_two_sandbox: Lua::new(),

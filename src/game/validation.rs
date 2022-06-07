@@ -7,23 +7,17 @@ use super::game::get_active_player;
 use super::game::{MAP_SIZE, Game, Move, Wall};
 
 pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
-
-	// Reverse board for player two
-	let reverse_board = !game.player_one_turn;
 	
-	// Flipping
-	let temp_player_move = conditionally_reverse_move(player_move, reverse_board);
-	let mut temp_walls = conditionally_reverse_walls(&game.walls.clone(), reverse_board);
-	
+	let mut walls = game.walls.clone();
 	let (active_player, other) = get_active_player(game);
 	let mut temp_active_player = active_player.clone();
 
 	// Execute a fake move to check if the move is valid
-	execute_move(&mut temp_walls, &mut temp_active_player, other, &temp_player_move);
+	execute_move(&mut walls, &mut temp_active_player, other, &player_move);
 
-	let (success, reason) = valid_tile(&temp_walls, other, other, temp_active_player.x, temp_active_player.y);
-	if !success {
-		return Err(format!("Invalid move: {}", reason.unwrap()));
+	let result = valid_tile(&walls, other, other, temp_active_player.x, temp_active_player.y);
+	if result.is_err() {
+		return Err(format!("Invalid move: {}", result.err().unwrap()));
 	}
 
 	match path_exists_for_players(game) {
@@ -32,14 +26,14 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 	}
 }
 
-pub fn valid_tile(walls: &Vec<Wall>, player_one: &Player, player_two: &Player, x: i32, y: i32) -> (bool, Option<String>) {
+pub fn valid_tile(walls: &Vec<Wall>, player_one: &Player, player_two: &Player, x: i32, y: i32) -> Result<(), String> {
 	if tile_occupied(walls, player_one, player_two, x, y) {
-		return (false, Some(format!("Tile ({},{}) is occupied", x, y)));
+		return Err(format!("Tile ({},{}) is occupied", x, y));
 	} 
 	if out_of_bounds(x, y) {
-		return (false, Some("Tile is out of bounds".to_string()));
+		return Err(format!("Tile is out of bounds ({}, {})", x, y));
 	}
-	return (true, None);
+	Ok(())
 }
 
 pub fn out_of_bounds(x: i32, y: i32) -> bool {
