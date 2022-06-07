@@ -1,5 +1,3 @@
-use crate::game::map_mirroring::conditionally_reverse_move;
-use crate::game::map_mirroring::conditionally_reverse_walls;
 use crate::game::path_find::path_exists_for_players;
 use super::player::Player;
 use super::execute_move::execute_move;
@@ -15,7 +13,7 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 	// Execute a fake move to check if the move is valid
 	execute_move(&mut walls, &mut temp_active_player, other, &player_move);
 
-	let result = valid_tile(&walls, other, other, temp_active_player.x, temp_active_player.y);
+	let result = valid_tile(&walls, active_player, other, temp_active_player.x, temp_active_player.y);
 	if result.is_err() {
 		return Err(format!("Invalid move: {}", result.err().unwrap()));
 	}

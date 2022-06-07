@@ -88,7 +88,6 @@ impl Game {
 	pub fn update(&mut self) {
 		let result = turn::on_turn(self);
 		if result.is_err() {
-			// TODO manage error
 			self.game_state = GameState::Failed;
 			println!("Error (update): {:?}", result.err().unwrap());
 		}
