@@ -2,7 +2,7 @@ extern crate hlua;
 use hlua::Lua;
 
 use super::turn;
-use super::player::Player;
+use super::player::{Player, PlayerType};
 use super::graphics::draw_game;
 
 pub const MAP_SIZE: i32 = 9;
@@ -51,9 +51,15 @@ impl Game {
 	pub fn new() -> Game {
 		Game {
 			game_state: GameState::Running,
-			player_one: Player::new(MAP_SIZE / 2, MAP_SIZE - 1, INITIAL_WALL_COUNT),
-			player_two: Player::new(MAP_SIZE / 2, 0, INITIAL_WALL_COUNT),
-			walls: Vec::new(),
+			player_one: Player::new(MAP_SIZE / 2, MAP_SIZE - 1, INITIAL_WALL_COUNT, PlayerType::Flipped),
+			player_two: Player::new(MAP_SIZE / 2, 0, INITIAL_WALL_COUNT, PlayerType::Regular),
+			walls: vec!(
+				Wall { x1: 0, y1: 5, x2: 1, y2: 5 }, 
+				Wall { x1: 2, y1: 5, x2: 3, y2: 5 }, 
+				Wall { x1: 4, y1: 5, x2: 5, y2: 5 },
+				Wall { x1: 6, y1: 5, x2: 7, y2: 5 },
+				Wall { x1: 8, y1: 5, x2: 8, y2: 6 }
+			),
 			player_one_sandbox: Lua::new(),
 			player_two_sandbox: Lua::new(),
 			player_one_turn: true,
@@ -83,7 +89,7 @@ impl Game {
 		let result = turn::on_turn(self);
 		if result.is_err() {
 			// TODO manage error
-			println!("Error: {:?}", result.err().unwrap());
+			println!("Error (update): {:?}", result.err().unwrap());
 		}
 
 		draw_game(self);
@@ -98,6 +104,15 @@ impl Game {
 			self.game_state = GameState::PlayerTwoWon;
 		}
 	}
+
+}
+
+pub fn get_opponent(game: &Game, player: &Player) -> Player {
+	// PlayerType::Flipped is always player one
+	if player.player_type == PlayerType::Flipped {
+		return game.player_two.clone();
+	}
+	return game.player_one.clone();
 }
 
 // Converts a string like ["x1,y1,x2,y2" -> Wall]

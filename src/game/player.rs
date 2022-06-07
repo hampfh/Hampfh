@@ -1,15 +1,23 @@
 use super::game::Move;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PlayerType {
+	Regular,	// Player 2
+	Flipped		// Player 1
+}
+
 #[derive(Debug, Clone)]
 pub struct Player {
+	pub player_type: PlayerType,
 	pub x: i32,
 	pub y: i32,
 	pub wall_count: i32
 }
 
 impl Player {
-	pub fn new(x: i32, y: i32, wall_count: i32) -> Player {
+	pub fn new(x: i32, y: i32, wall_count: i32, player_type: PlayerType) -> Player {
 		Player {
+			player_type: player_type,
 			x: x,
 			y: y,
 			wall_count: wall_count
