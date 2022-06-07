@@ -45,24 +45,35 @@ fn add_walkable_tiles(game: &mut Game, pos: &Pos) -> Vec<Pos> {
 	return directions;
 }
 
-pub fn path_exists_for_players(game: &mut Game) -> bool {
+pub fn path_exists_for_players(game: &mut Game) -> Result<(), String> {
 	// Player one wants to get to y = MAP_SIZE - 1
 	let player_one = game.player_one.clone();
 	// Player two wants to get to y = 0
 	let player_two = game.player_two.clone();
 
+	let mut player_one_valid = false;
+	let mut player_two_valid = false;
+
 	for i in 0..MAP_SIZE {
-		if path_exists(game, &player_one, Pos(i, 0)) {
-			println!("Exists for player one");
-			return true;
+		if !player_one_valid && path_exists(game, &player_one, Pos(i, 0)) {
+			player_one_valid = true;
 		}
 		
-		if path_exists(game, &player_two, Pos(i, MAP_SIZE - 1)) {
-			println!("Exists for player two");
-			return true;
+		if !player_two_valid && path_exists(game, &player_two, Pos(i, MAP_SIZE - 1)) {
+			player_two_valid = true;
 		}
 	}
-	return false;
+	
+	if player_one_valid && player_two_valid {
+		return Ok(());
+	}
+	else if player_one_valid {
+		return Err("No path for player 2 available".to_string());
+	}
+	else if player_two_valid {
+		return Err("No path for player 1 available".to_string());
+	}
+	return Err("No path for either bot available".to_string());
 }
 
 fn path_exists(game: &mut Game, player: &Player, target: Pos) -> bool {

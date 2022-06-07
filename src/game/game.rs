@@ -21,6 +21,7 @@ pub enum GameState {
 	Running,
 	PlayerOneWon,
 	PlayerTwoWon,
+	Failed
 }
 
 #[derive(Debug)]
@@ -89,11 +90,14 @@ impl Game {
 		let result = turn::on_turn(self);
 		if result.is_err() {
 			// TODO manage error
+			self.game_state = GameState::Failed;
 			println!("Error (update): {:?}", result.err().unwrap());
 		}
 
-		draw_game(self);
-		std::thread::sleep(std::time::Duration::from_millis(1000));
+		if cfg!(debug_assertions) {
+			draw_game(self);
+			std::thread::sleep(std::time::Duration::from_millis(1000));
+		}
 	}
 
 	pub fn winner(&mut self) {

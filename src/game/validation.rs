@@ -1,3 +1,5 @@
+use crate::game::map_mirroring::conditionally_reverse_move;
+use crate::game::map_mirroring::conditionally_reverse_walls;
 use crate::game::path_find::path_exists_for_players;
 use super::player::Player;
 use super::execute_move::execute_move;
@@ -8,24 +10,26 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 
 	// Reverse board for player two
 	let reverse_board = !game.player_one_turn;
-
-	let mut temp_walls = game.walls.clone();
+	
+	// Flipping
+	let temp_player_move = conditionally_reverse_move(player_move, reverse_board);
+	let mut temp_walls = conditionally_reverse_walls(&game.walls.clone(), reverse_board);
+	
 	let (active_player, other) = get_active_player(game);
 	let mut temp_active_player = active_player.clone();
-	execute_move(&mut temp_walls, &mut temp_active_player, other, &player_move);
+
+	// Execute a fake move to check if the move is valid
+	execute_move(&mut temp_walls, &mut temp_active_player, other, &temp_player_move);
 
 	let (success, reason) = valid_tile(&temp_walls, other, other, temp_active_player.x, temp_active_player.y);
 	if !success {
 		return Err(format!("Invalid move: {}", reason.unwrap()));
 	}
 
-	if path_exists_for_players(game) {
-		println!("Path exists");
-	} else {
-		println!("Path does not exist");
+	match path_exists_for_players(game) {
+		Ok(_) => Ok(()),
+		Err(reason) => Err(reason)
 	}
-
-	Ok(())
 }
 
 pub fn valid_tile(walls: &Vec<Wall>, player_one: &Player, player_two: &Player, x: i32, y: i32) -> (bool, Option<String>) {

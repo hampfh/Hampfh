@@ -37,9 +37,9 @@ pub fn reverse_coordinate(coordinate: i32) -> i32 {
 	return (MAP_SIZE - 1) - coordinate;
 }
 
-pub fn conditionally_reverse_move(player_move: Option<Move>, condition: bool) -> Option<Move> {
-	if !condition || player_move.is_none() { return player_move; } 
-	else { return Some(reverse_move(player_move.unwrap())); }
+pub fn conditionally_reverse_move(player_move: Move, condition: bool) -> Move {
+	if !condition { return player_move; } 
+	else { return reverse_move(player_move); }
 }
 
 pub fn conditionally_reverse_coordinates(coordinates: (i32, i32), condition: bool) -> (i32, i32) {
