@@ -4,7 +4,7 @@ use game::game::{Game, GameState};
 fn main() {
     println!("Hello, world!") ;
 
-    let program = std::fs::read_to_string("/Users/hampfh/dev/Projects/rust/hahalang/scripts/first.lua" )
+    let program = std::fs::read_to_string("/Users/hampfh/dev/Projects/rust/hahalang/scripts/temp.lua" )
         .expect("Something went wrong reading the file");
 
     let mut app = Game::new();
