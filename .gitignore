@@ -1,4 +1,4 @@
 /target
 /.vscode
 
-temp.lua
+*.temp.lua
