@@ -28,6 +28,7 @@ pub fn on_turn(game: &mut Game) -> Result<(), String> {
 		},
 		_ => ()
 	};
+	println!("Player turn: {}", if game.player_one_turn { "1" } else { "2" });
 	println!("Player move {:?}", player_move.clone().unwrap());
 
 	if should_reverse_player_move(game, &player_move) {

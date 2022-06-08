@@ -35,7 +35,8 @@ pub struct Game {
 	pub player_one_sandbox: hlua::Lua<'static>,
 	pub player_two_sandbox: hlua::Lua<'static>,
 	pub player_one_turn: bool,
-	pub last_move: Option<Move>
+	pub last_move: Option<Move>,
+	pub std: String // Standard library
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -49,7 +50,7 @@ pub enum Move {
 }
 
 impl Game {
-	pub fn new() -> Game {
+	pub fn new(std: String) -> Game {
 		Game {
 			game_state: GameState::Running,
 			player_one: Player::new(MAP_SIZE / 2, MAP_SIZE - 1, INITIAL_WALL_COUNT, PlayerType::Flipped),
@@ -63,19 +64,31 @@ impl Game {
 			player_one_sandbox: Lua::new(),
 			player_two_sandbox: Lua::new(),
 			player_one_turn: true,
-			last_move: None
+			last_move: None,
+			std: std
 		}
 	}
 
-	pub fn start(&mut self, program1: String, program2: String) -> GameState {
+	pub fn start(&mut self, program1: String, program2: String) -> Result<GameState, String> {
 		// Run programs for the first time
 
 		// TODO make sure programs to not run longer than 1 second
-		self.player_one_sandbox.execute::<()>(&program1).unwrap();
-		self.player_two_sandbox.execute::<()>(&program2).unwrap();
+		match self.player_one_sandbox.execute::<()>(&program1) {
+			Ok(_) => (),
+			Err(_) => return Err("Invalid program, could not parse player 1's program".to_string())
+		}
+		match self.player_two_sandbox.execute::<()>(&program2) {
+			Ok(_) => (),
+			Err(_) => return Err("Invalid program, could not parse player 2's program".to_string())
+		}
+
+		// Load standard library
+		self.player_one_sandbox.execute::<()>(&self.std).unwrap();
+		self.player_two_sandbox.execute::<()>(&self.std).unwrap();
 
 		self.game_loop();
-		return self.game_state.clone()
+		
+		Ok(self.game_state.clone())
 	}
 
 	pub fn game_loop(&mut self) {
