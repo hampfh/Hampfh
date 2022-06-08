@@ -13,7 +13,7 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 	// Execute a fake move to check if the move is valid
 	execute_move(&mut walls, &mut temp_active_player, other, &player_move);
 
-	let result = valid_tile(&walls, active_player, other, temp_active_player.x, temp_active_player.y);
+	let result = valid_tile(&walls, active_player, other, temp_active_player.x, temp_active_player.y, false);
 	if result.is_err() {
 		return Err(format!("Invalid move: {}", result.err().unwrap()));
 	}
@@ -24,8 +24,8 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 	}
 }
 
-pub fn valid_tile(walls: &Vec<Wall>, player_one: &Player, player_two: &Player, x: i32, y: i32) -> Result<(), String> {
-	if tile_occupied(walls, player_one, player_two, x, y) {
+pub fn valid_tile(walls: &Vec<Wall>, player_one: &Player, player_two: &Player, x: i32, y: i32, ignore_players: bool) -> Result<(), String> {
+	if tile_occupied(walls, player_one, player_two, x, y, ignore_players) {
 		return Err(format!("Tile ({},{}) is occupied", x, y));
 	} 
 	if out_of_bounds(x, y) {
@@ -38,7 +38,7 @@ pub fn out_of_bounds(x: i32, y: i32) -> bool {
 	return x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE
 }
 
-pub fn tile_occupied(walls: &Vec<Wall>, player_one: &Player, player_two: &Player, x: i32, y: i32) -> bool {
+pub fn tile_occupied(walls: &Vec<Wall>, player_one: &Player, player_two: &Player, x: i32, y: i32, ignore_players: bool) -> bool {
 	// Check if wall exists on tile
 	for wall in walls {
 		if wall.x1 == x && wall.y1 == y {
@@ -47,6 +47,10 @@ pub fn tile_occupied(walls: &Vec<Wall>, player_one: &Player, player_two: &Player
 		else if wall.x2 == x && wall.y2 == y {
 			return true;
 		}
+	}
+
+	if ignore_players {
+		return false
 	}
 	
 	// Check if a player stands on the tile
@@ -79,8 +83,8 @@ mod tests {
 	fn test_tile_occupied() {
 		let temp_player = Player::new(0, 0, 0, PlayerType::Regular);
 		let walls = vec![Wall { x1:0, y1:2, x2:0, y2: 1 }];
-		assert_eq!(true, tile_occupied(&walls, &temp_player, &temp_player, 0, 0));
-		assert_eq!(true, tile_occupied(&walls, &temp_player, &temp_player, 0, 1));
-		assert_eq!(false, tile_occupied(&walls, &temp_player, &temp_player, 1, 0));
+		assert_eq!(true, tile_occupied(&walls, &temp_player, &temp_player, 0, 0, false));
+		assert_eq!(true, tile_occupied(&walls, &temp_player, &temp_player, 0, 1, false));
+		assert_eq!(false, tile_occupied(&walls, &temp_player, &temp_player, 1, 0, false));
 	}
 }

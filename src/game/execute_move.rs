@@ -16,7 +16,7 @@ pub fn execute_move(walls: &mut Vec<Wall>, active_player: &mut Player, other_pla
 			let (new_x, new_y) = active_player.move_player(other);
 			
 			// If the tile is occupied we do not allow the player to move
-			if tile_occupied(walls, active_player, other_player, new_x, new_y) {
+			if tile_occupied(walls, active_player, other_player, new_x, new_y, false) {
 				return;
 			}
 
