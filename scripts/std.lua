@@ -28,6 +28,6 @@ end
 -- 2: P2
 -- 3: Wall
 function STD__GET_TILE(gameObj, x, y)
-	return gameObj.objects[x + MAP_SIZE * y]
+	return gameObj.board[x + MAP_SIZE * y]
 end
 
