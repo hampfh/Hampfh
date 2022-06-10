@@ -8,12 +8,18 @@ pub fn draw_game(game: &Game) {
 
 	println!("Last move: {:?}", game.last_move);
 
+	print!(" ");
+	for i in 0..MAP_SIZE {
+		print!("{}", i);
+	}
+	println!();
 	// Upper wall
 	for _ in 0..MAP_SIZE + 2 {
 		print!("#");
 	}
 	println!();
 	print!("#");
+	let mut line = 0;
 	for tile in buffer.iter() {
 		match tile {
 			Tile::Empty => print!(" "),
@@ -25,9 +31,10 @@ pub fn draw_game(game: &Game) {
 		count += 1;
 		// Side wall
 		if count >= MAP_SIZE {
-			println!("#");
+			println!("# {}", line);
 			count = 0;
 			print!("#");
+			line += 1;
 		}
 	}
 
