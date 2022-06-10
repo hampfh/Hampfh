@@ -56,10 +56,10 @@ impl Game {
 			player_one: Player::new(MAP_SIZE / 2, MAP_SIZE - 1, INITIAL_WALL_COUNT, PlayerType::Flipped),
 			player_two: Player::new(MAP_SIZE / 2, 0, INITIAL_WALL_COUNT, PlayerType::Regular),
 			walls: vec!(
-				Wall { x1: 0, y1: 5, x2: 1, y2: 5 }, 
-				Wall { x1: 2, y1: 5, x2: 3, y2: 5 }, 
-				Wall { x1: 4, y1: 5, x2: 5, y2: 5 },
-				Wall { x1: 6, y1: 5, x2: 7, y2: 5 }
+				Wall { x1: 1, y1: 5, x2: 2, y2: 5 }, 
+				Wall { x1: 3, y1: 5, x2: 4, y2: 5 },
+				Wall { x1: 5, y1: 5, x2: 6, y2: 5 },
+				Wall { x1: 7, y1: 5, x2: 8, y2: 5 }
 			),
 			player_one_sandbox: Lua::new(),
 			player_two_sandbox: Lua::new(),
@@ -107,7 +107,7 @@ impl Game {
 
 		if cfg!(debug_assertions) {
 			draw_game(self);
-			std::thread::sleep(std::time::Duration::from_millis(1000));
+			std::thread::sleep(std::time::Duration::from_millis(200));
 		}
 	}
 
