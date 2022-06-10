@@ -15,7 +15,7 @@ function STD__OCCUPIED(gameObj, x, y)
 		return true
 	end
 
-	if STD__GET_TILE(gameObj, x, y) ~= 0  then
+	if STD__GET_TILE(gameObj, x, y) ~= 0 then
 		return true
 	end
 
@@ -28,6 +28,7 @@ end
 -- 2: P2
 -- 3: Wall
 function STD__GET_TILE(gameObj, x, y)
-	return gameObj.board[x + MAP_SIZE * y]
+	-- Since lua always starts at 1 we need to compensate for that
+	return gameObj.board[x + MAP_SIZE * y + 1]
 end
 
