@@ -11,7 +11,7 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), String> {
 	let mut temp_active_player = active_player.clone();
 
 	// Execute a fake move to check if the move is valid
-	execute_move(&mut walls, &mut temp_active_player, other, &player_move);
+	execute_move(&mut walls, &mut temp_active_player, &player_move);
 
 	let result = valid_tile(&walls, active_player, other, temp_active_player.x, temp_active_player.y, false);
 	if result.is_err() {
