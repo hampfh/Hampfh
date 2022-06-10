@@ -1,3 +1,4 @@
+use crate::game::game::MAP_SIZE;
 use crate::game::game::get_active_player;
 use super::player::Player;
 use super::board::{serialize_board, populate_board};
@@ -46,8 +47,8 @@ pub fn on_turn(game: &mut Game) -> Result<(), String> {
 	}
 	
 	let mut walls = game.walls.clone();
-	let (active_player, other) = get_active_player(game);
-	execute_move(&mut walls, active_player, &other, &player_move.unwrap());
+	let (active_player, _) = get_active_player(game);
+	execute_move(&mut walls, active_player, &player_move.unwrap());
 	game.player_one_turn = !game.player_one_turn;
 
 	if game.player_one_turn {
@@ -82,14 +83,17 @@ fn create_lua_game_object(game: &Game) -> String {
 	let serialized_board = serialize_board(populate_board(game, &walls));
 	let (serialized_player, serialized_opponent) = match game.player_one_turn {
 		true => (
-			serialize_player(&conditionally_reverse_player(&game.player_one, reverse)), 
-			serialize_player(&conditionally_reverse_player(&game.player_two, reverse))
+			serialize_player(&conditionally_reverse_player(&game.player_one, false)), 
+			serialize_player(&conditionally_reverse_player(&game.player_two, false))
 		),
 		false => (
-			serialize_player(&conditionally_reverse_player(&game.player_two, reverse)), 
-			serialize_player(&conditionally_reverse_player(&game.player_one, reverse))
+			serialize_player(&conditionally_reverse_player(&game.player_two, true)), 
+			serialize_player(&conditionally_reverse_player(&game.player_one, true))
 		)
 	};
+
+	println!("Player pos ({})", serialized_player);
+	println!("Serialized board ({:?})", populate_board(game, &game.walls)[(2 + MAP_SIZE * game.player_one.y - 1) as usize]);
 
 	return format!("{{player={}, opponent={}, board={}}}", serialized_player, serialized_opponent, serialized_board);
 }
