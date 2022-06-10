@@ -13,7 +13,7 @@ fn main() {
     let mut app = Game::new(std);
     match app.start(program, program_2) {
         Ok(GameState::PlayerOneWon) => println!("Player 1 won"),
-        Ok(GameState::PlayerTwoWon) => println!("Player 1 won"),
+        Ok(GameState::PlayerTwoWon) => println!("Player 2 won"),
         Ok(game_state) => panic!("Unknown gamestate: [{:?}]", game_state),
         Err(reason) => println!("Error: {}", reason)
     }
