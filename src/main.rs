@@ -1,4 +1,4 @@
-mod game;
+/* mod game;
 use game::game::{Game, GameState};
 
 fn main() {
@@ -17,8 +17,25 @@ fn main() {
         Ok(game_state) => panic!("Unknown gamestate: [{:?}]", game_state),
         Err(reason) => println!("Error: {}", reason)
     }
-}
+} */
 
 
 // Load two files
 // execute them to load functionality
+
+use actix_web::{web, App, HttpServer, Result};
+
+mod web_specific_files;
+use web_specific_files::webhook_schema::GithubPayload;
+
+async fn challenge(info: web::Json<GithubPayload>) -> Result<String> {
+    Ok(format!("Welcome {}!\nYour submitted program was {}", info.sender.login, info.issue.body))
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| App::new().route("/api/challenge", web::post().to(challenge)))
+        .bind(("127.0.0.1", 8095))?
+        .run()
+        .await
+}
