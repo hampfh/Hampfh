@@ -1,4 +1,8 @@
+# Directories
 /target
 /.vscode
 
+# Files
+.env
 *.temp.lua
+storage.sql

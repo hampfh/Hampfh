@@ -1,4 +1,3 @@
-use super::validation::tile_occupied;
 use super::game::{Move, Wall};
 use super::player::Player;
 

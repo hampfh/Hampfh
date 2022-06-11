@@ -1,3 +1,4 @@
+pub mod entry_point;
 pub mod game;
 pub mod validation;
 pub mod match_maker;

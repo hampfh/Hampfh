@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct GithubPayload {
 	pub action: String,
 	pub issue: Issue,
@@ -8,7 +8,7 @@ pub struct GithubPayload {
 	pub sender: User
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Issue {
 	pub url: String,
 	pub repository_url: String,
@@ -40,7 +40,7 @@ pub struct Issue {
 	//pub state_reason: null
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Reactions {
 	pub url: String,
 	pub total_count: i32,
@@ -54,7 +54,7 @@ pub struct Reactions {
 	pub eyes: i32
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct User {
 	pub login: String, // Github username
 	pub id: i32,
@@ -76,7 +76,7 @@ pub struct User {
 	pub site_admin: bool
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Repository {
 	pub id: i32,
 	pub name: String,
