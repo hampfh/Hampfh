@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use crate::db::schema::Submissions;
 use crate::db::schema::Submissions::dsl::Submissions as submission_dsl;
 
-#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Clone)]
 #[table_name = "Submissions"]
 pub struct Submission {
     pub id: String,
@@ -63,6 +63,17 @@ impl Submission {
             .expect("Error saving new submission");
 		Self::by_id(&new_id, conn)
     }
+
+    pub fn save(&self, conn: &SqliteConnection) {
+        use crate::db::schema::Submissions::dsl::{id, score, updated_at};
+        diesel::update(submission_dsl.filter(id.eq(&self.id)))
+            .set((
+                score.eq(self.score),
+                updated_at.eq(chrono::Local::now().naive_local())
+            ))
+            .execute(conn).expect("Could not update record");
+    }
+
     fn new_submission_struct(id: &str, user_id: &str, script: &str, comment: Option<&str>, score: i32, issue_url: &str, issue_number: i32) -> Self {
         Submission {
             id: id.into(),
