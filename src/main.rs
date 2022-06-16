@@ -7,6 +7,7 @@ extern crate diesel_migrations;
 
 mod db;
 mod game;
+mod readme_factory;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
