@@ -1,3 +1,5 @@
+use actix_web::web::Data;
+
 #[macro_use]
 extern crate diesel;
 #[macro_use]
@@ -8,20 +10,18 @@ mod game;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    use actix_web::{App, HttpServer, web::JsonConfig};
-    use crate::db::services::core::submit_challenge;
+    use actix_web::{App, HttpServer};
+    use crate::db::services::core::config;
     
     let port = 8095;
 
-    HttpServer::new(move || {
+    println!("Listening on port {}", port);
+    HttpServer::new(|| {
         let db_connection = db::db::establish_connection();
 
-        println!("Listening on port {}", port);
-
         App::new()
-            .app_data(db_connection)
-            .app_data(JsonConfig::default())
-            .service(submit_challenge)
+            .app_data(Data::new(db_connection))
+            .configure(config)
     })
         .bind(("127.0.0.1", port))?
         .workers(2)
