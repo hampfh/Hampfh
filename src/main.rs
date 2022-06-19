@@ -10,6 +10,7 @@ mod db;
 mod game;
 mod readme_factory;
 mod repo_updater;
+mod code_unwrapper;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
