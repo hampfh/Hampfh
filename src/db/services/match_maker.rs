@@ -52,6 +52,8 @@ fn make_selection(submissions: Vec<Submission>) -> Vec<Submission> {
 	let mut submissions = submissions;
 	let mut match_queue: Vec<Submission> = Vec::new();
 
+	// Remove all submissions of disqualified bots
+	submissions = submissions.into_iter().filter(|submission| submission.disqualified == 0).collect();
 	// Sort from lowest to highest
 	submissions.sort_by(|a, b| a.score.cmp(&b.score));
 
