@@ -6,3 +6,5 @@
 .env
 *.temp.lua
 storage.sql
+
+.DS_Store
