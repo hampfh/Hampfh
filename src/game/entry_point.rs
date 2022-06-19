@@ -1,7 +1,7 @@
 use super::game::{Game, GameState};
 
 pub fn initialize_game_session(script_1: &str, script_2: &str) -> Result<GameState, String> {
-    let std = std::fs::read_to_string("/Users/hampfh/dev/Projects/rust/hahalang/scripts/std.lua")
+    let std = std::fs::read_to_string("./scripts/std.lua")
         .expect("Could not load standard library");
 
     let mut game_session = Game::new(std);
