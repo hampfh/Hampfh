@@ -5,6 +5,12 @@ use crate::db::models::match_model::Match;
 use crate::db::models::submission_model::Submission;
 use crate::db::models::user_model::User;
 
+use std::fs;
+
+pub fn write_file(path: &str, data: String) -> std::io::Result<()> {
+    fs::write(path, data)
+}
+
 pub fn generate_readme(users: Vec<User>, submissions: Vec<Submission>, matches: Vec<Match>, turns: Vec<Turn>) -> String {
 	return format!("{}{}", get_readme_header(), create_history_table(submissions));
 }
