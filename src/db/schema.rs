@@ -19,6 +19,7 @@ table! {
         issue_number -> Integer,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        disqualified -> Integer,
     }
 }
 

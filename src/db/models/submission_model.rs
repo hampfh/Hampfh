@@ -16,6 +16,7 @@ pub struct Submission {
     pub issue_number: i32,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
+    pub disqualified: i32, // Boolean SQLite doesn't support booleans
 }
 impl Submission {
     pub fn list(conn: &SqliteConnection) -> Vec<Self> {
@@ -81,6 +82,7 @@ impl Submission {
 			script: script.into(),
 			comment: comment.map(|c| c.into()),
 			score: score,
+            disqualified: 0,
 			issue_url: issue_url.into(),
             issue_number: issue_number,
             created_at: chrono::Local::now().naive_local(),
