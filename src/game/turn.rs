@@ -110,9 +110,10 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 		}
 	}
 	
-	let mut walls = game.walls.clone();
-	let (active_player, _) = methods::get_active_player(game);
-	execute_move(&mut walls, active_player, &player_move.unwrap());
+	let mut mutable_walls = game.walls.clone();
+	execute_move(&mut mutable_walls, methods::get_active_player(game).0, &player_move.unwrap());
+	// Reassign walls
+	game.walls = mutable_walls;
 	game.player_one_turn = !game.player_one_turn;
 
 	if game.player_one_turn {
@@ -157,6 +158,7 @@ fn create_lua_game_object(walls: Vec<Wall>, player_one_turn: bool, player_one: P
 	};
 
 	println!("Player pos ({})", serialized_player);
+	println!("Walls {:?}", walls);
 	println!("Serialized board ({:?})", populate_board(&player_one, &player_two, &walls)[(2 + MAP_SIZE * player_one.y - 1) as usize]);
 
 	return format!("{{player={}, opponent={}, board={}}}", serialized_player, serialized_opponent, serialized_board);
