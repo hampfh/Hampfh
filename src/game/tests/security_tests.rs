@@ -126,7 +126,7 @@ mod tests {
         match methods::start(&mut game_session, script.clone(), script) {
             GameState::PlayerOneWon => panic!("Player one won"),
             GameState::PlayerTwoWon => panic!("Player two won"),
-            GameState::Error(ErrorType::RuntimeError { reason }) => {
+            GameState::Error(ErrorType::RuntimeError { reason: _ }) => {
                 assert!(true)
             }
             GameState::Error(ErrorType::GameError { reason }) => {
