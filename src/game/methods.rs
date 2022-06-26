@@ -1,5 +1,4 @@
-extern crate hlua;
-use hlua::Lua;
+use rlua::Lua;
 
 use crate::game::game::{
     ErrorType, Game, GameState, Move, Wall, INITIAL_WALL_COUNT, MAP_SIZE, MAX_TURNS,
@@ -42,17 +41,17 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> GameState {
     std::thread::spawn(move || {
         tx.send(Ok(Some(thread_id::get()))).unwrap();
 
-        let mut player_one_sandbox = clone_one.lock().unwrap();
-        let mut player_two_sandbox = clone_two.lock().unwrap();
+        let player_one_sandbox = clone_one.lock().unwrap();
+        let player_two_sandbox = clone_two.lock().unwrap();
 
-        match player_one_sandbox.execute::<()>(&program1) {
+        match player_one_sandbox.context(|ctx| ctx.load(&program1).exec()) {
             Ok(_) => (),
             Err(_) => {
                 tx.send(Err("Your script could not be executed".to_string()))
                     .unwrap();
             }
         }
-        match player_two_sandbox.execute::<()>(&program2) {
+        match player_two_sandbox.context(|ctx| ctx.load(&program2).exec()) {
             Ok(_) => (),
             Err(_) => {
                 tx.send(Err("Opponent script could not be executed".to_string()))
@@ -80,10 +79,21 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> GameState {
     }
 
     // Load standard library
+    // We don't have to check errors here since
+    // this is deterministic and all lua code
+    // comes from us
     let first = game.player_one_sandbox.clone();
-    first.lock().unwrap().execute::<()>(&std).unwrap();
+    first
+        .lock()
+        .unwrap()
+        .context(|ctx| ctx.load(&std).exec())
+        .unwrap();
     let second = game.player_two_sandbox.clone();
-    second.lock().unwrap().execute::<()>(&std).unwrap();
+    second
+        .lock()
+        .unwrap()
+        .context(|ctx| ctx.load(&std).exec())
+        .unwrap();
 
     // Unlock mutexes
     drop(first);

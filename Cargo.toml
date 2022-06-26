@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 
 # Game specific dependencies
-hlua = "0.4.1"
+rlua = "0.19.2"
 pathfinding = "3.0.12"
 
 # Web dependencies

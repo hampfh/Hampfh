@@ -14,7 +14,7 @@ use super::validation::valid_move;
 
 struct ThreadReturn {
 	thread_id: Option<usize>,
-	player_move: Option<String>,
+	player_move: Result<String, rlua::Error>,
 }
 
 pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
@@ -33,7 +33,7 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	std::thread::spawn(move || {
 		tx.send(ThreadReturn {
 			thread_id: Some(thread_id::get()),
-			player_move: None
+			player_move: Ok(String::new()),
 		}).unwrap();
 
 		let starting_script = get_lua_starting_script(create_lua_game_object(walls, player_one_turn, player_one, player_two));
@@ -45,18 +45,21 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 		}
 		
 		println!("Starting script");
-		match active_sandbox.execute::<()>(&starting_script) {
+		match active_sandbox.context(|ctx| ctx.load(&starting_script).exec()) {
 			Ok(_) => (),
 			Err(err) => {
 				tx.send(ThreadReturn {
 					thread_id: None,
-					player_move: Some(err.to_string())
+					player_move: Err(err)
 				}).unwrap();
 			}
 		}
 		println!("ENDING script");
 
-		let raw_player_move: Option<String> = active_sandbox.get("ExternalGlobalVarResult");
+		
+		let raw_player_move = active_sandbox.context(|ctx| {
+			ctx.globals().get::<_, String>("ExternalGlobalVarResult")
+		});
 		drop(active_sandbox);
 		
 		tx.send(ThreadReturn {
@@ -75,7 +78,10 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 
 	// Second time we either get the result or a timeout error
 	let player_move = match rx.recv_timeout(Duration::from_millis(500)) {
-		Ok(returned) => returned.player_move,
+		Ok(returned) => match returned.player_move {
+			Ok(move_string) => move_string,
+			Err(error) => return Err(ErrorType::RuntimeError { reason: error.to_string() }),
+		},
 		Err(_) => {
 			println!("Timed out");
 			terminate_thread(sandbox_thread_id);
@@ -83,11 +89,11 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 		}
 	};
 
-	if player_move.is_some() && player_move.clone().unwrap().len() != 1 && player_move.clone().unwrap().len() != 7 {
-		return Err(ErrorType::RuntimeError { reason: player_move.unwrap() });
+	if player_move.len() != 1 && player_move.len() != 7 {
+		return Err(ErrorType::RuntimeError { reason: format!("Invalid input: {}", player_move) });
 	}
 	
-	let mut player_move = convert_player_move_from_string_to_object(player_move);
+	let mut player_move = convert_player_move_from_string_to_object(Some(player_move));
 	println!("Player move {:?}", player_move);
 	match player_move {
 		Some(Move::Invalid { reason }) => {

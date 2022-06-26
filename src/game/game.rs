@@ -37,7 +37,7 @@ pub enum ErrorType {
     GameDeadlock,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Game {
     pub game_state: GameState,
     pub player_one: Player,
@@ -45,8 +45,8 @@ pub struct Game {
 
     pub walls: Vec<Wall>,
 
-    pub player_one_sandbox: Arc<Mutex<hlua::Lua<'static>>>,
-    pub player_two_sandbox: Arc<Mutex<hlua::Lua<'static>>>,
+    pub player_one_sandbox: Arc<Mutex<rlua::Lua>>,
+    pub player_two_sandbox: Arc<Mutex<rlua::Lua>>,
     pub player_one_turn: bool,
     pub last_move: Option<Move>,
     pub std: String, // Standard library
