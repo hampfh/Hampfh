@@ -140,7 +140,7 @@ mod tests {
         let p1_script = format!(
             "
 			round = -1
-            y = 1
+            y = 7
 			function onTurn()  
 
                 round = round + 1
@@ -154,7 +154,7 @@ mod tests {
                 end
 
 				x = round * 2
-				return x .. \",4,\" .. (x + 1) .. \",4\"
+				return x .. \",\" .. y .. \",\" .. (x + 1) .. \",\" .. y
 			end
 		"
         );
