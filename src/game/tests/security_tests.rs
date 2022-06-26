@@ -2,7 +2,7 @@
 mod tests {
     use crate::game::{
         game::{ErrorType, GameState},
-        methods,
+        tests::util::_run_core_test,
     };
 
     /**
@@ -24,20 +24,9 @@ mod tests {
 			"
         );
 
-        let mut game_session = methods::new(String::new());
-        match methods::start(&mut game_session, script.clone(), script) {
-            GameState::PlayerOneWon => panic!("Player one won"),
-            GameState::PlayerTwoWon => panic!("Player two won"),
-            GameState::Error(ErrorType::RuntimeError { reason }) => {
-                panic!("RuntimeError: {}", reason)
-            }
-            GameState::Error(ErrorType::GameError { reason }) => {
-                panic!("Game error: {}", reason)
-            }
-            GameState::Error(ErrorType::TurnTimeout) => assert!(true),
-            GameState::Error(ErrorType::GameDeadlock) => panic!("Expected game error"),
-            _ => panic!("Why is game still running?"),
-        }
+        _run_core_test(script.clone(), script, |state| {
+            state == GameState::Error(ErrorType::TurnTimeout)
+        });
     }
 
     #[test]
@@ -55,20 +44,9 @@ mod tests {
 			"
         );
 
-        let mut game_session = methods::new(String::new());
-        match methods::start(&mut game_session, script.clone(), script) {
-            GameState::PlayerOneWon => panic!("Player one won"),
-            GameState::PlayerTwoWon => panic!("Player two won"),
-            GameState::Error(ErrorType::RuntimeError { reason }) => {
-                panic!("RuntimeError: {}", reason)
-            }
-            GameState::Error(ErrorType::GameError { reason }) => {
-                panic!("Game error: {}", reason)
-            }
-            GameState::Error(ErrorType::TurnTimeout) => assert!(true),
-            GameState::Error(ErrorType::GameDeadlock) => panic!("Expected game error"),
-            _ => panic!("Why is game still running?"),
-        }
+        _run_core_test(script.clone(), script, |state| {
+            state == GameState::Error(ErrorType::TurnTimeout)
+        });
     }
 
     #[test]
@@ -91,20 +69,9 @@ mod tests {
             "
         );
 
-        let mut game_session = methods::new(String::new());
-        match methods::start(&mut game_session, script.clone(), script) {
-            GameState::PlayerOneWon => panic!("Player one won"),
-            GameState::PlayerTwoWon => panic!("Player two won"),
-            GameState::Error(ErrorType::RuntimeError { reason }) => {
-                panic!("RuntimeError: {}", reason)
-            }
-            GameState::Error(ErrorType::GameError { reason }) => {
-                panic!("Game error: {}", reason)
-            }
-            GameState::Error(ErrorType::TurnTimeout) => panic!("Turn timeout"),
-            GameState::Error(ErrorType::GameDeadlock) => assert!(true),
-            _ => panic!("Why is game still running?"),
-        }
+        _run_core_test(script.clone(), script, |state| {
+            state == GameState::Error(ErrorType::GameDeadlock)
+        });
     }
 
     #[test]
@@ -122,19 +89,11 @@ mod tests {
             "
         );
 
-        let mut game_session = methods::new(String::new());
-        match methods::start(&mut game_session, script.clone(), script) {
-            GameState::PlayerOneWon => panic!("Player one won"),
-            GameState::PlayerTwoWon => panic!("Player two won"),
-            GameState::Error(ErrorType::RuntimeError { reason: _ }) => {
-                assert!(true)
-            }
-            GameState::Error(ErrorType::GameError { reason }) => {
-                panic!("Game error: {}", reason)
-            }
-            GameState::Error(ErrorType::TurnTimeout) => panic!("Turn timeout"),
-            GameState::Error(ErrorType::GameDeadlock) => panic!("GameDeadlock"),
-            _ => panic!("Why is game still running?"),
-        }
+        _run_core_test(script.clone(), script, |state| {
+            std::mem::discriminant(&state)
+                == std::mem::discriminant(&GameState::Error(ErrorType::RuntimeError {
+                    reason: String::new(),
+                }))
+        });
     }
 }

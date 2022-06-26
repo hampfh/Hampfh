@@ -2,7 +2,7 @@
 mod tests {
     use crate::game::{
         game::{ErrorType, GameState},
-        methods,
+        tests::util::_run_core_test,
     };
 
     #[test]
@@ -18,18 +18,10 @@ mod tests {
 		"
         );
 
-        let mut game_session = methods::new(String::new());
-        match methods::start(&mut game_session, script.to_string(), String::new()) {
-            GameState::PlayerOneWon => panic!("Expected game to fail"),
-            GameState::PlayerTwoWon => panic!("Expected game to fail"),
-            GameState::Error(ErrorType::RuntimeError { reason }) => {
-                assert!(reason.contains("onTurn"));
-            }
-            GameState::Error(ErrorType::GameError { reason }) => panic!("Game error: {}", reason),
-            GameState::Error(ErrorType::TurnTimeout) => panic!("Expected game to fail"),
-            GameState::Error(ErrorType::GameDeadlock) => panic!("Expected game to fail"),
-            _ => panic!("Why is game still running?"),
-        }
+        _run_core_test(script.clone(), script, |state| match state {
+            GameState::Error(ErrorType::RuntimeError { reason }) => reason.contains("onTurn"),
+            _ => false,
+        })
     }
 
     #[test]
@@ -47,20 +39,12 @@ mod tests {
 		"
         );
 
-        let mut game_session = methods::new(String::new());
-        match methods::start(&mut game_session, script.clone(), script) {
-            GameState::PlayerOneWon => panic!("Player one won"),
-            GameState::PlayerTwoWon => panic!("Player two won"),
-            GameState::Error(ErrorType::RuntimeError { reason }) => {
-                panic!("RuntimeError: {}", reason)
-            }
-            GameState::Error(ErrorType::GameError { reason }) => {
-                assert_eq!(reason, "Invalid move: Tile (4,4) is occupied")
-            }
-            GameState::Error(ErrorType::TurnTimeout) => panic!("Expected game error"),
-            GameState::Error(ErrorType::GameDeadlock) => panic!("Expected game error"),
-            _ => panic!("Why is game still running?"),
-        }
+        _run_core_test(script.clone(), script, |state| {
+            state
+                == GameState::Error(ErrorType::GameError {
+                    reason: "Invalid move: Tile (4,4) is occupied".to_string(),
+                })
+        });
     }
 
     #[test]
@@ -84,18 +68,9 @@ mod tests {
 		"
         );
 
-        let mut game_sesion = methods::new(String::new());
-        match methods::start(&mut game_sesion, script.clone(), script) {
-            GameState::PlayerOneWon => assert_eq!(true, true),
-            GameState::PlayerTwoWon => panic!("Player two won"),
-            GameState::Error(ErrorType::RuntimeError { reason }) => {
-                panic!("RuntimeError: {}", reason)
-            }
-            GameState::Error(ErrorType::GameError { reason }) => panic!("Game error: {}", reason),
-            GameState::Error(ErrorType::TurnTimeout) => panic!("Expected player 1 to win"),
-            GameState::Error(ErrorType::GameDeadlock) => panic!("Expected player 1 to win"),
-            _ => panic!("Why is game still running?"),
-        };
+        _run_core_test(script.clone(), script, |state| {
+            state == GameState::PlayerOneWon
+        });
     }
 
     #[test]
@@ -110,23 +85,9 @@ mod tests {
             "
         );
 
-        let mut game_session = methods::new(String::new());
-        match methods::start(&mut game_session, script.clone(), script) {
-            GameState::PlayerOneWon => panic!("Expected game to fail"),
-            GameState::PlayerTwoWon => panic!("Expected game to fail"),
-            GameState::Error(ErrorType::RuntimeError { reason }) => {
-                panic!("RuntimeError: {}", reason)
-            }
-            GameState::Error(ErrorType::GameError { reason }) => {
-                assert_eq!(
-                    reason,
-                    "Invalid wall format, a wall must consist of two adjacent coordinates: ((0,4), (8,8))"
-                )
-            }
-            GameState::Error(ErrorType::TurnTimeout) => panic!("Expected game to fail"),
-            GameState::Error(ErrorType::GameDeadlock) => assert!(true),
-            _ => panic!("Why is game still running?"),
-        };
+        _run_core_test(script.clone(), script, |state| {
+            state == GameState::Error(ErrorType::GameError { reason: "Invalid wall format, a wall must consist of two adjacent coordinates: ((0,4), (8,8))".to_string() })
+        });
     }
 
     #[test]
@@ -174,19 +135,32 @@ mod tests {
 		"
         );
 
-        let mut game_session = methods::new(String::new());
-        match methods::start(&mut game_session, p1_script, p2_script) {
-            GameState::PlayerOneWon => panic!("Player one won"),
-            GameState::PlayerTwoWon => panic!("Player two won"),
-            GameState::Error(ErrorType::RuntimeError { reason }) => {
-                panic!("RuntimeError: {}", reason)
-            }
-            GameState::Error(ErrorType::GameError { reason }) => {
-                assert_eq!(reason, "No path for either bot available")
-            }
-            GameState::Error(ErrorType::TurnTimeout) => panic!("Expected game error"),
-            GameState::Error(ErrorType::GameDeadlock) => panic!("Expected game error"),
-            _ => panic!("Why is game still running?"),
-        };
+        _run_core_test(p1_script, p2_script, |state| {
+            state
+                == GameState::Error(ErrorType::GameError {
+                    reason: "No path for either bot available".to_string(),
+                })
+        });
+    }
+
+    #[test]
+    /// Invalid wall
+    ///
+    /// This script tries to place a wall
+    /// outside the boundary of the board.
+    fn out_of_bound_wall() {
+        let script = format!(
+            "
+            function onTurn()
+                return \"100,100,100,100\"
+            end
+        "
+        );
+        _run_core_test(script.clone(), script, |game_state| {
+            game_state
+                == GameState::Error(ErrorType::RuntimeError {
+                    reason: String::from("Invalid input: 100,100,100,100"),
+                })
+        });
     }
 }

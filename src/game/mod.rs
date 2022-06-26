@@ -11,6 +11,7 @@ pub mod turn;
 pub mod validation;
 
 mod tests {
-    pub mod game_tests;
-    pub mod security_tests;
+    mod game_tests;
+    mod security_tests;
+    mod util;
 }
