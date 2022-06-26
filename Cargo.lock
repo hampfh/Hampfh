@@ -731,7 +731,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "hahalang"
+name = "hampfh-github-profile"
 version = "0.1.0"
 dependencies = [
  "actix-rt 1.1.1",
@@ -742,10 +742,12 @@ dependencies = [
  "dotenv",
  "futures",
  "hlua",
+ "libc",
  "pathfinding",
  "reqwest",
  "serde",
  "serde_json",
+ "thread-id",
  "uuid",
 ]
 
@@ -1676,6 +1678,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "thread-id"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fdfe0627923f7411a43ec9ec9c39c3a9b4151be313e0922042581fb6c9b717f"
+dependencies = [
+ "libc",
+ "redox_syscall",
+ "winapi 0.3.9",
 ]
 
 [[package]]

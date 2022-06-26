@@ -1,53 +1,117 @@
+use crate::terminate_thread::terminate_thread;
+
+use std::time::Duration;
+use thread_id;
+
 use crate::game::game::MAP_SIZE;
-use crate::game::game::get_active_player;
+use crate::game::methods;
 use super::player::Player;
 use super::board::{serialize_board, populate_board};
-use super::game::{self, Game, Move};
+use super::game::{Wall, Game, Move, ErrorType};
 use super::execute_move::execute_move;
 use super::map_mirroring::{reverse_move, conditionally_reverse_player, conditionally_reverse_walls};
 use super::validation::valid_move;
 
-pub fn on_turn(game: &mut Game) -> Result<(), String> {
-	let starting_script = get_lua_starting_script(create_lua_game_object(&game));
+struct ThreadReturn {
+	thread_id: Option<usize>,
+	player_move: Option<String>,
+}
 
-	let active_sandbox = if game.player_one_turn {
-		&mut game.player_one_sandbox
-	} else {
-		&mut game.player_two_sandbox
+pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
+
+	let player_one_sandbox_mutex = game.player_one_sandbox.clone();
+	let player_two_sandbox_mutex = game.player_two_sandbox.clone();
+
+	let player_one = game.player_one.clone();
+	let player_two = game.player_two.clone();
+	let walls = game.walls.clone();
+	let player_one_turn = game.player_one_turn;
+
+	// Sandbox execution of script
+	// Limit execution time to 1 second
+	let (tx, rx) = std::sync::mpsc::channel::<ThreadReturn>();
+	std::thread::spawn(move || {
+		tx.send(ThreadReturn {
+			thread_id: Some(thread_id::get()),
+			player_move: None
+		}).unwrap();
+
+		let starting_script = get_lua_starting_script(create_lua_game_object(walls, player_one_turn, player_one, player_two));
+		
+		let mut active_sandbox = player_one_sandbox_mutex.lock().unwrap();
+		if !player_one_turn {
+			drop(active_sandbox);
+			active_sandbox = player_two_sandbox_mutex.lock().unwrap();
+		}
+		
+		println!("Starting script");
+		match active_sandbox.execute::<()>(&starting_script) {
+			Ok(_) => (),
+			Err(err) => {
+				tx.send(ThreadReturn {
+					thread_id: None,
+					player_move: Some(err.to_string())
+				}).unwrap();
+			}
+		}
+		println!("ENDING script");
+
+		let raw_player_move: Option<String> = active_sandbox.get("ExternalGlobalVarResult");
+		drop(active_sandbox);
+		
+		tx.send(ThreadReturn {
+			thread_id: None,
+			player_move: raw_player_move
+		}).unwrap();
+	});
+
+	// First time we send the thread id through
+	// This does not have to be timed checked since this is before we
+	// execute the script.
+	let sandbox_thread_id = match rx.recv().unwrap().thread_id {
+		Some(id) => id,
+		_ => panic!("Could not get thread id"),
 	};
 
-	active_sandbox.execute::<()>(&starting_script).unwrap();
+	// Second time we either get the result or a timeout error
+	let player_move = match rx.recv_timeout(Duration::from_millis(500)) {
+		Ok(returned) => returned.player_move,
+		Err(_) => {
+			println!("Timed out");
+			terminate_thread(sandbox_thread_id);
+			return Err(ErrorType::TurnTimeout);
+		}
+	};
 
-	// TODO (Security) here we should add a timeout for the script to run
-	let raw_player_move: Option<String> = active_sandbox.get("ExternalGlobalVarResult");
-	println!("Raw Player move {}", raw_player_move.clone().unwrap());
-
-	let mut player_move = convert_player_move_from_string_to_object(raw_player_move);
+	if player_move.is_some() && player_move.clone().unwrap().len() != 1 && player_move.clone().unwrap().len() != 7 {
+		return Err(ErrorType::RuntimeError { reason: player_move.unwrap() });
+	}
+	
+	let mut player_move = convert_player_move_from_string_to_object(player_move);
+	println!("Player move {:?}", player_move);
 	match player_move {
 		Some(Move::Invalid { reason }) => {
-			return Err(String::from(reason));
+			return Err(ErrorType::GameError { reason: reason });
 		},
 		_ => ()
 	};
-	println!("Player turn: {}", if game.player_one_turn { "1" } else { "2" });
-	println!("Player move {:?}", player_move.clone().unwrap());
 
 	if should_reverse_player_move(game, &player_move) {
 		player_move = Some(reverse_move(player_move.unwrap()));
 	}
 	
 	if player_move.is_none() {
-		return Err("Player did not return a move".to_string());
+		return Err(ErrorType::GameError { reason: "Player did not return a valid move".to_string() });
 	}
 	match valid_move(game, player_move.clone().unwrap()) {
 		Ok(_) => (),
 		Err(reason) => {
-			return Err(reason);
+			return Err(ErrorType::GameError { reason: reason });
 		}
 	}
 	
 	let mut walls = game.walls.clone();
-	let (active_player, _) = get_active_player(game);
+	let (active_player, _) = methods::get_active_player(game);
 	execute_move(&mut walls, active_player, &player_move.unwrap());
 	game.player_one_turn = !game.player_one_turn;
 
@@ -75,25 +139,25 @@ fn get_lua_starting_script(game_object: String) -> String {
 	);
 }
 
-fn create_lua_game_object(game: &Game) -> String {
-	let reverse = !game.player_one_turn;
+fn create_lua_game_object(walls: Vec<Wall>, player_one_turn: bool, player_one: Player, player_two: Player) -> String {
+	let reverse = !player_one_turn;
 
-	let walls = conditionally_reverse_walls(&game.walls.clone(), reverse);
+	let walls = conditionally_reverse_walls(&walls, reverse);
 
-	let serialized_board = serialize_board(populate_board(game, &walls));
-	let (serialized_player, serialized_opponent) = match game.player_one_turn {
+	let serialized_board = serialize_board(populate_board(&player_one, &player_two, &walls));
+	let (serialized_player, serialized_opponent) = match player_one_turn {
 		true => (
-			serialize_player(&conditionally_reverse_player(&game.player_one, false)), 
-			serialize_player(&conditionally_reverse_player(&game.player_two, false))
+			serialize_player(&conditionally_reverse_player(&player_one, false)), 
+			serialize_player(&conditionally_reverse_player(&player_two, false))
 		),
 		false => (
-			serialize_player(&conditionally_reverse_player(&game.player_two, true)), 
-			serialize_player(&conditionally_reverse_player(&game.player_one, true))
+			serialize_player(&conditionally_reverse_player(&player_two, true)), 
+			serialize_player(&conditionally_reverse_player(&player_one, true))
 		)
 	};
 
 	println!("Player pos ({})", serialized_player);
-	println!("Serialized board ({:?})", populate_board(game, &game.walls)[(2 + MAP_SIZE * game.player_one.y - 1) as usize]);
+	println!("Serialized board ({:?})", populate_board(&player_one, &player_two, &walls)[(2 + MAP_SIZE * player_one.y - 1) as usize]);
 
 	return format!("{{player={}, opponent={}, board={}}}", serialized_player, serialized_opponent, serialized_board);
 }
@@ -107,11 +171,11 @@ fn convert_player_move_from_string_to_object(raw_player_move: Option<String>) ->
 		Some(value) => {
 			match value.as_str() {
 				"0" => Some(Move::Up),
-				"1" => Some(Move::Left),
+				"1" => Some(Move::Right),
 				"2" => Some(Move::Down),
-				"3" => Some(Move::Right),
+				"3" => Some(Move::Left),
 				wall => {
-					match game::deserialize_wall(&wall) {
+					match methods::deserialize_wall(&wall) {
 						Move::Wall(wall) => Some(Move::Wall(wall)),
 						Move::Invalid { reason } => Some(Move::Invalid { reason }),
 						_ => panic!("Invalid wall")

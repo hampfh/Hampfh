@@ -1,164 +1,60 @@
-extern crate hlua;
-use hlua::Lua;
+use std::sync::{Arc, Mutex};
 
-use super::turn;
-use super::player::{Player, PlayerType};
-use super::graphics::draw_game;
+use super::player::Player;
 
 pub const MAP_SIZE: i32 = 9;
 pub const INITIAL_WALL_COUNT: i32 = 10;
+pub const MAX_TURNS: i32 = 2000;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Wall {
-	pub x1: i32,
-	pub y1: i32,
-	pub x2: i32,
-	pub y2: i32
+    pub x1: i32,
+    pub y1: i32,
+    pub x2: i32,
+    pub y2: i32,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GameState {
-	Running,
-	PlayerOneWon,
-	PlayerTwoWon,
-	Failed
+    Running,
+    PlayerOneWon,
+    PlayerTwoWon,
+    Error(ErrorType),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum ErrorType {
+    /// The script did not obey the rules of the game in some way
+    GameError { reason: String },
+    /// The script did not run properly
+    RuntimeError { reason: String },
+    /// The script takes to much time during a round
+    TurnTimeout,
+    #[allow(dead_code)]
+    GameDeadlock,
+}
+
+#[derive(Debug, Clone)]
 pub struct Game {
-	pub game_state: GameState,
-	pub player_one: Player,
-	pub player_two: Player,
- 
-	pub walls: Vec<Wall>,
- 
-	pub player_one_sandbox: hlua::Lua<'static>,
-	pub player_two_sandbox: hlua::Lua<'static>,
-	pub player_one_turn: bool,
-	pub last_move: Option<Move>,
-	pub std: String // Standard library
+    pub game_state: GameState,
+    pub player_one: Player,
+    pub player_two: Player,
+
+    pub walls: Vec<Wall>,
+
+    pub player_one_sandbox: Arc<Mutex<hlua::Lua<'static>>>,
+    pub player_two_sandbox: Arc<Mutex<hlua::Lua<'static>>>,
+    pub player_one_turn: bool,
+    pub last_move: Option<Move>,
+    pub std: String, // Standard library
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Move {
-	Up,
-	Down,
-	Left,
-	Right,
-	Wall(Wall),
-	Invalid { reason: String }
-}
-
-impl Game {
-	pub fn new(std: String) -> Game {
-		Game {
-			game_state: GameState::Running,
-			player_one: Player::new(MAP_SIZE / 2, MAP_SIZE - 1, INITIAL_WALL_COUNT, PlayerType::Flipped),
-			player_two: Player::new(MAP_SIZE / 2, 0, INITIAL_WALL_COUNT, PlayerType::Regular),
-			walls: vec!(
-				Wall { x1: 1, y1: 5, x2: 2, y2: 5 }, 
-				Wall { x1: 3, y1: 5, x2: 4, y2: 5 },
-				Wall { x1: 5, y1: 5, x2: 6, y2: 5 },
-				Wall { x1: 7, y1: 5, x2: 8, y2: 5 }
-			),
-			player_one_sandbox: Lua::new(),
-			player_two_sandbox: Lua::new(),
-			player_one_turn: true,
-			last_move: None,
-			std: std
-		}
-	}
-
-	pub fn start(&mut self, program1: String, program2: String) -> Result<GameState, String> {
-		// Run programs for the first time
-
-		// TODO make sure programs to not run longer than 1 second
-		match self.player_one_sandbox.execute::<()>(&program1) {
-			Ok(_) => (),
-			Err(_) => return Err("Invalid program, could not parse player 1's program".to_string())
-		}
-		match self.player_two_sandbox.execute::<()>(&program2) {
-			Ok(_) => (),
-			Err(_) => return Err("Invalid program, could not parse player 2's program".to_string())
-		}
-
-		// Load standard library
-		self.player_one_sandbox.execute::<()>(&self.std).unwrap();
-		self.player_two_sandbox.execute::<()>(&self.std).unwrap();
-
-		self.game_loop();
-		
-		Ok(self.game_state.clone())
-	}
-
-	pub fn game_loop(&mut self) {
-		while self.game_state == GameState::Running {
-			self.update();
-			self.winner();
-		}
-	}
-
-	pub fn update(&mut self) {
-		let result = turn::on_turn(self);
-		if result.is_err() {
-			self.game_state = GameState::Failed;
-			println!("Error (update): {:?}", result.err().unwrap());
-		}
-
-		if cfg!(debug_assertions) {
-			draw_game(self);
-			std::thread::sleep(std::time::Duration::from_millis(200));
-		}
-	}
-
-	pub fn winner(&mut self) {
-		if self.player_one.y == 0 {
-			self.game_state = GameState::PlayerOneWon;
-		}
-		else if self.player_two.y == MAP_SIZE - 1 {
-			self.game_state = GameState::PlayerTwoWon;
-		}
-	}
-
-}
-
-pub fn get_opponent(game: &Game, player: &Player) -> Player {
-	// PlayerType::Flipped is always player one
-	if player.player_type == PlayerType::Flipped {
-		return game.player_two.clone();
-	}
-	return game.player_one.clone();
-}
-
-// Converts a string like ["x1,y1,x2,y2" -> Wall]
-pub fn deserialize_wall(input: &str) -> Move {
-
-	let splits = input.split(",").map(|s| s.trim()).collect::<Vec<&str>>();
-	if splits.len() != 4 as usize {
-		return Move::Invalid { reason: format!("Invalid return format, expected 4 values, got: [{}]", input) };
-	}
-	let result = splits.iter().map(|x| x.trim()).map(|x| x.parse::<i32>().unwrap_or_else(|_| -1)).collect::<Vec<i32>>();
-
-	// If any of the values are invalid (negative), the move is invalid
-	if result.iter().any(|x| *x < 0) {
-		return Move::Invalid { reason: "Invalid wall param".to_string() };
-	}
-
-	return Move::Wall(Wall {
-		x1: result[0],
-		y1: result[1],
-		x2: result[2],
-		y2: result[3]
-	});
-}
-
-/**
- * Returns a tuple, the first player is always the active one
- * the second is the non-active player
- */
-pub fn get_active_player(game: &mut Game) -> (&mut Player, &Player) {
-	if game.player_one_turn {
-		return (&mut game.player_one, &game.player_two);
-	}
-	return (&mut game.player_two, &game.player_one);
+    Up,
+    Down,
+    Left,
+    Right,
+    Wall(Wall),
+    Invalid { reason: String },
 }

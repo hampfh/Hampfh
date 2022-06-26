@@ -1,14 +1,14 @@
-use super::game::{Game, GameState};
+use crate::game::game::GameState;
+use crate::game::methods;
 
-pub fn initialize_game_session(script_1: &str, script_2: &str) -> Result<GameState, String> {
-    let std = std::fs::read_to_string("./scripts/std.lua")
-        .expect("Could not load standard library");
+pub fn initialize_game_session(script_1: &str, script_2: &str) -> GameState {
+    let std =
+        std::fs::read_to_string("./scripts/std.lua").expect("Could not load standard library");
 
-    let mut game_session = Game::new(std);
-    match game_session.start(script_1.to_string(), script_2.to_string()) {
-        Ok(GameState::PlayerOneWon) => Ok(GameState::PlayerOneWon),
-        Ok(GameState::PlayerTwoWon) => Ok(GameState::PlayerTwoWon),
-        Ok(game_state) => Err(format!("Invalid game state {:?}", game_state)),
-        Err(reason) => Err(format!("[Error] Game interupted with error: {}", reason))
-    }
+    let mut game_session = methods::new(std);
+    return methods::start(
+        &mut game_session,
+        script_1.to_string(),
+        script_2.to_string(),
+    );
 }

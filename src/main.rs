@@ -1,4 +1,3 @@
-use crate::repo_updater::update_repo;
 use actix_web::web::Data;
 
 #[macro_use]
@@ -11,6 +10,7 @@ mod game;
 mod readme_factory;
 mod repo_updater;
 mod code_unwrapper;
+pub mod terminate_thread;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
