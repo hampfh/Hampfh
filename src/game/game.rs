@@ -25,12 +25,15 @@ pub enum GameState {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ErrorType {
     /// The script did not obey the rules of the game in some way
-    GameError { reason: String },
+    GameError {
+        reason: String,
+    },
     /// The script did not run properly
-    RuntimeError { reason: String },
+    RuntimeError {
+        reason: String,
+    },
     /// The script takes to much time during a round
     TurnTimeout,
-    #[allow(dead_code)]
     GameDeadlock,
 }
 
