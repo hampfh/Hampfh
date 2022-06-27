@@ -6,6 +6,11 @@ pub fn is_live() -> bool {
     return std::env::var("GITHUB_POST_SECRET").unwrap() == "true";
 }
 
+pub fn is_plagiarism_enabled() -> bool {
+    dotenv().ok();
+    return std::env::var("PLAGIARISM_CHECK").unwrap() == "true";
+}
+
 /**
  * This function will push changes to the repository.
  */
