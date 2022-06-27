@@ -41,6 +41,14 @@ pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<Strin
             }
         }
 
+        // We never save a match if it wasn't successful
+        // If we get thos this point we know there
+        // were no errors
+
+        // If there are errors, then we stop the match-making process
+        // This is because the submitted bot is obviously not working
+        // and should therefore not be matchmaked against future bots
+
         matches[i].save(conn);
         match Match::create(&winner.unwrap(), &loser.unwrap(), conn) {
             Some(match_record) => {
