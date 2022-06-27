@@ -37,10 +37,11 @@ pub async fn submit_challenge(
         }
     }
 
+    // Get lua code from issue body
     let code = match unwrap_code(&webhook_post.issue.body) {
         Ok(code) => code,
         Err(e) => {
-            create_issue_comment(webhook_post.issue.number, e);
+            create_issue_comment(webhook_post.issue.number, &e);
             return Ok(format!("{}", e));
         }
     };
