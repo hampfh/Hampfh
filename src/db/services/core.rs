@@ -26,13 +26,17 @@ pub async fn submit_challenge(
     }
 
     // If user doesn't exist we create it
-    let mut user = User::by_id(&webhook_post.sender.login, &conn);
+    let mut user = User::by_username(&webhook_post.sender.login, &conn);
     if user.is_none() {
         // Create user
         user = User::create(&webhook_post.sender.login, &conn);
 
         if user.is_none() {
-            create_issue_comment(webhook_post.issue.number, "Internal error");
+            println!("Error: Could not create user");
+            create_issue_comment(
+                webhook_post.issue.number,
+                "Internal error, please try again later",
+            );
             return Ok(format!("Internal error"));
         }
     }
@@ -47,7 +51,7 @@ pub async fn submit_challenge(
     };
 
     // Create submission
-    let challenger = Submission::create(
+    let challenger = match Submission::create(
         &user.unwrap().id,
         &code,
         Some(&webhook_post.issue.title),
@@ -55,7 +59,19 @@ pub async fn submit_challenge(
         &webhook_post.issue.html_url,
         webhook_post.issue.number,
         &conn,
-    );
+    ) {
+        Ok(submission) => submission,
+        Err(_) => {
+            create_issue_comment(
+                webhook_post.issue.number,
+                &format!("This submission has already been submitted before"),
+            );
+            return Ok(format!(
+                "{}",
+                "This submission has already been submitted before"
+            ));
+        }
+    };
 
     if challenger.is_none() {
         create_issue_comment(
@@ -65,11 +81,9 @@ pub async fn submit_challenge(
         return Ok(format!("Could not create submission...<br>Try again later"));
     }
 
-    return Ok("Challenge created".to_string());
-
     create_issue_comment(webhook_post.issue.number, &format!("User: {}<br>Script-id: {}<br>Thanks for submitting!<br>Your code is being processed...", webhook_post.sender.login, challenger.as_ref().unwrap().id));
 
-    let errors = match_make(&challenger.unwrap(), &conn);
+    let errors = match_make(&challenger.clone().unwrap(), &conn);
 
     let mut output = String::new();
     if errors.len() > 0 {
