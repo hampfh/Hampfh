@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{ErrorType, GameState},
+        game::{ErrorType, GameState, MAP_SIZE},
         tests::util::_run_core_test,
     };
 
@@ -203,5 +203,115 @@ mod tests {
             GameState::Error(ErrorType::GameError { reason }) => reason.contains("walls"),
             _ => false,
         });
+    }
+
+    #[test]
+    /// Walk out of bounds
+    ///
+    /// This script will try to walk out of bounds
+    fn walk_out_of_bounds_bottom() {
+        let script = format!(
+            "
+            function onTurn()
+                return \"2\"
+            end
+            "
+        );
+        _run_core_test(script.clone(), script, |game_state| match game_state {
+            GameState::Error(ErrorType::GameError { reason }) => {
+                reason.contains("out of bounds") && reason.contains(&MAP_SIZE.to_string())
+            }
+            _ => false,
+        });
+        let script = format!(
+            "
+            function onTurn()
+                return \"1\"
+            end
+            "
+        );
+        _run_core_test(script.clone(), script, |game_state| match game_state {
+            GameState::Error(ErrorType::GameError { reason }) => {
+                reason.contains("out of bounds") && reason.contains(&MAP_SIZE.to_string())
+            }
+            _ => false,
+        });
+        let script = format!(
+            "
+            function onTurn()
+                return \"3\"
+            end
+            "
+        );
+        _run_core_test(script.clone(), script, |game_state| match game_state {
+            GameState::Error(ErrorType::GameError { reason }) => {
+                reason.contains("out of bounds") && reason.contains("-1")
+            }
+            _ => false,
+        });
+    }
+
+    #[test]
+    /// Opposite tiles winnable
+    ///
+    /// This test checks that all tiles
+    /// are winnable. It check that both
+    /// player 1 and player 2 can win on
+    /// all tiles.
+    fn opposite_tiles_winnable() {
+        for x in 0..MAP_SIZE {
+            let get_script = |x: i32, stal: bool| {
+                format!(
+                    "
+                    stal = {}
+                    round = -1
+                    if stal then
+                        round = -1
+                    end
+                    function onTurn()
+                        -- We want to go to the far left
+                        -- from there we can iterate 
+                        -- though all x positions
+                        round = round + 1
+
+                        if round <= 3 then
+                            return \"3\"
+                        end
+
+                        -- Stal section
+                        if stal then
+                            if round % 2 == 0 then
+                                return \"0\"
+                            end
+                            return \"2\"
+                        end
+                        
+                        if round > {} then
+                            return \"0\"
+                        end
+                        return \"1\"
+                    end
+                ",
+                    if stal { "true" } else { "false" },
+                    x
+                )
+            };
+
+            // Second player must be offset by one otherwise
+            // they will collide when they are both trying
+            // x = 4
+            let second_player_x = if x == 9 { 0 } else { x + 1 };
+
+            _run_core_test(
+                get_script(x, false),
+                get_script(second_player_x, false),
+                |game_state| game_state == GameState::PlayerOneWon,
+            );
+            _run_core_test(
+                get_script(x, true),
+                get_script(second_player_x, false),
+                |game_state| game_state == GameState::PlayerTwoWon,
+            );
+        }
     }
 }

@@ -15,8 +15,8 @@ pub fn _run_core_test(script: String, script2: String, is_equal: fn(GameState) -
 
 fn _capture_test_fail(game_state: GameState) {
     match game_state {
-        GameState::PlayerOneWon => panic!("Expected game to fail"),
-        GameState::PlayerTwoWon => panic!("Expected game to fail"),
+        GameState::PlayerOneWon => panic!("Player 1 won"),
+        GameState::PlayerTwoWon => panic!("Player 2 won"),
         GameState::Error(ErrorType::RuntimeError { reason }) => {
             panic!("RuntimeError: {}", reason)
         }
