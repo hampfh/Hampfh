@@ -163,4 +163,45 @@ mod tests {
                 })
         });
     }
+
+    #[test]
+    /// Over-use walls
+    ///
+    /// This function will try to use more than 10 walls
+    fn overuse_walls() {
+        let script = format!(
+            "
+            round = -1
+            y = -1
+            function onTurn()  
+                alternate = round % 2
+                round = round + 1
+                if round % 2 == 0 then
+                    y = y + 1
+                    return 0 .. \",\" .. y .. \",\" .. 1 .. \",\" .. y
+                else
+                    return 2 .. \",\" .. y .. \",\" .. 3 .. \",\" .. y
+                end
+            end
+            "
+        );
+
+        let p2_script = format!(
+            "
+            round = -1
+            function onTurn()
+                round = round + 1
+                if round % 2 == 0 then
+                    return \"0\"
+                end
+                return \"2\"
+            end
+            "
+        );
+
+        _run_core_test(script, p2_script, |game_state| match game_state {
+            GameState::Error(ErrorType::GameError { reason }) => reason.contains("walls"),
+            _ => false,
+        });
+    }
 }

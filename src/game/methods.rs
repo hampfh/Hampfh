@@ -46,9 +46,12 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> GameState {
 
         match player_one_sandbox.context(|ctx| ctx.load(&program1).exec()) {
             Ok(_) => (),
-            Err(_) => {
-                tx.send(Err("Your script could not be executed".to_string()))
-                    .unwrap();
+            Err(err) => {
+                tx.send(Err(format!(
+                    "Your script could not be executed, reason: {}",
+                    err
+                )))
+                .unwrap();
             }
         }
         match player_two_sandbox.context(|ctx| ctx.load(&program2).exec()) {

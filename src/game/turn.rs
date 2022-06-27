@@ -111,13 +111,12 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	}
 	match valid_move(game, player_move.clone().unwrap()) {
 		Ok(_) => (),
-		Err(reason) => {
-			return Err(ErrorType::GameError { reason: reason });
-		}
+		error => return error
 	}
 	
 	let mut mutable_walls = game.walls.clone();
-	execute_move(&mut mutable_walls, methods::get_active_player(game).0, &player_move.unwrap());
+	// We don't have to check this since we just that the move was valid
+	execute_move(&mut mutable_walls, methods::get_active_player(game).0, &player_move.unwrap()).unwrap();
 	// Reassign walls
 	game.walls = mutable_walls;
 	game.player_one_turn = !game.player_one_turn;
