@@ -1,5 +1,7 @@
 use crate::db::models::match_model::Match;
 use crate::db::models::submission_model::Submission;
+use crate::db::models::turn_model::Turn;
+use crate::game::board::board_to_string;
 use crate::game::entry_point::initialize_game_session;
 use crate::game::game::GameState;
 use diesel::SqliteConnection;
@@ -15,7 +17,7 @@ pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<Strin
 
     // Match-maker goes here
     for i in 0..matches.len() {
-        let result = initialize_game_session(&challenger.script, &matches[i].script);
+        let (result, turns) = initialize_game_session(&challenger.script, &matches[i].script);
         let winner: Option<String>;
         let loser: Option<String>;
         match result {
@@ -40,7 +42,22 @@ pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<Strin
         }
 
         matches[i].save(conn);
-        Match::create(&winner.unwrap(), &loser.unwrap(), conn);
+        match Match::create(&winner.unwrap(), &loser.unwrap(), conn) {
+            Some(match_record) => {
+                // Generate turns
+                let mut turn_index = 1;
+                for turn in turns {
+                    Turn::create(&match_record.id, turn_index, &board_to_string(turn), conn);
+                    turn_index += 1;
+                }
+            }
+            None => {
+                errors.push(format!(
+                    "Internal error, match making interrupted, try again later"
+                ));
+                return errors;
+            }
+        }
     }
 
     new_challenger.save(conn);

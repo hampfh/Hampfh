@@ -47,3 +47,28 @@ pub fn serialize_board(board: Vec<Tile>) -> String {
     output.push_str("}");
     return output;
 }
+
+pub fn board_to_string(board: Vec<Tile>) -> String {
+    // Serialize board
+    let mut output = String::from("");
+    for tile in board.iter() {
+        output.push_str(&(*tile as i32).to_string());
+    }
+    output.push_str("}");
+    return output;
+}
+
+#[allow(dead_code)]
+pub fn board_from_string(board: String) -> Vec<Tile> {
+    let mut output = Vec::new();
+    for char in board.chars() {
+        match char.to_digit(10).unwrap() {
+            0 => output.push(Tile::Empty),
+            1 => output.push(Tile::P1),
+            2 => output.push(Tile::P2),
+            3 => output.push(Tile::Wall),
+            _ => panic!("Invalid tile"),
+        };
+    }
+    return output;
+}

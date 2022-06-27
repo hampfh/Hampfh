@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use super::player::Player;
+use super::{board::Tile, player::Player};
 
 pub const MAP_SIZE: i32 = 9;
 pub const INITIAL_WALL_COUNT: i32 = 10;
@@ -50,6 +50,7 @@ pub struct Game {
     pub player_one_turn: bool,
     pub last_move: Option<Move>,
     pub std: String, // Standard library
+    pub turns: Vec<Vec<Tile>>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

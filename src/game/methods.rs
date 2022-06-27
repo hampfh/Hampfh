@@ -10,6 +10,8 @@ use crate::terminate_thread;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use super::board::Tile;
+
 pub fn new(std: String) -> Game {
     Game {
         game_state: GameState::Running,
@@ -25,11 +27,12 @@ pub fn new(std: String) -> Game {
         player_two_sandbox: Arc::new(Mutex::new(Lua::new())),
         player_one_turn: true,
         last_move: None,
-        std: std,
+        std,
+        turns: Vec::new(),
     }
 }
 
-pub fn start(game: &mut Game, program1: String, program2: String) -> GameState {
+pub fn start(game: &mut Game, program1: String, program2: String) -> (GameState, Vec<Vec<Tile>>) {
     let std = game.std.clone();
 
     let clone_one = game.player_one_sandbox.clone();
@@ -71,13 +74,16 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> GameState {
     match rx.recv_timeout(Duration::from_millis(100)) {
         Ok(Ok(_)) => (),
         Ok(Err(err)) => {
-            return GameState::Error(ErrorType::RuntimeError {
-                reason: err.to_string(),
-            });
+            return (
+                GameState::Error(ErrorType::RuntimeError {
+                    reason: err.to_string(),
+                }),
+                game.turns.clone(),
+            );
         }
         Err(_) => {
             terminate_thread::terminate_thread(thread_id);
-            return GameState::Error(ErrorType::TurnTimeout);
+            return (GameState::Error(ErrorType::TurnTimeout), game.turns.clone());
         }
     }
 
@@ -104,7 +110,7 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> GameState {
 
     game_loop(game);
 
-    return game.game_state.clone();
+    return (game.game_state.clone(), game.turns.clone());
 }
 
 pub fn game_loop(game: &mut Game) {

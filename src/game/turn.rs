@@ -128,6 +128,8 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 		println!("Player 2 turn");
 	}
 
+	game.turns.push(populate_board(&game.player_one.clone(), &game.player_two.clone(), &game.walls));
+
 	Ok(())
 }
 

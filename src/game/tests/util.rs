@@ -5,7 +5,7 @@ use crate::game::{
 
 pub fn _run_core_test(script: String, script2: String, is_equal: fn(GameState) -> bool) {
     let mut game_session = methods::new(String::new());
-    let game_state_result = methods::start(&mut game_session, script, script2);
+    let (game_state_result, _) = methods::start(&mut game_session, script, script2);
     println!("Result from run: {:?}", game_state_result.clone());
 
     if !is_equal(game_state_result.clone()) {
