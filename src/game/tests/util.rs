@@ -27,6 +27,5 @@ fn _capture_test_fail(game_state: GameResult) {
             panic!("Turn timeout error, fault: [{:?}]", fault)
         }
         GameResult::Error(ErrorType::GameDeadlock) => panic!("Expected game error"),
-        _ => panic!("Why is game still running?"),
     };
 }
