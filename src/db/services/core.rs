@@ -86,9 +86,13 @@ pub async fn submit_challenge(
     let reports = match_make(&challenger.clone().unwrap(), &conn);
 
     let mut output = String::new();
-    for report in reports {
+    for report in reports.clone() {
         output += &report;
         output += "<br>";
+    }
+    if reports.len() == 0 {
+        create_issue_comment(webhook_post.issue.number, &format!("Bot has been registered but could not be match-maked against another bot, wait for someone else to create a bot..."));
+    } else {
         create_issue_comment(webhook_post.issue.number, &output);
     }
 
