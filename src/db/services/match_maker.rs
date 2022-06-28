@@ -10,7 +10,7 @@ use diesel::SqliteConnection;
 pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<String> {
     // Order by score and pick the submission with the higest score
     let submissions = Submission::list(conn);
-    let mut matches = make_selection(submissions);
+    let mut matches = make_selection(submissions, challenger.id.clone());
 
     let mut new_challenger = challenger.clone();
 
@@ -147,14 +147,14 @@ fn report_round(
     }
 }
 
-fn make_selection(submissions: Vec<Submission>) -> Vec<Submission> {
+fn make_selection(submissions: Vec<Submission>, challenger_id: String) -> Vec<Submission> {
     let mut submissions = submissions;
     let mut match_queue: Vec<Submission> = Vec::new();
 
     // Remove all submissions of disqualified bots
     submissions = submissions
         .into_iter()
-        .filter(|submission| submission.disqualified == 0)
+        .filter(|submission| submission.disqualified == 0 && submission.id != challenger_id)
         .collect();
     // Sort from lowest to highest
     submissions.sort_by(|a, b| a.score.cmp(&b.score));
