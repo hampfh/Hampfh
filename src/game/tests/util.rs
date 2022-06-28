@@ -1,9 +1,9 @@
 use crate::game::{
-    game::{ErrorType, GameState},
+    game::{ErrorType, GameResult},
     methods,
 };
 
-pub fn _run_core_test(script: String, script2: String, is_equal: fn(GameState) -> bool) {
+pub fn _run_core_test(script: String, script2: String, is_equal: fn(GameResult) -> bool) {
     let mut game_session = methods::new(String::new());
     let (game_state_result, _) = methods::start(&mut game_session, script, script2);
     println!("Result from run: {:?}", game_state_result.clone());
@@ -13,20 +13,20 @@ pub fn _run_core_test(script: String, script2: String, is_equal: fn(GameState) -
     }
 }
 
-fn _capture_test_fail(game_state: GameState) {
+fn _capture_test_fail(game_state: GameResult) {
     match game_state {
-        GameState::PlayerOneWon => panic!("Player 1 won"),
-        GameState::PlayerTwoWon => panic!("Player 2 won"),
-        GameState::Error(ErrorType::RuntimeError { reason, fault }) => {
+        GameResult::PlayerOneWon => panic!("Player 1 won"),
+        GameResult::PlayerTwoWon => panic!("Player 2 won"),
+        GameResult::Error(ErrorType::RuntimeError { reason, fault }) => {
             panic!("RuntimeError: {}, fault: [{:?}]", reason, fault)
         }
-        GameState::Error(ErrorType::GameError { reason, fault }) => {
+        GameResult::Error(ErrorType::GameError { reason, fault }) => {
             panic!("Game error: {}, fault: [{:?}]", reason, fault)
         }
-        GameState::Error(ErrorType::TurnTimeout { fault }) => {
+        GameResult::Error(ErrorType::TurnTimeout { fault }) => {
             panic!("Turn timeout error, fault: [{:?}]", fault)
         }
-        GameState::Error(ErrorType::GameDeadlock) => panic!("Expected game error"),
+        GameResult::Error(ErrorType::GameDeadlock) => panic!("Expected game error"),
         _ => panic!("Why is game still running?"),
     };
 }

@@ -18,17 +18,10 @@ pub struct Wall {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum GameState {
-    Running,
+pub enum GameResult {
+    Error(ErrorType),
     PlayerOneWon,
     PlayerTwoWon,
-    Error(ErrorType),
-}
-
-#[allow(dead_code)]
-pub enum GameResult {
-    Success,
-    Error(ErrorType),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -52,7 +45,8 @@ pub enum ErrorType {
 
 #[derive(Debug)]
 pub struct Game {
-    pub game_state: GameState,
+    pub running: bool,
+    pub game_result: Option<GameResult>,
     pub player_one: Player,
     pub player_two: Player,
 

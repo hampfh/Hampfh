@@ -3,7 +3,7 @@ use crate::db::models::submission_model::Submission;
 use crate::db::models::turn_model::Turn;
 use crate::game::board::board_to_string;
 use crate::game::entry_point::initialize_game_session;
-use crate::game::game::GameState;
+use crate::game::game::GameResult;
 use diesel::SqliteConnection;
 
 pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<String> {
@@ -21,21 +21,17 @@ pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<Strin
         let winner: Option<String>;
         let loser: Option<String>;
         match result {
-            GameState::PlayerOneWon => {
+            GameResult::PlayerOneWon => {
                 new_challenger.score += 1;
                 winner = Some(challenger.id.clone());
                 loser = Some(matches[i].id.clone());
             }
-            GameState::PlayerTwoWon => {
+            GameResult::PlayerTwoWon => {
                 matches[i].score += 1;
                 winner = Some(matches[i].id.clone());
                 loser = Some(challenger.id.clone());
             }
-            GameState::Running => {
-                errors.push(format!("Somehow the game is still running match..."));
-                return errors;
-            }
-            GameState::Error(err) => {
+            GameResult::Error(err) => {
                 errors.push(format!("{:?}", err));
                 return errors;
             }

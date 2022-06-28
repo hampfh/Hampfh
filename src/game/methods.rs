@@ -1,8 +1,6 @@
 use rlua::Lua;
 
-use crate::game::game::{
-    ErrorType, Game, GameState, Move, Wall, INITIAL_WALL_COUNT, MAP_SIZE, MAX_TURNS,
-};
+use crate::game::game::{ErrorType, Game, Move, Wall, INITIAL_WALL_COUNT, MAP_SIZE, MAX_TURNS};
 use crate::game::graphics::draw_game;
 use crate::game::player::{Player, PlayerType};
 use crate::game::turn;
@@ -11,10 +9,12 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use super::board::Tile;
+use super::game::GameResult;
 
 pub fn new(std: String) -> Game {
     Game {
-        game_state: GameState::Running,
+        running: true,
+        game_result: None,
         player_one: Player::new(
             MAP_SIZE / 2,
             MAP_SIZE - 1,
@@ -32,7 +32,7 @@ pub fn new(std: String) -> Game {
     }
 }
 
-pub fn start(game: &mut Game, program1: String, program2: String) -> (GameState, Vec<Vec<Tile>>) {
+pub fn start(game: &mut Game, program1: String, program2: String) -> (GameResult, Vec<Vec<Tile>>) {
     let std = game.std.clone();
 
     let clone_one = game.player_one_sandbox.clone();
@@ -75,7 +75,7 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> (GameState,
         Ok(Ok(_)) => (),
         Ok(Err(err)) => {
             return (
-                GameState::Error(ErrorType::RuntimeError {
+                GameResult::Error(ErrorType::RuntimeError {
                     reason: err.to_string(),
                     fault: Some(get_active_player_type(game)),
                 }),
@@ -85,7 +85,7 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> (GameState,
         Err(_) => {
             terminate_thread::terminate_thread(thread_id);
             return (
-                GameState::Error(ErrorType::TurnTimeout {
+                GameResult::Error(ErrorType::TurnTimeout {
                     fault: Some(get_active_player_type(game)),
                 }),
                 game.turns.clone(),
@@ -116,17 +116,27 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> (GameState,
 
     game_loop(game);
 
-    return (game.game_state.clone(), game.turns.clone());
+    return match game.game_result.clone() {
+        Some(game_result) => (game_result, game.turns.clone()),
+        None => (
+            GameResult::Error(ErrorType::GameError {
+                reason: format!("Unknown match end"),
+                fault: None,
+            }),
+            game.turns.clone(),
+        ),
+    };
 }
 
 pub fn game_loop(game: &mut Game) {
     let mut round = 1;
-    while game.game_state == GameState::Running {
+    while game.running {
         println!("\n\n## Round {} ##", round);
         update(game);
         winner(game);
         if round >= MAX_TURNS {
-            game.game_state = GameState::Error(ErrorType::GameDeadlock);
+            game.running = false;
+            game.game_result = Some(GameResult::Error(ErrorType::GameDeadlock));
         }
         round += 1;
     }
@@ -134,10 +144,13 @@ pub fn game_loop(game: &mut Game) {
 
 pub fn update(game: &mut Game) {
     let result = turn::on_turn(game);
-    game.game_state = match result {
-        Ok(_) => game.game_state.clone(),
-        Err(err) => GameState::Error(err),
-    };
+    match result {
+        Ok(_) => (),
+        Err(err) => {
+            game.running = false;
+            game.game_result = Some(GameResult::Error(err));
+        }
+    }
 
     if cfg!(debug_assertions) && !cfg!(test) {
         draw_game(&game);
@@ -147,9 +160,11 @@ pub fn update(game: &mut Game) {
 
 pub fn winner(game: &mut Game) {
     if game.player_one.y == 0 {
-        game.game_state = GameState::PlayerOneWon;
+        game.running = false;
+        game.game_result = Some(GameResult::PlayerOneWon);
     } else if game.player_two.y == MAP_SIZE - 1 {
-        game.game_state = GameState::PlayerTwoWon;
+        game.running = false;
+        game.game_result = Some(GameResult::PlayerTwoWon);
     }
 }
 

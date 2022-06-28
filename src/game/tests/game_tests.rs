@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{ErrorType, GameState, MAP_SIZE},
+        game::{ErrorType, GameResult, MAP_SIZE},
         player::PlayerType,
         tests::util::_run_core_test,
     };
@@ -20,7 +20,7 @@ mod tests {
         );
 
         _run_core_test(script.clone(), script, |state| match state {
-            GameState::Error(ErrorType::RuntimeError { reason, fault }) => {
+            GameResult::Error(ErrorType::RuntimeError { reason, fault }) => {
                 reason.contains("onTurn")
                     && fault.is_some()
                     && fault.unwrap() == PlayerType::Flipped
@@ -46,7 +46,7 @@ mod tests {
 
         _run_core_test(script.clone(), script, |state| {
             state
-                == GameState::Error(ErrorType::GameError {
+                == GameResult::Error(ErrorType::GameError {
                     reason: "Invalid move: Tile (4,4) is occupied".to_string(),
                     fault: Some(PlayerType::Regular),
                 })
@@ -75,7 +75,7 @@ mod tests {
         );
 
         _run_core_test(script.clone(), script, |state| {
-            state == GameState::PlayerOneWon
+            state == GameResult::PlayerOneWon
         });
     }
 
@@ -95,7 +95,7 @@ mod tests {
         );
 
         _run_core_test(script.clone(), script, |state| {
-            state == GameState::Error(ErrorType::GameError { 
+            state == GameResult::Error(ErrorType::GameError { 
                 reason: "Invalid wall format, a wall must consist of two adjacent coordinates: ((0,4), (8,8))".to_string(),
                 fault: Some(PlayerType::Flipped), 
             })
@@ -149,7 +149,7 @@ mod tests {
 
         _run_core_test(p1_script, p2_script, |state| {
             state
-                == GameState::Error(ErrorType::GameError {
+                == GameResult::Error(ErrorType::GameError {
                     reason: "No path for either bot available".to_string(),
                     fault: Some(PlayerType::Flipped),
                 })
@@ -171,7 +171,7 @@ mod tests {
         );
         _run_core_test(script.clone(), script, |game_state| {
             game_state
-                == GameState::Error(ErrorType::RuntimeError {
+                == GameResult::Error(ErrorType::RuntimeError {
                     reason: String::from("Invalid input: 100,100,100,100"),
                     fault: Some(PlayerType::Flipped),
                 })
@@ -214,7 +214,7 @@ mod tests {
         );
 
         _run_core_test(script, p2_script, |game_state| match game_state {
-            GameState::Error(ErrorType::GameError { reason, fault }) => 
+            GameResult::Error(ErrorType::GameError { reason, fault }) => 
                 reason.contains("walls") && fault.is_some() && fault.unwrap() == PlayerType::Flipped,
             _ => false,
         });
@@ -233,7 +233,7 @@ mod tests {
             "
         );
         _run_core_test(script.clone(), script, |game_state| match game_state {
-            GameState::Error(ErrorType::GameError { reason, fault }) => {
+            GameResult::Error(ErrorType::GameError { reason, fault }) => {
                 reason.contains("out of bounds") && 
                 reason.contains(&MAP_SIZE.to_string()) && 
                 fault.is_some() && 
@@ -249,7 +249,7 @@ mod tests {
             "
         );
         _run_core_test(script.clone(), script, |game_state| match game_state {
-            GameState::Error(ErrorType::GameError { reason, fault }) => {
+            GameResult::Error(ErrorType::GameError { reason, fault }) => {
                 reason.contains("out of bounds") && 
                 reason.contains(&MAP_SIZE.to_string()) &&
                 fault.is_some() &&
@@ -265,7 +265,7 @@ mod tests {
             "
         );
         _run_core_test(script.clone(), script, |game_state| match game_state {
-            GameState::Error(ErrorType::GameError { reason, fault }) => {
+            GameResult::Error(ErrorType::GameError { reason, fault }) => {
                 reason.contains("out of bounds") && 
                 reason.contains("-1") &&
                 fault.is_some() &&
@@ -329,12 +329,12 @@ mod tests {
             _run_core_test(
                 get_script(x, false),
                 get_script(second_player_x, false),
-                |game_state| game_state == GameState::PlayerOneWon,
+                |game_state| game_state == GameResult::PlayerOneWon,
             );
             _run_core_test(
                 get_script(x, true),
                 get_script(second_player_x, false),
-                |game_state| game_state == GameState::PlayerTwoWon,
+                |game_state| game_state == GameResult::PlayerTwoWon,
             );
         }
     }
