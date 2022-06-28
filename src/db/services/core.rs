@@ -83,17 +83,13 @@ pub async fn submit_challenge(
 
     create_issue_comment(webhook_post.issue.number, &format!("User: {}<br>Script-id: {}<br>Thanks for submitting!<br>Your code is being processed...", webhook_post.sender.login, challenger.as_ref().unwrap().id));
 
-    let errors = match_make(&challenger.clone().unwrap(), &conn);
+    let reports = match_make(&challenger.clone().unwrap(), &conn);
 
     let mut output = String::new();
-    if errors.len() > 0 {
-        for error in errors {
-            output += &error;
-            output += "<br>";
-        }
+    for report in reports {
+        output += &report;
+        output += "<br>";
         create_issue_comment(webhook_post.issue.number, &output);
-    } else {
-        create_issue_comment(webhook_post.issue.number, "Matches performed!");
     }
 
     match write_file(

@@ -92,11 +92,12 @@ impl Submission {
     }
 
     pub fn save(&self, conn: &SqliteConnection) {
-        use crate::db::schema::Submissions::dsl::{id, score, updated_at};
+        use crate::db::schema::Submissions::dsl::{disqualified, id, score, updated_at};
         diesel::update(submission_dsl.filter(id.eq(&self.id)))
             .set((
                 score.eq(self.score),
                 updated_at.eq(chrono::Local::now().naive_local()),
+                disqualified.eq(self.disqualified),
             ))
             .execute(conn)
             .expect("Could not update record");

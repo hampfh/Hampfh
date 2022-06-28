@@ -3,7 +3,8 @@ use crate::db::models::submission_model::Submission;
 use crate::db::models::turn_model::Turn;
 use crate::game::board::board_to_string;
 use crate::game::entry_point::initialize_game_session;
-use crate::game::game::GameResult;
+use crate::game::game::{ErrorType, GameResult};
+use crate::game::player::PlayerType;
 use diesel::SqliteConnection;
 
 pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<String> {
@@ -13,10 +14,13 @@ pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<Strin
 
     let mut new_challenger = challenger.clone();
 
-    let mut errors: Vec<String> = vec![];
+    let mut round_reports: Vec<String> = Vec::new();
 
     // Match-maker goes here
     for i in 0..matches.len() {
+        let mut error_fault: Option<PlayerType> = None;
+        let mut error_msg: Option<String> = None;
+
         let (result, turns) = initialize_game_session(&challenger.script, &matches[i].script);
         let winner: Option<String>;
         let loser: Option<String>;
@@ -31,10 +35,70 @@ pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<Strin
                 winner = Some(matches[i].id.clone());
                 loser = Some(challenger.id.clone());
             }
-            GameResult::Error(err) => {
-                errors.push(format!("{:?}", err));
-                return errors;
+            GameResult::Error(error) => {
+                // If an error occur, it's no longer a matter
+                // of who is the winner, it's rather a matter
+                // of who is the going to be disqualified.
+                winner = None;
+                loser = None;
+
+                match error {
+                    ErrorType::GameError { reason, fault }
+                    | ErrorType::RuntimeError { reason, fault } => {
+                        error_fault = fault;
+                        error_msg = Some(reason);
+                        matches[i].disqualified = 1;
+                    }
+                    ErrorType::TurnTimeout { fault } => {
+                        error_fault = fault;
+                        error_msg = Some("Turn timeout".to_string());
+                        matches[i].disqualified = 1;
+                    }
+                    ErrorType::GameDeadlock => {
+                        error_msg = Some("Deadlock, both bots failed".to_string());
+                        matches[i].disqualified = 1;
+                    }
+                }
+
+                // Challenger is always the flipped player
+                match error_fault {
+                    Some(PlayerType::Regular) => {
+                        println!("Disq reg");
+                        matches[i].disqualified = 1;
+                    }
+                    Some(PlayerType::Flipped) => {
+                        println!("Disq flip");
+                        new_challenger.disqualified = 1;
+                    }
+                    None => {
+                        println!("Disq both");
+                        // Both are disqualified
+                        matches[i].disqualified = 1;
+                        new_challenger.disqualified = 1;
+                    }
+                }
             }
+        }
+
+        round_reports.push(report_round(
+            error_msg.clone(),
+            error_fault.clone(),
+            matches[i].id.clone(),
+        ));
+
+        matches[i].save(conn);
+
+        // If the new challenger has a part in the error
+        // we disqualify it directly here
+        if error_msg.is_some()
+            && error_fault.is_some()
+            && error_fault.unwrap() == PlayerType::Flipped
+            || winner.is_none()
+            || loser.is_none()
+        {
+            println!("Saving {:?}", new_challenger);
+            new_challenger.save(conn);
+            return round_reports;
         }
 
         // We never save a match if it wasn't successful
@@ -44,8 +108,6 @@ pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<Strin
         // If there are errors, then we stop the match-making process
         // This is because the submitted bot is obviously not working
         // and should therefore not be matchmaked against future bots
-
-        matches[i].save(conn);
         match Match::create(&winner.unwrap(), &loser.unwrap(), conn) {
             Some(match_record) => {
                 // Generate turns
@@ -56,17 +118,33 @@ pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<Strin
                 }
             }
             None => {
-                errors.push(format!(
-                    "Internal error, match making interrupted, try again later"
-                ));
-                return errors;
+                println!("Internal error, could not create match");
             }
         }
     }
 
     new_challenger.save(conn);
+    return round_reports;
+}
 
-    return errors;
+fn report_round(
+    error_msg: Option<String>,
+    fault: Option<PlayerType>,
+    opponent_id: String,
+) -> String {
+    match error_msg {
+        Some(error_msg) => format!(
+            "[FAIL] Opponent: {}, Error: {}, {}",
+            opponent_id,
+            error_msg,
+            match fault {
+                Some(PlayerType::Flipped) => format!("submission has been disqualified"),
+                Some(PlayerType::Regular) => format!("opponent has been disqualified"),
+                None => format!("both players have been disqualifed"),
+            }
+        ),
+        None => format!("[SUCCESS] Opponent: {}", opponent_id),
+    }
 }
 
 fn make_selection(submissions: Vec<Submission>) -> Vec<Submission> {
