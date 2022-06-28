@@ -4,7 +4,7 @@ use std::time::Duration;
 use thread_id;
 
 use crate::game::game::MAP_SIZE;
-use crate::game::methods;
+use crate::game::methods::{self, get_active_player_type};
 use super::player::Player;
 use super::board::{serialize_board, populate_board};
 use super::game::{Wall, Game, Move, ErrorType};
@@ -54,8 +54,6 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 				}).unwrap();
 			}
 		}
-		println!("ENDING script");
-
 		
 		let raw_player_move = active_sandbox.context(|ctx| {
 			ctx.globals().get::<_, String>("ExternalGlobalVarResult")
@@ -80,24 +78,34 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	let player_move = match rx.recv_timeout(Duration::from_millis(500)) {
 		Ok(returned) => match returned.player_move {
 			Ok(move_string) => move_string,
-			Err(error) => return Err(ErrorType::RuntimeError { reason: error.to_string() }),
+			Err(error) => return Err(ErrorType::RuntimeError { 
+				reason: error.to_string(), 
+				fault: Some(get_active_player_type(game)) 
+			}),
 		},
 		Err(_) => {
 			println!("Timed out");
 			terminate_thread(sandbox_thread_id);
-			return Err(ErrorType::TurnTimeout);
+			return Err(ErrorType::TurnTimeout { 
+				fault: Some(get_active_player_type(game)) 
+			});
 		}
 	};
 
 	if player_move.len() != 1 && player_move.len() != 7 {
-		return Err(ErrorType::RuntimeError { reason: format!("Invalid input: {}", player_move) });
+		return Err(ErrorType::RuntimeError { 
+			reason: format!("Invalid input: {}", player_move),
+			fault: Some(get_active_player_type(game))
+		});
 	}
 	
 	let mut player_move = convert_player_move_from_string_to_object(Some(player_move));
-	println!("Player move {:?}", player_move);
 	match player_move {
 		Some(Move::Invalid { reason }) => {
-			return Err(ErrorType::GameError { reason: reason });
+			return Err(ErrorType::GameError { 
+				reason,
+				fault: Some(get_active_player_type(game))
+			});
 		},
 		_ => ()
 	};
@@ -107,7 +115,10 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	}
 	
 	if player_move.is_none() {
-		return Err(ErrorType::GameError { reason: "Player did not return a valid move".to_string() });
+		return Err(ErrorType::GameError { 
+			reason: "Player did not return a valid move".to_string(),
+			fault: Some(get_active_player_type(game))
+		});
 	}
 	match valid_move(game, player_move.clone().unwrap()) {
 		Ok(_) => (),
@@ -116,7 +127,9 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	
 	let mut mutable_walls = game.walls.clone();
 	// We don't have to check this since we just that the move was valid
-	execute_move(&mut mutable_walls, methods::get_active_player(game).0, &player_move.unwrap()).unwrap();
+	let (first, second) = methods::get_active_player(game);
+	println!("{:?} {:?}", first, second);
+	execute_move(&mut mutable_walls, first, &player_move.unwrap()).unwrap();
 	// Reassign walls
 	game.walls = mutable_walls;
 	game.player_one_turn = !game.player_one_turn;

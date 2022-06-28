@@ -17,13 +17,15 @@ fn _capture_test_fail(game_state: GameState) {
     match game_state {
         GameState::PlayerOneWon => panic!("Player 1 won"),
         GameState::PlayerTwoWon => panic!("Player 2 won"),
-        GameState::Error(ErrorType::RuntimeError { reason }) => {
-            panic!("RuntimeError: {}", reason)
+        GameState::Error(ErrorType::RuntimeError { reason, fault }) => {
+            panic!("RuntimeError: {}, fault: [{:?}]", reason, fault)
         }
-        GameState::Error(ErrorType::GameError { reason }) => {
-            panic!("Game error: {}", reason)
+        GameState::Error(ErrorType::GameError { reason, fault }) => {
+            panic!("Game error: {}, fault: [{:?}]", reason, fault)
         }
-        GameState::Error(ErrorType::TurnTimeout) => panic!("Expected game error"),
+        GameState::Error(ErrorType::TurnTimeout { fault }) => {
+            panic!("Turn timeout error, fault: [{:?}]", fault)
+        }
         GameState::Error(ErrorType::GameDeadlock) => panic!("Expected game error"),
         _ => panic!("Why is game still running?"),
     };

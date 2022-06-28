@@ -1,6 +1,9 @@
 use std::sync::{Arc, Mutex};
 
-use super::{board::Tile, player::Player};
+use super::{
+    board::Tile,
+    player::{Player, PlayerType},
+};
 
 pub const MAP_SIZE: i32 = 9;
 pub const INITIAL_WALL_COUNT: i32 = 10;
@@ -22,18 +25,28 @@ pub enum GameState {
     Error(ErrorType),
 }
 
+#[allow(dead_code)]
+pub enum GameResult {
+    Success,
+    Error(ErrorType),
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ErrorType {
     /// The script did not obey the rules of the game in some way
     GameError {
         reason: String,
+        fault: Option<PlayerType>,
     },
     /// The script did not run properly
     RuntimeError {
         reason: String,
+        fault: Option<PlayerType>,
     },
     /// The script takes to much time during a round
-    TurnTimeout,
+    TurnTimeout {
+        fault: Option<PlayerType>,
+    },
     GameDeadlock,
 }
 

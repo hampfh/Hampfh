@@ -10,7 +10,11 @@ pub fn execute_move(
         Move::Wall(wall) => {
             if active_player.wall_count <= 0 {
                 return Err(ErrorType::GameError {
-                    reason: format!("No more walls to place, all walls already used"),
+                    reason: format!(
+                        "No more walls to place, all walls already used, active player: {:?}",
+                        active_player.player_type.clone()
+                    ),
+                    fault: Some(active_player.player_type.clone()),
                 });
             }
 

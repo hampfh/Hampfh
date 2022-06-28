@@ -77,13 +77,19 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> (GameState,
             return (
                 GameState::Error(ErrorType::RuntimeError {
                     reason: err.to_string(),
+                    fault: Some(get_active_player_type(game)),
                 }),
                 game.turns.clone(),
             );
         }
         Err(_) => {
             terminate_thread::terminate_thread(thread_id);
-            return (GameState::Error(ErrorType::TurnTimeout), game.turns.clone());
+            return (
+                GameState::Error(ErrorType::TurnTimeout {
+                    fault: Some(get_active_player_type(game)),
+                }),
+                game.turns.clone(),
+            );
         }
     }
 
@@ -185,4 +191,11 @@ pub fn deserialize_wall(input: &str) -> Move {
         x2: result[2],
         y2: result[3],
     });
+}
+
+pub fn get_active_player_type(game: &Game) -> PlayerType {
+    if game.player_one_turn {
+        return PlayerType::Flipped;
+    }
+    return PlayerType::Regular;
 }

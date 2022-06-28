@@ -2,6 +2,7 @@
 mod tests {
     use crate::game::{
         game::{ErrorType, GameState},
+        player::PlayerType,
         tests::util::_run_core_test,
     };
 
@@ -25,7 +26,10 @@ mod tests {
         );
 
         _run_core_test(script.clone(), script, |state| {
-            state == GameState::Error(ErrorType::TurnTimeout)
+            state
+                == GameState::Error(ErrorType::TurnTimeout {
+                    fault: Some(PlayerType::Flipped),
+                })
         });
     }
 
@@ -45,7 +49,10 @@ mod tests {
         );
 
         _run_core_test(script.clone(), script, |state| {
-            state == GameState::Error(ErrorType::TurnTimeout)
+            state
+                == GameState::Error(ErrorType::TurnTimeout {
+                    fault: Some(PlayerType::Flipped),
+                })
         });
     }
 
@@ -93,6 +100,7 @@ mod tests {
             std::mem::discriminant(&state)
                 == std::mem::discriminant(&GameState::Error(ErrorType::RuntimeError {
                     reason: String::new(),
+                    fault: Some(PlayerType::Flipped),
                 }))
         });
     }

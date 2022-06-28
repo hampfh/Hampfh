@@ -2,6 +2,7 @@
 mod tests {
     use crate::game::{
         game::{ErrorType, GameState, MAP_SIZE},
+        player::PlayerType,
         tests::util::_run_core_test,
     };
 
@@ -19,7 +20,11 @@ mod tests {
         );
 
         _run_core_test(script.clone(), script, |state| match state {
-            GameState::Error(ErrorType::RuntimeError { reason }) => reason.contains("onTurn"),
+            GameState::Error(ErrorType::RuntimeError { reason, fault }) => {
+                reason.contains("onTurn")
+                    && fault.is_some()
+                    && fault.unwrap() == PlayerType::Flipped
+            }
             _ => false,
         })
     }
@@ -43,6 +48,7 @@ mod tests {
             state
                 == GameState::Error(ErrorType::GameError {
                     reason: "Invalid move: Tile (4,4) is occupied".to_string(),
+                    fault: Some(PlayerType::Regular),
                 })
         });
     }
@@ -74,6 +80,9 @@ mod tests {
     }
 
     #[test]
+    /// Place invalid wall
+    /// 
+    /// Place a wall that is not contiguous
     fn place_invalid_wall() {
         let script = format!(
             "
@@ -86,7 +95,10 @@ mod tests {
         );
 
         _run_core_test(script.clone(), script, |state| {
-            state == GameState::Error(ErrorType::GameError { reason: "Invalid wall format, a wall must consist of two adjacent coordinates: ((0,4), (8,8))".to_string() })
+            state == GameState::Error(ErrorType::GameError { 
+                reason: "Invalid wall format, a wall must consist of two adjacent coordinates: ((0,4), (8,8))".to_string(),
+                fault: Some(PlayerType::Flipped), 
+            })
         });
     }
 
@@ -139,6 +151,7 @@ mod tests {
             state
                 == GameState::Error(ErrorType::GameError {
                     reason: "No path for either bot available".to_string(),
+                    fault: Some(PlayerType::Flipped),
                 })
         });
     }
@@ -160,6 +173,7 @@ mod tests {
             game_state
                 == GameState::Error(ErrorType::RuntimeError {
                     reason: String::from("Invalid input: 100,100,100,100"),
+                    fault: Some(PlayerType::Flipped),
                 })
         });
     }
@@ -200,7 +214,8 @@ mod tests {
         );
 
         _run_core_test(script, p2_script, |game_state| match game_state {
-            GameState::Error(ErrorType::GameError { reason }) => reason.contains("walls"),
+            GameState::Error(ErrorType::GameError { reason, fault }) => 
+                reason.contains("walls") && fault.is_some() && fault.unwrap() == PlayerType::Flipped,
             _ => false,
         });
     }
@@ -218,8 +233,11 @@ mod tests {
             "
         );
         _run_core_test(script.clone(), script, |game_state| match game_state {
-            GameState::Error(ErrorType::GameError { reason }) => {
-                reason.contains("out of bounds") && reason.contains(&MAP_SIZE.to_string())
+            GameState::Error(ErrorType::GameError { reason, fault }) => {
+                reason.contains("out of bounds") && 
+                reason.contains(&MAP_SIZE.to_string()) && 
+                fault.is_some() && 
+                fault.unwrap() == PlayerType::Flipped
             }
             _ => false,
         });
@@ -231,8 +249,11 @@ mod tests {
             "
         );
         _run_core_test(script.clone(), script, |game_state| match game_state {
-            GameState::Error(ErrorType::GameError { reason }) => {
-                reason.contains("out of bounds") && reason.contains(&MAP_SIZE.to_string())
+            GameState::Error(ErrorType::GameError { reason, fault }) => {
+                reason.contains("out of bounds") && 
+                reason.contains(&MAP_SIZE.to_string()) &&
+                fault.is_some() &&
+                fault.unwrap() == PlayerType::Flipped
             }
             _ => false,
         });
@@ -244,8 +265,11 @@ mod tests {
             "
         );
         _run_core_test(script.clone(), script, |game_state| match game_state {
-            GameState::Error(ErrorType::GameError { reason }) => {
-                reason.contains("out of bounds") && reason.contains("-1")
+            GameState::Error(ErrorType::GameError { reason, fault }) => {
+                reason.contains("out of bounds") && 
+                reason.contains("-1") &&
+                fault.is_some() &&
+                fault.unwrap() == PlayerType::Flipped
             }
             _ => false,
         });

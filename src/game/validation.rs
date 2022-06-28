@@ -1,5 +1,6 @@
 use super::execute_move::execute_move;
 use super::game::{ErrorType, Move, Wall, MAP_SIZE};
+use super::methods::get_active_player_type;
 use super::path_find::Pos;
 use super::player::Player;
 use crate::game::game::Game;
@@ -28,20 +29,26 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), ErrorType> {
     match player_move.clone() {
         Move::Wall(wall) => {
             if !valid_wall_format(&wall) {
-                return Err(ErrorType::GameError { reason: format!(
-                    "Invalid wall format, a wall must consist of two adjacent coordinates: (({},{}), ({},{}))",
-                    wall.x1, wall.y1, wall.x2, wall.y2
-                )});
+                return Err(ErrorType::GameError { 
+                    reason: format!(
+                        "Invalid wall format, a wall must consist of two adjacent coordinates: (({},{}), ({},{}))",
+                        wall.x1, wall.y1, wall.x2, wall.y2
+                    ), 
+                    fault: Some(get_active_player_type(game))
+                });
             }
             // Check that wall is not out of bounds
             // or tries to populate another tile
             if tile_is_valid(Pos(wall.x1, wall.y1)).is_err()
                 || tile_is_valid(Pos(wall.x2, wall.y2)).is_err()
             {
-                return Err(ErrorType::GameError { reason: format!(
-                    "Invalid wall placement at (({},{}),({},{})), coordinates are either occupied or out of bounds",
-                    wall.x1, wall.y1, wall.x2, wall.y2
-                )});
+                return Err(ErrorType::GameError { 
+                    reason: format!(
+                        "Invalid wall placement at (({},{}),({},{})), coordinates are either occupied or out of bounds",
+                        wall.x1, wall.y1, wall.x2, wall.y2
+                    ),
+                    fault: Some(get_active_player_type(game))
+                });
             }
         }
         _ => (),
@@ -57,14 +64,16 @@ pub fn valid_move(game: &mut Game, player_move: Move) -> Result<(), ErrorType> {
     if result.is_err() {
         return Err(ErrorType::GameError {
             reason: format!("Invalid move: {}", result.err().unwrap()),
+            fault: Some(get_active_player_type(game))
         });
     }
 
-    match path_exists_for_players(game) {
+    match path_exists_for_players(&walls, &game.player_one, &game.player_two) {
         Ok(_) => Ok(()),
         Err(error) => {
             return Err(ErrorType::GameError {
                 reason: error.to_string(),
+                fault: Some(get_active_player_type(game))
             })
         }
     }
