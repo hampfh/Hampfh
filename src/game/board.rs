@@ -54,7 +54,6 @@ pub fn board_to_string(board: Vec<Tile>) -> String {
     for tile in board.iter() {
         output.push_str(&(*tile as i32).to_string());
     }
-    output.push_str("}");
     return output;
 }
 
