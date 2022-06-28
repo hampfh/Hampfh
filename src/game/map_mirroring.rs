@@ -69,3 +69,41 @@ pub fn conditionally_reverse_player(player: &Player, condition: bool) -> Player 
     new_player.y = MAP_SIZE - new_player.y;
     return new_player;
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::game::game::{Move, Wall, MAP_SIZE};
+
+    use super::{reverse_coordinate, reverse_move, reverse_wall};
+
+    #[test]
+    fn test_reverse_move() {
+        assert_eq!(Move::Up, reverse_move(Move::Down));
+        assert_eq!(Move::Right, reverse_move(Move::Left));
+        assert_eq!(Move::Down, reverse_move(Move::Up));
+        assert_eq!(Move::Left, reverse_move(Move::Right));
+    }
+
+    #[test]
+    fn test_reverse_wall() {
+        let wall = Wall {
+            x1: 1,
+            y1: 1,
+            x2: 2,
+            y2: 1,
+        };
+        let reversed_wall = Wall {
+            x1: 6,
+            y1: 7,
+            x2: 7,
+            y2: 7,
+        };
+        assert_eq!(reversed_wall, reverse_wall(&wall));
+    }
+
+    #[test]
+    fn correct_mirroring_of_corners() {
+        assert_eq!(reverse_coordinate(0), MAP_SIZE - 1);
+        assert_eq!(reverse_coordinate(MAP_SIZE - 1), 0);
+    }
+}
