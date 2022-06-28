@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize, Queryable, Insertable)]
 #[table_name = "Submissions"]
 pub struct Submission {
     pub id: String,
