@@ -1,10 +1,11 @@
 use crate::db::schema::Matches;
 use crate::db::schema::Matches::dsl::Matches as matches_dsl;
+use crate::db::schema::Turns::dsl::Turns as turns_dsl;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::submission_model::Submission;
+use super::{submission_model::Submission, turn_model::Turn, user_model::User};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Queryable, Insertable)]
 #[table_name = "Matches"]
@@ -26,6 +27,49 @@ impl Match {
             Some(record)
         } else {
             None
+        }
+    }
+
+    pub fn players(
+        &self,
+        conn: &SqliteConnection,
+    ) -> Option<((User, Submission), (User, Submission))> {
+        return Match::get_players(&self.id, conn);
+    }
+
+    pub fn get_players(
+        id: &str,
+        conn: &SqliteConnection,
+    ) -> Option<((User, Submission), (User, Submission))> {
+        let target_match = match Self::by_id(id, conn) {
+            Some(result) => result,
+            None => return None,
+        };
+        let winning_submission = Submission::by_id(&target_match.winner, &conn);
+        let losing_sunmission = Submission::by_id(&target_match.loser, &conn);
+        if winning_submission.is_none() || losing_sunmission.is_none() {
+            return None;
+        }
+
+        let winner = User::by_id(&winning_submission.clone().unwrap().user, &conn);
+        let loser = User::by_id(&losing_sunmission.clone().unwrap().user, &conn);
+        if winner.is_none() || loser.is_none() {
+            return None;
+        }
+        return Some((
+            (winner.unwrap(), winning_submission.unwrap()),
+            (loser.unwrap(), losing_sunmission.unwrap()),
+        ));
+    }
+
+    pub fn get_turns(target_match_id: &str, conn: &SqliteConnection) -> Option<Vec<Turn>> {
+        use crate::db::schema::Turns::dsl::match_id;
+        match turns_dsl
+            .filter(match_id.eq(target_match_id))
+            .load::<Turn>(conn)
+        {
+            Ok(result) => Some(result),
+            Err(_) => None,
         }
     }
 

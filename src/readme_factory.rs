@@ -1,3 +1,6 @@
+use diesel::SqliteConnection;
+
+use crate::db;
 use crate::db::models::match_model::Match;
 use crate::db::models::submission_model::Submission;
 use crate::db::models::turn_model::Turn;
@@ -5,6 +8,11 @@ use crate::db::models::user_model::User;
 use crate::game::board::{board_from_string, Tile};
 
 use std::fs;
+
+pub fn clear_match_dir() {
+    std::fs::remove_dir_all("data/matches").unwrap();
+    std::fs::create_dir("data/matches").unwrap();
+}
 
 pub fn write_file(path: &str, data: String) -> std::io::Result<()> {
     fs::write(path, data)
@@ -19,9 +27,9 @@ pub fn generate_readme(
     return format!(
         "{}<br/><br/>{}<br/><br/>{}<br/><br/>{}",
         get_readme_header(),
-        get_last_turn_of_last_match(players.clone(), submissions.clone(), matches, turns),
+        get_last_turn_of_last_match(players.clone(), submissions.clone(), &matches, turns),
         generate_score_board(&submissions, &players),
-        create_history_table(submissions)
+        create_history_table(&submissions, &matches)
     );
 }
 
@@ -76,7 +84,7 @@ fn get_players_from_turn(
 fn get_last_turn_of_last_match(
     players: Vec<User>,
     submissions: Vec<Submission>,
-    matches: Vec<Match>,
+    matches: &Vec<Match>,
     turns: Vec<Turn>,
 ) -> String {
     if turns.len() == 0 {
@@ -122,18 +130,46 @@ fn generate_board(board: Vec<Tile>) -> String {
     return output;
 }
 
-fn create_history_table(submissions: Vec<Submission>) -> String {
-    let mut output = format!("<div align=\"center\">\n\n| Challenger submissions  |\n| :--: |\n");
+fn create_history_table(bor_submissions: &Vec<Submission>, bor_matches: &Vec<Match>) -> String {
+    let conn = db::db::establish_connection().get().unwrap();
+    let mut match_list = format!("<details><summary>Matches</summary>  \n");
+    let mut submission_list = format!("<details><summary>Submissions</summary>  \n");
 
-    let mut submissions = submissions;
+    let mut matches = bor_matches.clone();
+    matches.reverse();
+    let mut submissions = bor_submissions.clone();
     submissions.reverse();
-    for submission in submissions {
-        output.push_str(&format!(
-            "| &#124; [Submission]({}) &#124; {} |\n",
-            submission.issue_url,
-            submission.created_at.format("%Y-%m-%d %H:%M")
+
+    // Get matches
+    for current in matches {
+        let result = current.players(&conn);
+        if result.is_none() {
+            continue;
+        }
+        let ((winner, _), (loser, _)) = result.unwrap();
+        match_list.push_str(&format!(
+            "<p>{} vs {} &#124; <a href=\"./data/matches/{}.md\">Match</a></p>  \n",
+            winner.username, loser.username, current.id
         ));
     }
+    match_list.push_str("</details>\n");
+
+    // Get submissions
+    for current in submissions {
+        let user = User::by_id(&current.user, &conn);
+        if user.is_none() {
+            continue;
+        }
+        submission_list.push_str(&format!(
+            "<p>{} &#124; <a href=\"{}\">Submission</a> &#124; {}</p>  \n",
+            user.unwrap().username,
+            current.issue_url,
+            current.created_at.format("%Y-%m-%d %H:%M")
+        ));
+    }
+    submission_list.push_str("</details>  \n");
+
+    let mut output = format!("<div align=\"center\">\n\n<table><tr><td>Matches played</td><td>Challenger submissions</td></tr><tr><td>{}</td><td>{}</td></tr></table></div>", match_list, submission_list);
 
     output.push_str("</div>");
 
@@ -169,4 +205,48 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
     }
     output.push_str("\n");
     return output;
+}
+
+pub fn build_match_files_wrapper() {
+    let conn = db::db::establish_connection().get().unwrap();
+    build_match_files(&conn, Match::list(&conn));
+}
+fn build_match_files(conn: &SqliteConnection, matches: Vec<Match>) {
+    for current in matches {
+        let build_result = build_match(conn, &current);
+        match match build_result {
+            Some(file) => write_file(&format!("data/matches/{}.md", current.id), file),
+            None => Ok(()),
+        } {
+            Ok(()) => (),
+            Err(_) => (),
+        }
+    }
+}
+
+fn build_match(conn: &SqliteConnection, target_match: &Match) -> Option<String> {
+    let result = Match::get_players(&target_match.id, &conn);
+    if result.is_none() {
+        return None;
+    }
+    let ((winner, win_sub), (loser, los_sub)) = result.unwrap();
+
+    let turns = Match::get_turns(&target_match.id, &conn);
+    if turns.is_none() {
+        return None;
+    }
+
+    let mut file = format!(
+        "<div align=\"center\"><h1>{} vs {}</h1><p><a href=\"{}\">Submission</a> vs <a href=\"{}\">Submission</a></p></div>",
+        winner.username, loser.username, win_sub.issue_url, los_sub.issue_url
+    );
+    let mut round = 1;
+    for turn in turns.unwrap() {
+        file.push_str(&format!("<div align=\"center\">Round {}</div>", round));
+        file.push_str(&generate_board(board_from_string(turn.board)));
+        file.push_str(&format!("\n---\n\n"));
+        round += 1;
+    }
+
+    return Some(file);
 }

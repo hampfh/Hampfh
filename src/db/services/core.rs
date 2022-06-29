@@ -7,6 +7,8 @@ use crate::db::models::turn_model::Turn;
 use crate::db::models::user_model::User;
 use crate::db::services::match_maker::match_make;
 use crate::db::services::webhook_schema::GithubPayload;
+use crate::readme_factory::build_match_files_wrapper;
+use crate::readme_factory::clear_match_dir;
 use crate::readme_factory::generate_readme;
 use crate::readme_factory::write_file;
 use crate::repo_updater::update_repo;
@@ -96,6 +98,8 @@ pub async fn submit_challenge(
         create_issue_comment(webhook_post.issue.number, &output);
     }
 
+    clear_match_dir();
+    build_match_files_wrapper();
     match write_file(
         "README.md",
         generate_readme(
