@@ -3,7 +3,7 @@ use std::process::Command;
 
 pub fn is_live() -> bool {
     dotenv().ok();
-    return std::env::var("GITHUB_POST_SECRET").unwrap() == "true";
+    return std::env::var("LIVE").unwrap() == "true";
 }
 
 pub fn is_plagiarism_enabled() -> bool {
