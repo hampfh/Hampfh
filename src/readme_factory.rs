@@ -194,13 +194,18 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
             .iter()
             .find(|current| current.id == sorted_submissions[i].user);
         output.push_str(&format!(
-            "| {} | {} | [Submission]({}) |\n",
+            "| {} | {} | [Submission]({}) {} |\n",
             sorted_submissions[i].score.to_string(),
             match user {
                 Some(user) => user.username.clone(),
                 None => format!("<Unknown>"),
             },
-            sorted_submissions[i].issue_url
+            sorted_submissions[i].issue_url,
+            if sorted_submissions[i].disqualified >= 1 {
+                "❌"
+            } else {
+                "✅"
+            }
         ))
     }
     output.push_str("\n");
