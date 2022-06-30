@@ -43,8 +43,10 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 			drop(active_sandbox);
 			active_sandbox = player_two_sandbox_mutex.lock().unwrap();
 		}
-		
-		println!("Starting script");
+
+		if cfg!(debug_assertions) {
+			println!("Starting script");
+		}
 		match active_sandbox.context(|ctx| ctx.load(&starting_script).exec()) {
 			Ok(_) => (),
 			Err(err) => {
@@ -127,18 +129,19 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	
 	let mut mutable_walls = game.walls.clone();
 	// We don't have to check this since we just that the move was valid
-	let (first, second) = methods::get_active_player(game);
-	println!("{:?} {:?}", first, second);
+	let (first, _) = methods::get_active_player(game);
 	execute_move(&mut mutable_walls, first, &player_move.unwrap()).unwrap();
 	// Reassign walls
 	game.walls = mutable_walls;
 	game.player_one_turn = !game.player_one_turn;
 
-	if game.player_one_turn {
-		println!("Player 1 turn");
-	}
-	else {
-		println!("Player 2 turn");
+	if cfg!(debug_assertions) {
+		if game.player_one_turn {
+			println!("Player 1 turn");
+		}
+		else {
+			println!("Player 2 turn");
+		}
 	}
 
 	game.turns.push(populate_board(&game.player_one.clone(), &game.player_two.clone(), &game.walls));
@@ -177,9 +180,11 @@ fn create_lua_game_object(walls: Vec<Wall>, player_one_turn: bool, player_one: P
 		)
 	};
 
-	println!("Player pos ({})", serialized_player);
-	println!("Walls {:?}", walls);
-	println!("Serialized board ({:?})", populate_board(&player_one, &player_two, &walls)[(2 + MAP_SIZE * player_one.y - 1) as usize]);
+	if cfg!(debug_assertions) {
+		println!("Player pos ({})", serialized_player);
+		println!("Walls {:?}", walls);
+		println!("Serialized board ({:?})", populate_board(&player_one, &player_two, &walls)[(2 + MAP_SIZE * player_one.y - 1) as usize]);
+	}
 
 	return format!("{{player={}, opponent={}, board={}}}", serialized_player, serialized_opponent, serialized_board);
 }
