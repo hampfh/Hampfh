@@ -1,4 +1,5 @@
 use actix_web::{web::Data, App, HttpServer};
+use dotenv::dotenv;
 
 use crate::db::services::core::config;
 
@@ -17,8 +18,12 @@ mod terminate_thread;
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
+    dotenv().ok();
     let args: Vec<String> = std::env::args().collect();
-    cli::cli(args);
+    if args.len() > 1 {
+        cli::cli(args);
+        return Ok(());
+    }
 
     let port = 8095;
 
@@ -29,7 +34,7 @@ async fn main() -> Result<(), std::io::Error> {
             .app_data(Data::new(db_connection))
             .configure(config)
     })
-    .bind(("127.0.0.1", port))?
+    .bind((std::env::var("IP").unwrap(), port))?
     .workers(2)
     .run()
     .await
