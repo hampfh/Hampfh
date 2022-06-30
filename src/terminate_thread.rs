@@ -7,7 +7,7 @@ extern "C" {
 }
 
 pub fn terminate_thread(thread_id: usize) -> i32 {
-    return unsafe { pthread_cancel(thread_id as usize) };
+    return unsafe { pthread_cancel((thread_id as usize).try_into().unwrap()) };
 }
 
 #[cfg(test)]
