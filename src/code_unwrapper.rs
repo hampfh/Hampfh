@@ -5,7 +5,7 @@
 */
 pub fn unwrap_code(raw_data: &str) -> Result<String, String> {
     if raw_data.chars().take(6).collect::<String>() != "```lua" {
-        return Err("Cound not parse code block, please check the documentation on how to format your submissions".to_string());
+        return Err("Could not parse code block, please check the documentation on how to format your submissions".to_string());
     }
     Ok(raw_data.chars().skip(6).take_while(|c| *c != '`').collect())
 }
