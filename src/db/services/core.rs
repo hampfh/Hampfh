@@ -129,7 +129,7 @@ pub async fn submit_challenge(
                 }
                 None => CloseType::NotPlanned,
             };
-            close_issue(CloseType::NotPlanned, webhook_post.issue.number);
+            close_issue(close_type, webhook_post.issue.number);
             return Ok("README.md updated".to_string());
         }
         Err(e) => {
