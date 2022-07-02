@@ -1,3 +1,4 @@
+use chrono::NaiveDateTime;
 use diesel::SqliteConnection;
 
 use crate::db;
@@ -25,18 +26,19 @@ pub fn generate_readme(
     turns: Vec<Turn>,
 ) -> String {
     return format!(
-        "{}<br/><br/>{}<br/><br/>{}<br/><br/>{}",
+        "{}<br/><br/>{}{}{}{}",
         get_readme_header(),
         get_last_turn_of_last_match(players.clone(), submissions.clone(), &matches, turns),
         generate_score_board(&submissions, &players),
-        create_history_table(&submissions, &matches)
+        create_history_table(&submissions, &matches),
+        credits(chrono::Local::now().naive_local())
     );
 }
 
 fn get_readme_header() -> String {
     return String::from(
-"<div align=\"center\"> <h1>Hampus Hallkvist</h1>
-<h3>🎉🎉🎉 Welcome to my github profile 🎉🎉🎉</h3>
+"<div align=\"center\">
+<h3>🎉🎉🎉 Welcome to the scripting game! 🎉🎉🎉</h3>
 </div>
 
 <div align=\"center\"> 
@@ -100,16 +102,19 @@ fn get_last_turn_of_last_match(
     };
 
     return format!(
-        "<div align=\"center\"><p>Latest game:</p><p>{} vs {}</p></div>\n{}",
+        "<div align=\"center\"><p>Latest game:</p><p><a href=\"https://github.com/{}\">@{}</a> vs <a href=\"https://github.com/{}\">@{}</a></p>\n<a href=\"./data/matches/{}.md\">Go to match</a></div>\n\n---\n\n{}\n---\n",
+        winner.username,
         winner.username,
         loser.username,
+        loser.username,
+        matches.iter().find(|current| current.id == last_turn.match_id).unwrap().id,
         generate_board(board_from_string(last_turn.board.clone()))
     );
 }
 
 #[allow(dead_code)]
 fn generate_board(board: Vec<Tile>) -> String {
-    let mut output = String::from("\n\n---\n<div align=\"center\">\n");
+    let mut output = String::from("\n<div align=\"center\">\n");
 
     let mut count = 1;
     for tile in board {
@@ -125,7 +130,7 @@ fn generate_board(board: Vec<Tile>) -> String {
         count += 1;
     }
 
-    output.push_str("</div>\n\n---\n");
+    output.push_str("</div>\n");
 
     return output;
 }
@@ -242,16 +247,28 @@ fn build_match(conn: &SqliteConnection, target_match: &Match) -> Option<String> 
     }
 
     let mut file = format!(
-        "<div align=\"center\"><h1>{} vs {}</h1><p><a href=\"{}\">Submission</a> vs <a href=\"{}\">Submission</a></p></div>",
+        "<div align=\"center\"><h1>{} vs {}</h1><p><a href=\"{}\">Submission</a> vs <a href=\"{}\">Submission</a></p></div>\n\n---\n",
         winner.username, loser.username, win_sub.issue_url, los_sub.issue_url
     );
     let mut round = 1;
     for turn in turns.unwrap() {
-        file.push_str(&format!("<div align=\"center\">Round {}</div>", round));
+        file.push_str(&format!("<div align=\"center\">Round {}</div><br/>", round));
         file.push_str(&generate_board(board_from_string(turn.board)));
         file.push_str(&format!("\n---\n\n"));
         round += 1;
     }
 
     return Some(file);
+}
+
+fn credits(last_updated: NaiveDateTime) -> String {
+    let spacing = format!("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+    return format!(
+        "<br/><div align=\"center\"><a href=\"www.craft.do/s/ges8o08lvj4cfd\">What is this? </a> {}&#124;{} Hampus Hallkvist {}&#124;{} {}</div>",
+        spacing,
+        spacing,
+        spacing,
+        spacing,
+        &last_updated.format("%Y-%m-%d %H:%M")
+    );
 }
