@@ -1,4 +1,5 @@
 use crate::code_unwrapper::unwrap_code;
+use crate::db::close_issue::{close_issue, CloseType};
 use crate::db::create_issue_comment::create_issue_comment;
 use crate::db::db::DbPool;
 use crate::db::models::match_model::Match;
@@ -39,6 +40,7 @@ pub async fn submit_challenge(
                 webhook_post.issue.number,
                 "Internal error, please try again later",
             );
+            close_issue(CloseType::NotPlanned, webhook_post.issue.number);
             return Ok(format!("Internal error"));
         }
     }
@@ -48,6 +50,7 @@ pub async fn submit_challenge(
         Ok(code) => code,
         Err(e) => {
             create_issue_comment(webhook_post.issue.number, &e);
+            close_issue(CloseType::NotPlanned, webhook_post.issue.number);
             return Ok(format!("{}", e));
         }
     };
@@ -68,6 +71,7 @@ pub async fn submit_challenge(
                 webhook_post.issue.number,
                 &format!("This submission has already been submitted before"),
             );
+            close_issue(CloseType::NotPlanned, webhook_post.issue.number);
             return Ok(format!(
                 "{}",
                 "This submission has already been submitted before"
@@ -80,6 +84,7 @@ pub async fn submit_challenge(
             webhook_post.issue.number,
             "Error: Internal error, could not create submission...<br>Try again later",
         );
+        close_issue(CloseType::NotPlanned, webhook_post.issue.number);
         return Ok(format!("Could not create submission...<br>Try again later"));
     }
 
@@ -111,7 +116,20 @@ pub async fn submit_challenge(
     ) {
         Ok(_) => {
             // Submit new files to repo
-            update_repo(&challenger.unwrap().id, &webhook_post.sender.login);
+            let challenger_id = challenger.unwrap().id;
+            update_repo(&challenger_id, &webhook_post.sender.login);
+            close_issue(CloseType::Completed, webhook_post.issue.number);
+            let close_type = match Submission::by_id(&challenger_id, &conn) {
+                Some(submission) => {
+                    if submission.disqualified >= 1 {
+                        CloseType::Completed
+                    } else {
+                        CloseType::NotPlanned
+                    }
+                }
+                None => CloseType::NotPlanned,
+            };
+            close_issue(CloseType::NotPlanned, webhook_post.issue.number);
             return Ok("README.md updated".to_string());
         }
         Err(e) => {
@@ -119,6 +137,7 @@ pub async fn submit_challenge(
                 webhook_post.issue.number,
                 &format!("Internal error: Could not update README.md: {}", e),
             );
+            close_issue(CloseType::NotPlanned, webhook_post.issue.number);
             return Ok("Could not update README.md".to_string());
         }
     }
