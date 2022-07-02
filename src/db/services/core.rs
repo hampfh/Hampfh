@@ -118,7 +118,6 @@ pub async fn submit_challenge(
             // Submit new files to repo
             let challenger_id = challenger.unwrap().id;
             update_repo(&challenger_id, &webhook_post.sender.login);
-            close_issue(CloseType::Completed, webhook_post.issue.number);
             let close_type = match Submission::by_id(&challenger_id, &conn) {
                 Some(submission) => {
                     if submission.disqualified >= 1 {
