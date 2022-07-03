@@ -1,5 +1,4 @@
 use crate::repo_updater::is_live;
-use dotenv::dotenv;
 
 #[derive(Debug)]
 pub enum CloseType {
@@ -7,8 +6,6 @@ pub enum CloseType {
     Completed,
 }
 pub fn close_issue(state: CloseType, issue_number: i32) {
-    dotenv().ok();
-
     let secret = std::env::var("GITHUB_POST_SECRET").unwrap();
     let user = std::env::var("GITHUB_USER").unwrap_or("hampfh".to_string());
     let repo = std::env::var("GITHUB_REPO").unwrap_or("temp".to_string());

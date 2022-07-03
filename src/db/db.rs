@@ -3,15 +3,11 @@ use std::path::Path;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 
-use dotenv::dotenv;
-
 embed_migrations!();
 
 pub type DbPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
 pub fn establish_connection() -> DbPool {
-    dotenv().ok();
-
     // If no database exists we create it.
     let path_string =
         std::env::var("DATABASE_URL").expect("NO DATABASE_URL specified in .env file");

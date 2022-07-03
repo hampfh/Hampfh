@@ -65,7 +65,6 @@ impl Submission {
         issue_number: i32,
         conn: &SqliteConnection,
     ) -> Result<Option<Self>, ()> {
-        dotenv::dotenv().ok();
         let new_id = Uuid::new_v4().to_hyphenated().to_string();
 
         // Check that script doens't already exist

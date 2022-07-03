@@ -1,5 +1,4 @@
 use actix_web::{web::Data, App, HttpServer};
-use dotenv::dotenv;
 
 use crate::db::services::core::config;
 
@@ -18,7 +17,7 @@ mod terminate_thread;
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
-    dotenv().ok();
+    dotenv::dotenv().expect("Could not load .env file");
     let args: Vec<String> = std::env::args().collect();
     if args.len() > 1 {
         cli::cli(args);

@@ -1,10 +1,6 @@
-use dotenv::dotenv;
-
 use crate::repo_updater::is_live;
 
 pub fn create_issue_comment(issue_number: i32, msg: &str) {
-    dotenv().ok();
-
     let secret = std::env::var("GITHUB_POST_SECRET").unwrap();
     let user = std::env::var("GITHUB_USER").unwrap_or("hampfh".to_string());
     let repo = std::env::var("GITHUB_REPO").unwrap_or("temp".to_string());
