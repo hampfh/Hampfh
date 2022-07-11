@@ -3,7 +3,6 @@ use crate::backend::models::match_model::Match;
 use crate::backend::models::submission_model::Submission;
 use crate::backend::models::turn_model::Turn;
 use crate::backend::models::user_model::User;
-use crate::backend::services::match_maker::match_make;
 use crate::external_related::code_unwrapper::unwrap_code;
 use crate::external_related::github::close_issue::{close_issue, CloseType};
 use crate::external_related::github::create_issue_comment::create_issue_comment;
@@ -12,6 +11,7 @@ use crate::external_related::readme_factory::{
     build_match_files_wrapper, clear_match_dir, generate_readme, write_file,
 };
 use crate::external_related::repo_updater::update_repo;
+use crate::match_maker::placements::run_placements;
 use actix_web::{post, web};
 
 #[post("/api/challenge")]
@@ -89,7 +89,7 @@ pub async fn submit_challenge(
 
     create_issue_comment(webhook_post.issue.number, &format!("User: {}<br>Script-id: {}<br>Thanks for submitting!<br>Your code is being processed...", webhook_post.sender.login, challenger.as_ref().unwrap().id));
 
-    let reports = match_make(&challenger.clone().unwrap(), &conn);
+    let reports = run_placements(&challenger.clone().unwrap(), &conn);
 
     let mut output = String::new();
     for report in reports.clone() {

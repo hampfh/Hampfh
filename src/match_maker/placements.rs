@@ -7,7 +7,7 @@ use crate::game::game::{ErrorType, GameResult};
 use crate::game::player::PlayerType;
 use diesel::SqliteConnection;
 
-pub fn match_make(challenger: &Submission, conn: &SqliteConnection) -> Vec<String> {
+pub fn run_placements(challenger: &Submission, conn: &SqliteConnection) -> Vec<String> {
     // Order by score and pick the submission with the higest score
     let submissions = Submission::list(conn);
     let mut matches = make_selection(submissions, challenger.id.clone());

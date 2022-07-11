@@ -11,6 +11,7 @@ mod backend;
 mod cli;
 mod external_related;
 mod game;
+mod match_maker;
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
