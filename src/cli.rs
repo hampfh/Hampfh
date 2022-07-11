@@ -5,7 +5,9 @@ use crate::{
             match_model::Match, submission_model::Submission, turn_model::Turn, user_model::User,
         },
     },
-    readme_factory::{build_match_files_wrapper, clear_match_dir, generate_readme, write_file},
+    external_related::readme_factory::{
+        build_match_files_wrapper, clear_match_dir, generate_readme, write_file,
+    },
 };
 
 pub fn cli(args: Vec<String>) {

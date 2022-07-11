@@ -1,5 +1,5 @@
 use crate::db::schema::Submissions::dsl::Submissions as submission_dsl;
-use crate::{db::schema::Submissions, repo_updater::is_plagiarism_enabled};
+use crate::{db::schema::Submissions, external_related::repo_updater::is_plagiarism_enabled};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

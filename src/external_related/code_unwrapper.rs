@@ -12,7 +12,7 @@ pub fn unwrap_code(raw_data: &str) -> Result<String, String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::code_unwrapper::unwrap_code;
+    use crate::external_related::code_unwrapper::unwrap_code;
 
     #[test]
     /// Test that code is unwrapped correctly

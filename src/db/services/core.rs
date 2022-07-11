@@ -1,4 +1,3 @@
-use crate::code_unwrapper::unwrap_code;
 use crate::db::close_issue::{close_issue, CloseType};
 use crate::db::create_issue_comment::create_issue_comment;
 use crate::db::db::DbPool;
@@ -8,11 +7,11 @@ use crate::db::models::turn_model::Turn;
 use crate::db::models::user_model::User;
 use crate::db::services::match_maker::match_make;
 use crate::db::services::webhook_schema::GithubPayload;
-use crate::readme_factory::build_match_files_wrapper;
-use crate::readme_factory::clear_match_dir;
-use crate::readme_factory::generate_readme;
-use crate::readme_factory::write_file;
-use crate::repo_updater::update_repo;
+use crate::external_related::code_unwrapper::unwrap_code;
+use crate::external_related::readme_factory::{
+    build_match_files_wrapper, clear_match_dir, generate_readme, write_file,
+};
+use crate::external_related::repo_updater::update_repo;
 use actix_web::{post, web};
 
 #[post("/api/challenge")]

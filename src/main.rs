@@ -8,11 +8,9 @@ extern crate diesel;
 extern crate diesel_migrations;
 
 mod cli;
-mod code_unwrapper;
 mod db;
+mod external_related;
 mod game;
-mod readme_factory;
-mod repo_updater;
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {

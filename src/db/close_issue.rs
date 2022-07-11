@@ -1,4 +1,4 @@
-use crate::repo_updater::is_live;
+use crate::external_related::repo_updater::is_live;
 
 #[derive(Debug)]
 pub enum CloseType {

@@ -1,4 +1,4 @@
-use crate::repo_updater::is_live;
+use crate::external_related::repo_updater::is_live;
 
 pub fn create_issue_comment(issue_number: i32, msg: &str) {
     let secret = std::env::var("GITHUB_POST_SECRET").unwrap();
