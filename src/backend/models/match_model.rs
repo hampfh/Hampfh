@@ -1,6 +1,6 @@
-use crate::db::schema::Matches;
-use crate::db::schema::Matches::dsl::Matches as matches_dsl;
-use crate::db::schema::Turns::dsl::Turns as turns_dsl;
+use crate::backend::schema::Matches;
+use crate::backend::schema::Matches::dsl::Matches as matches_dsl;
+use crate::backend::schema::Turns::dsl::Turns as turns_dsl;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -63,7 +63,7 @@ impl Match {
     }
 
     pub fn get_turns(target_match_id: &str, conn: &SqliteConnection) -> Option<Vec<Turn>> {
-        use crate::db::schema::Turns::dsl::match_id;
+        use crate::backend::schema::Turns::dsl::match_id;
         match turns_dsl
             .filter(match_id.eq(target_match_id))
             .load::<Turn>(conn)

@@ -1,6 +1,6 @@
-use crate::db::models::match_model::Match;
-use crate::db::models::submission_model::Submission;
-use crate::db::models::turn_model::Turn;
+use crate::backend::models::match_model::Match;
+use crate::backend::models::submission_model::Submission;
+use crate::backend::models::turn_model::Turn;
 use crate::game::board::board_to_string;
 use crate::game::entry_point::initialize_game_session;
 use crate::game::game::{ErrorType, GameResult};

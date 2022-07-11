@@ -1,5 +1,5 @@
-use crate::db::schema::Turns;
-use crate::db::schema::Turns::dsl::Turns as turns_dsl;
+use crate::backend::schema::Turns;
+use crate::backend::schema::Turns::dsl::Turns as turns_dsl;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

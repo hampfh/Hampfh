@@ -1,5 +1,5 @@
-use crate::db::schema::Users;
-use crate::db::schema::Users::dsl::Users as user_dsl;
+use crate::backend::schema::Users;
+use crate::backend::schema::Users::dsl::Users as user_dsl;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -24,7 +24,7 @@ impl User {
         }
     }
     pub fn by_username(username_str: &str, conn: &SqliteConnection) -> Option<Self> {
-        use crate::db::schema::Users::dsl::username;
+        use crate::backend::schema::Users::dsl::username;
         if let Ok(record) = user_dsl
             .filter(username.eq(username_str))
             .first::<User>(conn)

@@ -1,11 +1,11 @@
 use chrono::NaiveDateTime;
 use diesel::SqliteConnection;
 
-use crate::db;
-use crate::db::models::match_model::Match;
-use crate::db::models::submission_model::Submission;
-use crate::db::models::turn_model::Turn;
-use crate::db::models::user_model::User;
+use crate::backend;
+use crate::backend::models::match_model::Match;
+use crate::backend::models::submission_model::Submission;
+use crate::backend::models::turn_model::Turn;
+use crate::backend::models::user_model::User;
 use crate::game::board::{board_from_string, Tile};
 
 use std::fs;
@@ -136,7 +136,7 @@ fn generate_board(board: Vec<Tile>) -> String {
 }
 
 fn create_history_table(bor_submissions: &Vec<Submission>, bor_matches: &Vec<Match>) -> String {
-    let conn = db::db::establish_connection().get().unwrap();
+    let conn = backend::db::establish_connection().get().unwrap();
     let mut match_list = format!("<details><summary>Matches</summary>  \n");
     let mut submission_list = format!("<details><summary>Submissions</summary>  \n");
 
@@ -218,7 +218,7 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
 }
 
 pub fn build_match_files_wrapper() {
-    let conn = db::db::establish_connection().get().unwrap();
+    let conn = backend::db::establish_connection().get().unwrap();
     build_match_files(&conn, Match::list(&conn));
 }
 fn build_match_files(conn: &SqliteConnection, matches: Vec<Match>) {

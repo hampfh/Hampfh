@@ -1,14 +1,14 @@
 use actix_web::{web::Data, App, HttpServer};
 
-use crate::db::services::core::config;
+use crate::backend::services::core::config;
 
 #[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
+mod backend;
 mod cli;
-mod db;
 mod external_related;
 mod game;
 
@@ -25,7 +25,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     println!("Listening on port {}", port);
     HttpServer::new(|| {
-        let db_connection = db::db::establish_connection();
+        let db_connection = backend::db::establish_connection();
         App::new()
             .app_data(Data::new(db_connection))
             .configure(config)
