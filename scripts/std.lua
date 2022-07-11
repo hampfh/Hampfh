@@ -4,22 +4,11 @@
 local MAP_SIZE = 9
 
 function STD__CHECK_OUT_OF_BOUNDS(x, y)
-	if x >= MAP_SIZE or y >= MAP_SIZE then
-		return true
-	end
-	return false
+	return x >= MAP_SIZE or y >= MAP_SIZE
 end
 
 function STD__OCCUPIED(gameObj, x, y)
-	if STD__CHECK_OUT_OF_BOUNDS(x, y) then
-		return true
-	end
-
-	if STD__GET_TILE(gameObj, x, y) ~= 0 then
-		return true
-	end
-
-	return false
+	return STD__CHECK_OUT_OF_BOUNDS(x, y) or STD__GET_TILE(gameObj, x, y) ~= 0
 end
 
 
