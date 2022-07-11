@@ -7,7 +7,7 @@ use super::{
 
 pub const MAP_SIZE: i32 = 9;
 pub const INITIAL_WALL_COUNT: i32 = 10;
-pub const MAX_TURNS: i32 = 2000;
+pub const MAX_TURNS: i32 = 400;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Wall {
