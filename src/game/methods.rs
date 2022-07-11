@@ -77,7 +77,7 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> (GameResult
             return (
                 GameResult::Error(ErrorType::RuntimeError {
                     reason: err.to_string(),
-                    fault: Some(get_active_player_type(game)),
+                    fault: Some(get_active_player_type(game.player_one_turn)),
                 }),
                 game.turns.clone(),
             );
@@ -86,7 +86,7 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> (GameResult
             terminate_thread::terminate_thread(thread_id);
             return (
                 GameResult::Error(ErrorType::TurnTimeout {
-                    fault: Some(get_active_player_type(game)),
+                    fault: Some(get_active_player_type(game.player_one_turn)),
                 }),
                 game.turns.clone(),
             );
@@ -208,8 +208,8 @@ pub fn deserialize_wall(input: &str) -> Move {
     });
 }
 
-pub fn get_active_player_type(game: &Game) -> PlayerType {
-    if game.player_one_turn {
+pub fn get_active_player_type(player_one_turn: bool) -> PlayerType {
+    if player_one_turn {
         return PlayerType::Flipped;
     }
     return PlayerType::Regular;
