@@ -13,7 +13,6 @@ mod db;
 mod game;
 mod readme_factory;
 mod repo_updater;
-mod terminate_thread;
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {

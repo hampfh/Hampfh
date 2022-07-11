@@ -4,7 +4,7 @@ use super::board::populate_board;
 use super::game::{Game, Move, ErrorType};
 use super::execute_move::execute_move;
 use super::map_mirroring::reverse_move;
-use super::sandbox_executor::execute_lua_in_sandbox;
+use super::sandbox::sandbox_executor::execute_lua_in_sandbox;
 use super::validation::valid_move;
 
 pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
@@ -50,7 +50,7 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 			fault: Some(get_active_player_type(game.player_one_turn))
 		});
 	}
-	
+
 	match valid_move(game, player_move.clone().unwrap()) {
 		Ok(_) => (),
 		error => return error

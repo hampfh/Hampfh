@@ -7,7 +7,7 @@ pub mod map_mirroring;
 pub mod methods;
 pub mod path_find;
 pub mod player;
-pub mod sandbox_executor;
+pub mod sandbox;
 pub mod turn;
 pub mod validation;
 

@@ -4,12 +4,12 @@ use crate::game::game::{ErrorType, Game, Move, Wall, INITIAL_WALL_COUNT, MAP_SIZ
 use crate::game::graphics::draw_game;
 use crate::game::player::{Player, PlayerType};
 use crate::game::turn;
-use crate::terminate_thread;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use super::board::Tile;
 use super::game::GameResult;
+use super::sandbox::terminate_thread::terminate_thread;
 
 pub fn new(std: String) -> Game {
     Game {
@@ -83,7 +83,7 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> (GameResult
             );
         }
         Err(_) => {
-            terminate_thread::terminate_thread(thread_id);
+            terminate_thread(thread_id);
             return (
                 GameResult::Error(ErrorType::TurnTimeout {
                     fault: Some(get_active_player_type(game.player_one_turn)),

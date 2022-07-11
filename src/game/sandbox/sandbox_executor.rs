@@ -3,15 +3,13 @@ use std::{
     time::Duration,
 };
 
-use crate::{
-    game::{
-        game::{ErrorType, MAP_SIZE},
-        methods::get_active_player_type,
-    },
-    terminate_thread::terminate_thread,
+use crate::game::{
+    game::{ErrorType, MAP_SIZE},
+    methods::get_active_player_type,
+    sandbox::terminate_thread::terminate_thread,
 };
 
-use super::{
+use crate::game::{
     board::{populate_board, serialize_board},
     game::Wall,
     map_mirroring::{conditionally_reverse_player, conditionally_reverse_walls},

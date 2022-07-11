@@ -12,7 +12,7 @@ pub fn terminate_thread(thread_id: usize) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::terminate_thread::terminate_thread;
+    use super::terminate_thread;
 
     #[test]
     fn successfully_terminates_thread() {
