@@ -338,4 +338,34 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    /// Place wall on player
+    /// 
+    /// Create a bot that will attempt to
+    /// place a wall on top of another player.
+    fn place_wall_on_player() {
+        let wall_script = format!(
+            "
+            function onTurn()
+                return \"4,0,4,1\"
+            end
+            "
+        );
+        let script = format!(
+            "
+            function onTurn()
+                return \"0\"
+            end
+            ");
+
+        _run_core_test(
+            wall_script, 
+            script, 
+            |game_state| match game_state {
+                GameResult::Error(ErrorType::GameError { reason: _, fault: __ }) => true,
+                _ => false,
+            }
+        );
+    }
 }
