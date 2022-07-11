@@ -1,13 +1,13 @@
-use crate::db::close_issue::{close_issue, CloseType};
-use crate::db::create_issue_comment::create_issue_comment;
 use crate::db::db::DbPool;
 use crate::db::models::match_model::Match;
 use crate::db::models::submission_model::Submission;
 use crate::db::models::turn_model::Turn;
 use crate::db::models::user_model::User;
 use crate::db::services::match_maker::match_make;
-use crate::db::services::webhook_schema::GithubPayload;
 use crate::external_related::code_unwrapper::unwrap_code;
+use crate::external_related::github::close_issue::{close_issue, CloseType};
+use crate::external_related::github::create_issue_comment::create_issue_comment;
+use crate::external_related::github::webhook_schema::GithubPayload;
 use crate::external_related::readme_factory::{
     build_match_files_wrapper, clear_match_dir, generate_readme, write_file,
 };
