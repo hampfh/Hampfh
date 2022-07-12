@@ -28,6 +28,7 @@ pub fn execute_lua_in_sandbox(
     player_one: Player,
     player_two: Player,
     player_one_turn: bool,
+    lua_function: String,
 ) -> Result<String, ErrorType> {
     let (tx, rx) = std::sync::mpsc::channel::<ThreadReturn>();
     // Sandbox execution of script
@@ -39,12 +40,10 @@ pub fn execute_lua_in_sandbox(
         })
         .unwrap();
 
-        let starting_script = get_lua_onturn_script(create_lua_game_object(
-            walls,
-            player_one_turn,
-            player_one,
-            player_two,
-        ));
+        let starting_script = get_lua_script(
+            lua_function,
+            create_lua_game_object(walls, player_one_turn, player_one, player_two),
+        );
 
         let mut active_sandbox = player_one_sandbox_mutex.lock().unwrap();
         if !player_one_turn {
@@ -108,12 +107,11 @@ pub fn execute_lua_in_sandbox(
     Ok(player_move)
 }
 
-fn get_lua_onturn_script(game_object: String) -> String {
-    return format!("ExternalGlobalVarResult = onTurn({})", game_object);
-}
-
-fn get_lua_onjump_script(game_object: String) -> String {
-    return format!("ExternalGlobalVarResult = onJump({})", game_object);
+fn get_lua_script(function_name: String, game_object: String) -> String {
+    return format!(
+        "ExternalGlobalVarResult = {}({})",
+        function_name, game_object
+    );
 }
 
 fn create_lua_game_object(

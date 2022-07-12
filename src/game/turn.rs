@@ -2,13 +2,13 @@ use crate::game::methods::{self, get_active_player_type};
 
 use super::board::populate_board;
 use super::game::{Game, Move, ErrorType};
-use super::execute_move::execute_move;
+use super::execute_move::{execute_move, execute_move_jump};
 use super::map_mirroring::reverse_move;
 use super::sandbox::sandbox_executor::execute_lua_in_sandbox;
 use super::validation::valid_move;
 
-pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 
+pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	let player_one_sandbox_mutex = game.player_one_sandbox.clone();
 	let player_two_sandbox_mutex = game.player_two_sandbox.clone();
 
@@ -17,11 +17,21 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	let walls = game.walls.clone();
 	let player_one_turn = game.player_one_turn;
 	
-	let player_move = match execute_lua_in_sandbox(player_one_sandbox_mutex, player_two_sandbox_mutex, walls, player_one, player_two, player_one_turn) {
+	let player_move = match execute_lua_in_sandbox(
+		player_one_sandbox_mutex.clone(), 
+		player_two_sandbox_mutex.clone(), 
+		walls.clone(), 
+		player_one.clone(), 
+		player_two.clone(), 
+		player_one_turn, 
+		"onTurn".to_string()
+	) {
 		Ok(player_move) => player_move,
 		Err(error) => return Err(error)
 	};
 
+	// onTurn fail if: not 1 and not 7
+	// onJump fail if: not 1
 	if player_move.len() != 1 && player_move.len() != 7 {
 		return Err(ErrorType::RuntimeError { 
 			reason: format!("Invalid input: {}", player_move),
@@ -40,7 +50,7 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 		_ => ()
 	};
 
-	if should_reverse_player_move(game, &player_move) {
+	if should_reverse_player_move(player_one_turn, &player_move) {
 		player_move = Some(reverse_move(player_move.unwrap()));
 	}
 	
@@ -51,17 +61,77 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 		});
 	}
 
-	match valid_move(game, player_move.clone().unwrap()) {
-		Ok(_) => (),
-		error => return error
-	}
+	let (active_player, opponent) = match player_one_turn {
+		true => (player_one.clone(), player_two.clone()),
+		false => (player_two.clone(), player_one.clone())
+	};
+
+	let run_on_jump = match valid_move(player_one_turn, &active_player, &opponent, &walls, player_move.clone().unwrap()) {
+		Ok(value) => !value,
+		Err(error) => return Err(error)
+	};
 	
 	let mut mutable_walls = game.walls.clone();
-	// We don't have to check this since we just that the move was valid
-	let (first, _) = methods::get_active_player(game);
-	execute_move(&mut mutable_walls, first, &player_move.unwrap()).unwrap();
-	// Reassign walls
-	game.walls = mutable_walls;
+	let (first, other) = methods::get_active_player(game);
+
+	if run_on_jump {
+		let player_move = match execute_lua_in_sandbox(
+			player_one_sandbox_mutex, 
+			player_two_sandbox_mutex, 
+			walls.clone(), 
+			player_one, 
+			player_two, 
+			player_one_turn, 
+			"onJump".to_string()
+		) {
+			Ok(player_move) => player_move,
+			Err(error) => return Err(error)
+		};
+
+		if player_move.len() != 1 {
+			return Err(ErrorType::GameError { 
+				reason: format!("Invalid return format from onJump, return can only be a number between 0-3"), 
+				fault: Some(get_active_player_type(game.player_one_turn)) 
+			});
+		}
+		let mut player_move = convert_player_move_from_string_to_object(Some(player_move));
+		match player_move {
+			Some(Move::Invalid { reason }) => {
+				return Err(ErrorType::GameError { 
+					reason,
+					fault: Some(get_active_player_type(game.player_one_turn))
+				});
+			},
+			_ => ()
+		};
+
+		if should_reverse_player_move(player_one_turn, &player_move) {
+			player_move = Some(reverse_move(player_move.unwrap()));
+		}
+		
+		if player_move.is_none() {
+			return Err(ErrorType::GameError { 
+				reason: "Player did not return a move".to_string(),
+				fault: Some(get_active_player_type(game.player_one_turn))
+			});
+		}
+
+		match valid_move(player_one_turn,&first, other, &walls ,player_move.clone().unwrap()) {
+			Ok(true) => (),
+			Ok(false) => return Err(ErrorType::GameError { 
+				reason: format!("Cannot trigger onJump more than once per turn"), 
+				fault: Some(get_active_player_type(game.player_one_turn)) 
+			}),
+			Err(error) => return Err(error)
+		};
+		
+		execute_move_jump(first, other, &player_move.clone().unwrap()).unwrap();
+	} else {
+		execute_move(&mut mutable_walls, first, &player_move.clone().unwrap()).unwrap();
+		// Reassign walls
+		game.walls = mutable_walls;
+	}
+	
 	game.player_one_turn = !game.player_one_turn;
 
 	if cfg!(debug_assertions) {
@@ -78,9 +148,9 @@ pub fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	Ok(())
 }
 
-fn should_reverse_player_move(game: &Game, player_move: &Option<Move>) -> bool {
+fn should_reverse_player_move(player_one_turn: bool, player_move: &Option<Move>) -> bool {
 	return 
-		!game.player_one_turn && player_move.is_some() && 
+		!player_one_turn && player_move.is_some() && 
 		// We compare the enums ONLY, we do not care what reason the fail has
 		std::mem::discriminant(&player_move.clone().unwrap()) != std::mem::discriminant(&Move::Invalid { reason: String::new() });
 }
