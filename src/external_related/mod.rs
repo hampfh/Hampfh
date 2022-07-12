@@ -1,4 +1,4 @@
-pub mod code_unwrapper;
-pub mod github;
-pub mod readme_factory;
-pub mod repo_updater;
+pub(crate) mod code_unwrapper;
+pub(crate) mod github;
+pub(crate) mod readme_factory;
+pub(crate) mod repo_updater;

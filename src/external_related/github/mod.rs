@@ -1,3 +1,3 @@
-pub mod close_issue;
-pub mod create_issue_comment;
-pub mod webhook_schema;
+pub(crate) mod close_issue;
+pub(crate) mod create_issue_comment;
+pub(crate) mod webhook_schema;
