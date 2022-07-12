@@ -75,6 +75,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	let (first, other) = methods::get_active_player(game);
 
 	if run_on_jump {
+		// TODO refactor this, this should recursivly call on turn again, instead of this code repeat
 		let player_move = match execute_lua_in_sandbox(
 			player_one_sandbox_mutex, 
 			player_two_sandbox_mutex, 
