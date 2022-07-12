@@ -361,6 +361,23 @@ mod tests {
 
         _run_core_test(
             wall_script, 
+            script.clone(), 
+            |game_state| match game_state {
+                GameResult::Error(ErrorType::GameError { reason: _, fault: __ }) => true,
+                _ => false,
+            }
+        );
+
+        let wall_script = format!(
+            "
+            function onTurn()
+                return \"4,8,5,8\"
+            end
+            "
+        );
+
+        _run_core_test(
+            wall_script, 
             script, 
             |game_state| match game_state {
                 GameResult::Error(ErrorType::GameError { reason: _, fault: __ }) => true,
