@@ -3,7 +3,7 @@ mod tests {
     use crate::game::{
         game::{ErrorType, GameResult},
         player::PlayerType,
-        tests::util::_run_core_test,
+        tests::util::{_run_core_test, aj, at},
     };
 
     /**
@@ -18,12 +18,12 @@ mod tests {
     /// loop in the startup, aka outside the
     /// "onTurn" function
     fn infinity_loop() {
-        let script = format!(
+        let script = aj(at(format!(
             "
 				while true do		
 				end
 			"
-        );
+        )));
 
         _run_core_test(script.clone(), script, |state| {
             state
@@ -39,14 +39,14 @@ mod tests {
     /// This test tries to loop
     /// for inifinity in the onTurn function.
     fn infinity_loop_on_turn() {
-        let script = format!(
+        let script = aj(format!(
             "
 				function onTurn()
                     while true do
                     end
                 end
 			"
-        );
+        ));
 
         _run_core_test(script.clone(), script, |state| {
             state
@@ -63,7 +63,7 @@ mod tests {
     /// the bots make no progress, they
     /// both just go back and forth.
     fn back_and_fourth() {
-        let script = format!(
+        let script = aj(format!(
             "
                 round = 0
                 function onTurn()
@@ -74,7 +74,7 @@ mod tests {
                     return \"2\"
                 end
             "
-        );
+        ));
 
         _run_core_test(script.clone(), script, |state| {
             state == GameResult::Error(ErrorType::GameDeadlock)
@@ -88,13 +88,13 @@ mod tests {
     /// python that should be gracfully
     /// returned by the program.
     fn invalid_syntax() {
-        let script = format!(
+        let script = aj(at(format!(
             "
                 test = 0
                 def onTurn():
                     return \"0\"
             "
-        );
+        )));
 
         _run_core_test(script.clone(), script, |state| {
             std::mem::discriminant(&state)

@@ -3,7 +3,7 @@ mod tests {
     use crate::game::{
         game::{ErrorType, GameResult, MAP_SIZE},
         player::PlayerType,
-        tests::util::_run_core_test,
+        tests::util::{_run_core_test, aj},
     };
 
     #[test]
@@ -30,37 +30,13 @@ mod tests {
     }
 
     #[test]
-    /// Player collides
-    ///
-    /// This test makes sure that the game
-    /// crashes if both players continue
-    /// straight forward.
-    fn fail_on_just_go_forward() {
-        let script = format!(
-            "
-			function onTurn()
-				return \"0\"
-			end
-		"
-        );
-
-        _run_core_test(script.clone(), script, |state| {
-            state
-                == GameResult::Error(ErrorType::GameError {
-                    reason: "Invalid move: Tile (4,4) is occupied".to_string(),
-                    fault: Some(PlayerType::Regular),
-                })
-        });
-    }
-
-    #[test]
     /// Forward with clear path
     ///
     /// This script moves both player to the left
     /// and the moves the forward, clearning the
     /// path for both players.
     fn success_when_left_and_forward() {
-        let script = format!(
+        let script = aj(format!(
             "
 			count = 0
 			function onTurn()
@@ -72,7 +48,7 @@ mod tests {
 				end 
 			end
 		"
-        );
+        ));
 
         _run_core_test(script.clone(), script, |state| {
             state == GameResult::PlayerOneWon
@@ -84,7 +60,7 @@ mod tests {
     /// 
     /// Place a wall that is not contiguous
     fn place_invalid_wall() {
-        let script = format!(
+        let script = aj(format!(
             "
             function onTurn()
                 -- This is clearly an invalid wall since
@@ -92,7 +68,7 @@ mod tests {
                 return \"0,4,8,8\"
             end
             "
-        );
+        ));
 
         _run_core_test(script.clone(), script, |state| {
             state == GameResult::Error(ErrorType::GameError { 
@@ -110,7 +86,7 @@ mod tests {
     fn fail_on_complete_block() {
         // Should fail on 4th round, since this will block
         // both players from finishing.
-        let p1_script = format!(
+        let p1_script = aj(format!(
             "
 			round = -1
             y = 7
@@ -130,10 +106,10 @@ mod tests {
 				return x .. \",\" .. y .. \",\" .. (x + 1) .. \",\" .. y
 			end
 		"
-        );
+        ));
 
         // This script will go back and forth
-        let p2_script = format!(
+        let p2_script = aj(format!(
             "
 			round = -1
 			function onTurn()
@@ -145,7 +121,7 @@ mod tests {
 				end
 			end
 		"
-        );
+        ));
 
         _run_core_test(p1_script, p2_script, |state| {
             state
@@ -162,13 +138,13 @@ mod tests {
     /// This script tries to place a wall
     /// outside the boundary of the board.
     fn out_of_bound_wall() {
-        let script = format!(
+        let script = aj(format!(
             "
             function onTurn()
                 return \"100,100,100,100\"
             end
         "
-        );
+        ));
         _run_core_test(script.clone(), script, |game_state| {
             game_state
                 == GameResult::Error(ErrorType::RuntimeError {
@@ -183,7 +159,7 @@ mod tests {
     ///
     /// This function will try to use more than 10 walls
     fn overuse_walls() {
-        let script = format!(
+        let script = aj(format!(
             "
             round = -1
             y = -1
@@ -198,9 +174,9 @@ mod tests {
                 end
             end
             "
-        );
+        ));
 
-        let p2_script = format!(
+        let p2_script = aj(format!(
             "
             round = -1
             function onTurn()
@@ -211,7 +187,7 @@ mod tests {
                 return \"2\"
             end
             "
-        );
+        ));
 
         _run_core_test(script, p2_script, |game_state| match game_state {
             GameResult::Error(ErrorType::GameError { reason, fault }) => 
@@ -225,13 +201,13 @@ mod tests {
     ///
     /// This script will try to walk out of bounds
     fn walk_out_of_bounds_bottom() {
-        let script = format!(
+        let script = aj(format!(
             "
             function onTurn()
                 return \"2\"
             end
             "
-        );
+        ));
         _run_core_test(script.clone(), script, |game_state| match game_state {
             GameResult::Error(ErrorType::GameError { reason, fault }) => {
                 reason.contains("out of bounds") && 
@@ -241,13 +217,13 @@ mod tests {
             }
             _ => false,
         });
-        let script = format!(
+        let script = aj(format!(
             "
             function onTurn()
                 return \"1\"
             end
             "
-        );
+        ));
         _run_core_test(script.clone(), script, |game_state| match game_state {
             GameResult::Error(ErrorType::GameError { reason, fault }) => {
                 reason.contains("out of bounds") && 
@@ -257,13 +233,13 @@ mod tests {
             }
             _ => false,
         });
-        let script = format!(
+        let script = aj(format!(
             "
             function onTurn()
                 return \"3\"
             end
             "
-        );
+        ));
         _run_core_test(script.clone(), script, |game_state| match game_state {
             GameResult::Error(ErrorType::GameError { reason, fault }) => {
                 reason.contains("out of bounds") && 
@@ -285,7 +261,7 @@ mod tests {
     fn opposite_tiles_winnable() {
         for x in 0..MAP_SIZE {
             let get_script = |x: i32, stal: bool| {
-                format!(
+                aj(format!(
                     "
                     stal = {}
                     round = -1
@@ -318,7 +294,7 @@ mod tests {
                 ",
                     if stal { "true" } else { "false" },
                     x
-                )
+                ))
             };
 
             // Second player must be offset by one otherwise
@@ -345,19 +321,19 @@ mod tests {
     /// Create a bot that will attempt to
     /// place a wall on top of another player.
     fn place_wall_on_player() {
-        let wall_script = format!(
+        let wall_script = aj(format!(
             "
             function onTurn()
                 return \"4,0,4,1\"
             end
             "
-        );
-        let script = format!(
+        ));
+        let script = aj(format!(
             "
             function onTurn()
                 return \"0\"
             end
-            ");
+            "));
 
         _run_core_test(
             wall_script, 
@@ -368,13 +344,13 @@ mod tests {
             }
         );
 
-        let wall_script = format!(
+        let wall_script = aj(format!(
             "
             function onTurn()
                 return \"4,8,5,8\"
             end
             "
-        );
+        ));
 
         _run_core_test(
             wall_script, 

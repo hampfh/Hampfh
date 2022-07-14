@@ -76,12 +76,12 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 
 	if run_on_jump {
 		// TODO refactor this, this should recursivly call on turn again, instead of this code repeat
-		let player_move = match execute_lua_in_sandbox(
+		let on_jump_player_move = match execute_lua_in_sandbox(
 			player_one_sandbox_mutex, 
 			player_two_sandbox_mutex, 
 			walls.clone(), 
-			player_one, 
-			player_two, 
+			player_one.clone(), 
+			player_two.clone(), 
 			player_one_turn, 
 			"onJump".to_string()
 		) {
@@ -89,14 +89,14 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 			Err(error) => return Err(error)
 		};
 
-		if player_move.len() != 1 {
+		if on_jump_player_move.len() != 1 {
 			return Err(ErrorType::GameError { 
 				reason: format!("Invalid return format from onJump, return can only be a number between 0-3"), 
 				fault: Some(get_active_player_type(game.player_one_turn)) 
 			});
 		}
-		let mut player_move = convert_player_move_from_string_to_object(Some(player_move));
-		match player_move {
+		let mut converted_on_jump_player_move = convert_player_move_from_string_to_object(Some(on_jump_player_move));
+		match converted_on_jump_player_move {
 			Some(Move::Invalid { reason }) => {
 				return Err(ErrorType::GameError { 
 					reason,
@@ -106,27 +106,21 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 			_ => ()
 		};
 
-		if should_reverse_player_move(player_one_turn, &player_move) {
-			player_move = Some(reverse_move(player_move.unwrap()));
+		if should_reverse_player_move(player_one_turn, &converted_on_jump_player_move) {
+			converted_on_jump_player_move = Some(reverse_move(converted_on_jump_player_move.unwrap()));
 		}
 		
-		if player_move.is_none() {
+		if converted_on_jump_player_move.is_none() {
 			return Err(ErrorType::GameError { 
 				reason: "Player did not return a move".to_string(),
 				fault: Some(get_active_player_type(game.player_one_turn))
 			});
 		}
-
-		match valid_move(player_one_turn,&first, other, &walls ,player_move.clone().unwrap()) {
-			Ok(true) => (),
-			Ok(false) => return Err(ErrorType::GameError { 
-				reason: format!("Cannot trigger onJump more than once per turn"), 
-				fault: Some(get_active_player_type(game.player_one_turn)) 
-			}),
+		
+		match execute_move_jump(first, other, &converted_on_jump_player_move.clone().unwrap()) {
+			Ok(()) => (),
 			Err(error) => return Err(error)
 		};
-		
-		execute_move_jump(first, other, &player_move.clone().unwrap()).unwrap();
 	} else {
 		execute_move(&mut mutable_walls, first, &player_move.clone().unwrap()).unwrap();
 		// Reassign walls
@@ -134,15 +128,6 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	}
 	
 	game.player_one_turn = !game.player_one_turn;
-
-	if cfg!(debug_assertions) {
-		if game.player_one_turn {
-			println!("Player 1 turn");
-		}
-		else {
-			println!("Player 2 turn");
-		}
-	}
 
 	game.turns.push(populate_board(&game.player_one.clone(), &game.player_two.clone(), &game.walls));
 

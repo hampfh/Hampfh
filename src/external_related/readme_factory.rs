@@ -250,15 +250,27 @@ fn build_match(conn: &SqliteConnection, target_match: &Match) -> Option<String> 
         "<div align=\"center\"><h1>{} vs {}</h1><p><a href=\"{}\">Submission</a> vs <a href=\"{}\">Submission</a></p></div>\n\n---\n",
         winner.username, loser.username, win_sub.issue_url, los_sub.issue_url
     );
-    let mut round = 1;
-    for turn in turns.unwrap() {
-        file.push_str(&format!("<div align=\"center\">Round {}</div><br/>", round));
-        file.push_str(&generate_board(board_from_string(turn.board)));
-        file.push_str(&format!("\n---\n\n"));
-        round += 1;
-    }
+    file.push_str(&get_match_from_tiles(
+        turns
+            .unwrap()
+            .iter()
+            .map(|turn| board_from_string(turn.board.clone()))
+            .collect(),
+    ));
 
     return Some(file);
+}
+
+pub(crate) fn get_match_from_tiles(turns: Vec<Vec<Tile>>) -> String {
+    let mut output = String::new();
+    let mut round = 1;
+    for turn in turns {
+        output.push_str(&format!("<div align=\"center\">Round {}</div><br/>", round));
+        output.push_str(&generate_board(turn));
+        output.push_str(&format!("\n---\n\n"));
+        round += 1;
+    }
+    return output;
 }
 
 fn credits(last_updated: NaiveDateTime) -> String {

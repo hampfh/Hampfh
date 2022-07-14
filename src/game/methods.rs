@@ -12,24 +12,36 @@ use super::game::GameResult;
 use super::sandbox::terminate_thread::terminate_thread;
 
 pub(crate) fn new(std: String) -> Game {
-    Game {
+    let p1 = Player::new(
+        MAP_SIZE / 2,
+        MAP_SIZE - 1,
+        INITIAL_WALL_COUNT,
+        PlayerType::Flipped,
+    );
+    let p2 = Player::new(MAP_SIZE / 2, 0, INITIAL_WALL_COUNT, PlayerType::Regular);
+    let walls = Vec::new();
+    return custom_new(p1, p2, walls, std);
+}
+
+pub(crate) fn custom_new(
+    player_one: Player,
+    player_two: Player,
+    walls: Vec<Wall>,
+    std: String,
+) -> Game {
+    return Game {
         running: true,
         game_result: None,
-        player_one: Player::new(
-            MAP_SIZE / 2,
-            MAP_SIZE - 1,
-            INITIAL_WALL_COUNT,
-            PlayerType::Flipped,
-        ),
-        player_two: Player::new(MAP_SIZE / 2, 0, INITIAL_WALL_COUNT, PlayerType::Regular),
-        walls: Vec::new(),
+        player_one,
+        player_two,
+        walls,
         player_one_sandbox: Arc::new(Mutex::new(Lua::new())),
         player_two_sandbox: Arc::new(Mutex::new(Lua::new())),
         player_one_turn: true,
         last_move: None,
         std,
         turns: Vec::new(),
-    }
+    };
 }
 
 pub(crate) fn start(
@@ -41,6 +53,15 @@ pub(crate) fn start(
 
     let clone_one = game.player_one_sandbox.clone();
     let clone_two = game.player_two_sandbox.clone();
+
+    match assert_lua_core_functions(program1.clone(), PlayerType::Flipped) {
+        Ok(_) => (),
+        Err(error) => return (GameResult::Error(error), Vec::new()),
+    }
+    match assert_lua_core_functions(program2.clone(), PlayerType::Regular) {
+        Ok(_) => (),
+        Err(error) => return (GameResult::Error(error), Vec::new()),
+    }
 
     // Run programs for the first time
     // We limit execution here to 100 milli-seconds
@@ -135,7 +156,6 @@ pub(crate) fn start(
 pub(crate) fn game_loop(game: &mut Game) {
     let mut round = 1;
     while game.running {
-        println!("\n\n## Round {} ##", round);
         update(game);
         winner(game);
         if round >= MAX_TURNS {
@@ -217,4 +237,21 @@ pub fn get_active_player_type(player_one_turn: bool) -> PlayerType {
         return PlayerType::Flipped;
     }
     return PlayerType::Regular;
+}
+
+fn assert_lua_core_functions(program: String, player_type: PlayerType) -> Result<(), ErrorType> {
+    if !program.contains("function onTurn(") {
+        return Err(ErrorType::RuntimeError {
+            reason: "onTurn() function not found, this function is mandatory".to_string(),
+            fault: Some(player_type),
+        });
+    }
+    if !program.contains("function onJump(") {
+        println!("{}", program);
+        return Err(ErrorType::RuntimeError {
+            reason: "onJump() function not found, this function is mandatory".to_string(),
+            fault: Some(player_type),
+        });
+    }
+    Ok(())
 }

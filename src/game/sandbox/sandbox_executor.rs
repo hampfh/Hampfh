@@ -4,9 +4,7 @@ use std::{
 };
 
 use crate::game::{
-    game::{ErrorType, MAP_SIZE},
-    methods::get_active_player_type,
-    sandbox::terminate_thread::terminate_thread,
+    game::ErrorType, methods::get_active_player_type, sandbox::terminate_thread::terminate_thread,
 };
 
 use crate::game::{
@@ -135,16 +133,6 @@ fn create_lua_game_object(
             serialize_player(&conditionally_reverse_player(&player_one, true)),
         ),
     };
-
-    if cfg!(debug_assertions) {
-        println!("Player pos ({})", serialized_player);
-        println!("Walls {:?}", walls);
-        println!(
-            "Serialized board ({:?})",
-            populate_board(&player_one, &player_two, &walls)
-                [(2 + MAP_SIZE * player_one.y - 1) as usize]
-        );
-    }
 
     return format!(
         "{{player={}, opponent={}, board={}}}",

@@ -5,6 +5,7 @@
 # Files
 .env
 *.temp.lua
+*.temp.md
 storage.sql
 
 .DS_Store

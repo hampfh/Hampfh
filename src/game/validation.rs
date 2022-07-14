@@ -18,7 +18,7 @@ pub(super) fn valid_move(
     let clousure_walls = walls.clone();
     let mut temp_active_player = active_player.clone();
 
-    let tile_is_valid = |pos: Pos| -> Result<(), String> {
+    let tile_is_valid = |pos: Pos, ignore_players: bool| -> Result<(), String> {
         valid_tile(
             &clousure_walls,
             // We never want to check ourselves since that position will be taken
@@ -26,7 +26,7 @@ pub(super) fn valid_move(
             Some(other),
             pos.0,
             pos.1,
-            false,
+            ignore_players,
         )
     };
 
@@ -44,8 +44,8 @@ pub(super) fn valid_move(
             }
             // Check that wall is not out of bounds
             // or tries to populate another tile
-            if tile_is_valid(Pos(wall.x1, wall.y1)).is_err()
-                || tile_is_valid(Pos(wall.x2, wall.y2)).is_err()
+            if tile_is_valid(Pos(wall.x1, wall.y1), false).is_err()
+                || tile_is_valid(Pos(wall.x2, wall.y2), false).is_err()
             {
                 return Err(ErrorType::GameError { 
                     reason: format!(
@@ -65,7 +65,7 @@ pub(super) fn valid_move(
         Err(error) => return Err(error),
     }
 
-    let result = tile_is_valid(Pos(temp_active_player.x, temp_active_player.y));
+    let result = tile_is_valid(Pos(temp_active_player.x, temp_active_player.y), true);
     if result.is_err() {
         return Err(ErrorType::GameError {
             reason: format!("Invalid move: {}", result.err().unwrap()),
@@ -75,10 +75,10 @@ pub(super) fn valid_move(
 
     let on_top_of_opponent = temp_active_player.x == other.x && temp_active_player.y == other.y;
     if on_top_of_opponent{
-        if tile_is_valid(Pos(other.x, other.y - 1)).is_err() &&
-        tile_is_valid(Pos(other.x + 1, other.y)).is_err() && 
-        tile_is_valid(Pos(other.x, other.y + 1)).is_err() &&
-        tile_is_valid(Pos(other.x - 1, other.y)).is_err() {
+        if tile_is_valid(Pos(other.x, other.y - 1), false).is_err() &&
+        tile_is_valid(Pos(other.x + 1, other.y), false).is_err() && 
+        tile_is_valid(Pos(other.x, other.y + 1), false).is_err() &&
+        tile_is_valid(Pos(other.x - 1, other.y), false).is_err() {
             return Err(ErrorType::GameError {
                 reason: format!("Invalid move, cannot jump, no free position around opponent"),
                 fault: Some(get_active_player_type(player_one_turn))

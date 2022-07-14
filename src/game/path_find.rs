@@ -129,12 +129,7 @@ fn path_exists(walls: &Vec<Wall>, p1: &Player, p2: &Player, player: &Player, tar
     );
 
     match result {
-        Some(path) => {
-            println!("Path exists {:?}", path);
-            return true;
-        }
-        None => {
-            return false;
-        }
+        Some(_) => true,
+        None => false,
     }
 }
