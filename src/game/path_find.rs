@@ -83,7 +83,11 @@ fn add_walkable_tiles(walls: &Vec<Wall>, p1: &Player, p2: &Player, pos: &Pos) ->
     return directions;
 }
 
-pub fn path_exists_for_players(walls: &Vec<Wall>, p1: &Player, p2: &Player) -> Result<(), String> {
+pub(crate) fn path_exists_for_players(
+    walls: &Vec<Wall>,
+    p1: &Player,
+    p2: &Player,
+) -> Result<(), String> {
     // Player one wants to get to y = MAP_SIZE - 1
     let player_one = p1;
     // Player two wants to get to y = 0

@@ -8,7 +8,7 @@ use crate::game::player::Player;
  * the second player.
  */
 
-pub fn reverse_move(player_move: Move) -> Move {
+pub(crate) fn reverse_move(player_move: Move) -> Move {
     return match player_move {
         Move::Up => Move::Down,
         Move::Right => Move::Left,
@@ -19,7 +19,7 @@ pub fn reverse_move(player_move: Move) -> Move {
     };
 }
 
-pub fn reverse_wall(wall: &Wall) -> Wall {
+pub(crate) fn reverse_wall(wall: &Wall) -> Wall {
     return Wall {
         x1: reverse_coordinate(wall.x2),
         y1: reverse_coordinate(wall.y2),
@@ -28,7 +28,7 @@ pub fn reverse_wall(wall: &Wall) -> Wall {
     };
 }
 
-pub fn conditionally_reverse_walls(walls: &Vec<Wall>, condition: bool) -> Vec<Wall> {
+pub(crate) fn conditionally_reverse_walls(walls: &Vec<Wall>, condition: bool) -> Vec<Wall> {
     if !condition {
         return walls.to_vec();
     }
@@ -40,7 +40,7 @@ pub fn reverse_coordinate(coordinate: i32) -> i32 {
 }
 
 #[allow(dead_code)]
-pub fn conditionally_reverse_move(player_move: Move, condition: bool) -> Move {
+pub(crate) fn conditionally_reverse_move(player_move: Move, condition: bool) -> Move {
     if !condition {
         return player_move;
     } else {

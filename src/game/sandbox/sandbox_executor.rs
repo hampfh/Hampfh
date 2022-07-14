@@ -21,7 +21,7 @@ pub struct ThreadReturn {
     player_move: Result<String, rlua::Error>,
 }
 
-pub fn execute_lua_in_sandbox(
+pub(crate) fn execute_lua_in_sandbox(
     player_one_sandbox_mutex: Arc<Mutex<rlua::Lua>>,
     player_two_sandbox_mutex: Arc<Mutex<rlua::Lua>>,
     walls: Vec<Wall>,

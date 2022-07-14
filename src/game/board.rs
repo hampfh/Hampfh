@@ -10,7 +10,11 @@ pub enum Tile {
     Wall = 3,
 }
 
-pub fn populate_board(player_one: &Player, player_two: &Player, walls: &Vec<Wall>) -> Vec<Tile> {
+pub(crate) fn populate_board(
+    player_one: &Player,
+    player_two: &Player,
+    walls: &Vec<Wall>,
+) -> Vec<Tile> {
     let mut draw_buffer = create_empty_board();
 
     for wall in walls {

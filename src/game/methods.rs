@@ -11,7 +11,7 @@ use super::board::Tile;
 use super::game::GameResult;
 use super::sandbox::terminate_thread::terminate_thread;
 
-pub fn new(std: String) -> Game {
+pub(crate) fn new(std: String) -> Game {
     Game {
         running: true,
         game_result: None,
@@ -32,7 +32,11 @@ pub fn new(std: String) -> Game {
     }
 }
 
-pub fn start(game: &mut Game, program1: String, program2: String) -> (GameResult, Vec<Vec<Tile>>) {
+pub(crate) fn start(
+    game: &mut Game,
+    program1: String,
+    program2: String,
+) -> (GameResult, Vec<Vec<Tile>>) {
     let std = game.std.clone();
 
     let clone_one = game.player_one_sandbox.clone();
@@ -128,7 +132,7 @@ pub fn start(game: &mut Game, program1: String, program2: String) -> (GameResult
     };
 }
 
-pub fn game_loop(game: &mut Game) {
+pub(crate) fn game_loop(game: &mut Game) {
     let mut round = 1;
     while game.running {
         println!("\n\n## Round {} ##", round);
@@ -142,7 +146,7 @@ pub fn game_loop(game: &mut Game) {
     }
 }
 
-pub fn update(game: &mut Game) {
+pub(crate) fn update(game: &mut Game) {
     let result = turn::on_turn(game);
     match result {
         Ok(_) => (),
@@ -158,7 +162,7 @@ pub fn update(game: &mut Game) {
     }
 }
 
-pub fn winner(game: &mut Game) {
+pub(crate) fn winner(game: &mut Game) {
     if game.player_one.y == 0 {
         game.running = false;
         game.game_result = Some(GameResult::PlayerOneWon);
@@ -172,7 +176,7 @@ pub fn winner(game: &mut Game) {
  * Returns a tuple, the first player is always the active one
  * the second is the non-active player
  */
-pub fn get_active_player(game: &mut Game) -> (&mut Player, &Player) {
+pub(crate) fn get_active_player(game: &mut Game) -> (&mut Player, &Player) {
     if game.player_one_turn {
         return (&mut game.player_one, &game.player_two);
     }
@@ -180,7 +184,7 @@ pub fn get_active_player(game: &mut Game) -> (&mut Player, &Player) {
 }
 
 // Converts a string like ["x1,y1,x2,y2" -> Wall]
-pub fn deserialize_wall(input: &str) -> Move {
+pub(crate) fn deserialize_wall(input: &str) -> Move {
     let splits = input.split(",").map(|s| s.trim()).collect::<Vec<&str>>();
     if splits.len() != 4 as usize {
         return Move::Invalid {
