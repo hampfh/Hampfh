@@ -3,6 +3,7 @@ use crate::{
     game::{
         game::{ErrorType, Game, GameResult},
         methods,
+        player::{Player, PlayerType},
     },
 };
 
@@ -55,4 +56,13 @@ pub(super) fn aj(c: String) -> String {
     let mut output = c.clone();
     output.push_str(format!("\nfunction onJump()\n    return \"0\"\nend").as_str());
     return output;
+}
+
+pub(super) fn mock_player(x: i32, y: i32, wall_count: i32, player_type: PlayerType) -> Player {
+    return Player {
+        x,
+        y,
+        wall_count,
+        player_type,
+    };
 }

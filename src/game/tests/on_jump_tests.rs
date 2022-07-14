@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{ErrorType, Game, GameResult},
+        game::{ErrorType, Game, GameResult, Wall},
         methods::custom_new,
         player::{Player, PlayerType},
-        tests::util::{_run_core_test, _run_test_with_custom_game_session},
+        tests::util::{_run_core_test, _run_test_with_custom_game_session, aj, at, mock_player},
     };
 
     #[test]
@@ -156,5 +156,89 @@ mod tests {
             }
             _ => false,
         });
+    }
+
+    #[test]
+    /// Attempt to jump into wall
+    ///
+    /// In this test the players will spawn
+    /// next to each other and there will be
+    /// a wall behind the second player.
+    /// The program should fail when the first
+    /// player attempts to jump over the second player...
+    fn jump_into_wall() {
+        let script = aj(at(String::new()));
+
+        _run_test_with_custom_game_session(
+            script.clone(),
+            script,
+            &mut custom_new(
+                mock_player(0, 4, 0, PlayerType::Regular),
+                mock_player(0, 5, 0, PlayerType::Flipped),
+                vec![Wall {
+                    x1: 0,
+                    y1: 3,
+                    x2: 0,
+                    y2: 2,
+                }],
+                String::new(),
+            ),
+            |result| match result {
+                GameResult::Error(ErrorType::GameError { reason, fault }) => {
+                    reason.contains("occupied") && fault.unwrap() == PlayerType::Flipped
+                }
+                _ => false,
+            },
+        );
+    }
+
+    #[test]
+    /// Out of bounds jump
+    ///
+    ///
+    fn jump_out_of_bounds() {
+        // It is allowed to jump out of bounds
+        // if it is the winning move
+        let script = aj(at(String::new()));
+
+        _run_test_with_custom_game_session(
+            script.clone(),
+            script,
+            &mut custom_new(
+                mock_player(0, 0, 0, PlayerType::Regular),
+                mock_player(0, 1, 0, PlayerType::Flipped),
+                Vec::new(),
+                String::new(),
+            ),
+            |result| result == GameResult::PlayerOneWon,
+        );
+
+        // Attempt to jump out of bounds horizontally
+        let sideways = format!(
+            "
+                function onTurn()
+                    return \"1\"
+                end
+                function onJump()
+                    return \"1\"
+                end
+            "
+        );
+        _run_test_with_custom_game_session(
+            sideways.clone(),
+            sideways,
+            &mut custom_new(
+                mock_player(8, 4, 0, PlayerType::Regular),
+                mock_player(7, 4, 0, PlayerType::Flipped),
+                Vec::new(),
+                String::new(),
+            ),
+            |result| match result {
+                GameResult::Error(ErrorType::GameError { reason, fault }) => {
+                    reason.contains("bounds") && fault.unwrap() == PlayerType::Flipped
+                }
+                _ => false,
+            },
+        );
     }
 }
