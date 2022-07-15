@@ -14,7 +14,7 @@ table! {
         user -> Text,
         script -> Text,
         comment -> Nullable<Text>,
-        score -> Integer,
+        wins -> Integer,
         issue_url -> Text,
         issue_number -> Integer,
         created_at -> Timestamp,

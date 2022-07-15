@@ -7,5 +7,6 @@
 *.temp.lua
 *.temp.md
 storage.sql
+storage.db
 
 .DS_Store

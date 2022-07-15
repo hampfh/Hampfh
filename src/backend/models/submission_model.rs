@@ -11,7 +11,7 @@ pub struct Submission {
     pub user: String,
     pub script: String,
     pub comment: Option<String>,
-    pub score: i32,
+    pub wins: i32,
     pub issue_url: String,
     pub issue_number: i32,
     pub created_at: chrono::NaiveDateTime,
@@ -43,10 +43,10 @@ impl Submission {
         }
     }
 
-    pub fn by_score(score_value: i32, conn: &SqliteConnection) -> Option<Self> {
-        use crate::backend::schema::Submissions::dsl::score;
+    pub fn by_score(wins_value: i32, conn: &SqliteConnection) -> Option<Self> {
+        use crate::backend::schema::Submissions::dsl::wins;
         if let Ok(record) = submission_dsl
-            .filter(score.eq(score_value))
+            .filter(wins.eq(wins_value))
             .order(Submissions::created_at.asc())
             .first::<Submission>(conn)
         {
@@ -91,10 +91,10 @@ impl Submission {
     }
 
     pub fn save(&self, conn: &SqliteConnection) {
-        use crate::backend::schema::Submissions::dsl::{disqualified, id, score, updated_at};
+        use crate::backend::schema::Submissions::dsl::{disqualified, id, updated_at, wins};
         diesel::update(submission_dsl.filter(id.eq(&self.id)))
             .set((
-                score.eq(self.score),
+                wins.eq(self.wins),
                 updated_at.eq(chrono::Local::now().naive_local()),
                 disqualified.eq(self.disqualified),
             ))
@@ -107,7 +107,7 @@ impl Submission {
         user_id: &str,
         script: &str,
         comment: Option<&str>,
-        score: i32,
+        wins: i32,
         issue_url: &str,
         issue_number: i32,
     ) -> Self {
@@ -116,7 +116,7 @@ impl Submission {
             user: user_id.into(),
             script: script.into(),
             comment: comment.map(|c| c.into()),
-            score: score,
+            wins: wins,
             disqualified: 0,
             issue_url: issue_url.into(),
             issue_number: issue_number,

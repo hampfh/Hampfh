@@ -26,12 +26,12 @@ pub fn run_placements(challenger: &Submission, conn: &SqliteConnection) -> Vec<S
         let loser: Option<String>;
         match result {
             GameResult::PlayerOneWon => {
-                new_challenger.score += 1;
+                new_challenger.wins += 1;
                 winner = Some(challenger.id.clone());
                 loser = Some(matches[i].id.clone());
             }
             GameResult::PlayerTwoWon => {
-                matches[i].score += 1;
+                matches[i].wins += 1;
                 winner = Some(matches[i].id.clone());
                 loser = Some(challenger.id.clone());
             }
@@ -157,7 +157,7 @@ fn make_selection(submissions: Vec<Submission>, challenger_id: String) -> Vec<Su
         .filter(|submission| submission.disqualified == 0 && submission.id != challenger_id)
         .collect();
     // Sort from lowest to highest
-    submissions.sort_by(|a, b| a.score.cmp(&b.score));
+    submissions.sort_by(|a, b| a.wins.cmp(&b.wins));
 
     if submissions.len() < 10 {
         return submissions;

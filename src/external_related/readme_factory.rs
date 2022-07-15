@@ -187,7 +187,7 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
     }
 
     let mut sorted_submissions = submissions.clone();
-    sorted_submissions.sort_by(|a, b| b.score.cmp(&a.score));
+    sorted_submissions.sort_by(|a, b| b.wins.cmp(&a.wins));
 
     let mut output = format!(
         "<div align=\"center\">\n\n| Scoreboard | (Top 10) | Submission  |\n| :-- | --: | :--: |\n"
@@ -200,7 +200,7 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
             .find(|current| current.id == sorted_submissions[i].user);
         output.push_str(&format!(
             "| {} | {} | [Submission]({}) {} |\n",
-            sorted_submissions[i].score.to_string(),
+            sorted_submissions[i].wins.to_string(),
             match user {
                 Some(user) => user.username.clone(),
                 None => format!("<Unknown>"),
