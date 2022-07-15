@@ -45,12 +45,14 @@ fn _capture_test_fail(game_state: GameResult) {
     };
 }
 
+#[allow(dead_code)]
 /// Append turn to code
 pub(super) fn at(c: String) -> String {
     let mut output = c.clone();
     output.push_str(format!("\nfunction onTurn()\n    return \"0\"\nend").as_str());
     return output;
 }
+#[allow(dead_code)]
 /// Append jump to code
 pub(super) fn aj(c: String) -> String {
     let mut output = c.clone();
@@ -58,6 +60,7 @@ pub(super) fn aj(c: String) -> String {
     return output;
 }
 
+#[allow(dead_code)]
 pub(super) fn mock_player(x: i32, y: i32, wall_count: i32, player_type: PlayerType) -> Player {
     return Player {
         x,
