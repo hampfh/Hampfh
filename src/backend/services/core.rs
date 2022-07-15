@@ -6,7 +6,7 @@ use crate::backend::models::user_model::User;
 use crate::external_related::code_unwrapper::unwrap_code;
 use crate::external_related::github::close_issue::{close_issue, CloseType};
 use crate::external_related::github::create_issue_comment::create_issue_comment;
-use crate::external_related::github::webhook_schema::GithubPayload;
+use crate::external_related::github::webhook_schema::{GithubPayload, Label};
 use crate::external_related::readme_factory::{
     build_match_files_wrapper, clear_match_dir, generate_readme, write_file,
 };
@@ -23,8 +23,10 @@ pub async fn submit_challenge(
     let conn = pool.get().unwrap();
 
     // Validate the the submission is a challenger submission
-    if webhook_post.action != "opened" || webhook_post.issue.title != "[Challenger-submission]" {
-        return Ok(format!("Only accepts \"opened\" actions"));
+    if valid_request(&webhook_post.action, &webhook_post.issue.labels) {
+        return Ok(format!(
+            "Only accepts \"opened\" actions and must be marked with the \"challenger\" label"
+        ));
     }
 
     // If user doesn't exist we create it
@@ -139,6 +141,10 @@ pub async fn submit_challenge(
             return Ok("Could not update README.md".to_string());
         }
     }
+}
+
+fn valid_request(action: &String, labels: &Vec<Label>) -> bool {
+    return action != "opened" || labels.iter().any(|current| current.name == "challenger");
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {
