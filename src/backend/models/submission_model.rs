@@ -1,4 +1,5 @@
 use crate::backend::schema::Submissions::dsl::Submissions as submission_dsl;
+use crate::match_maker::constants::MMR_START_RATING;
 use crate::{backend::schema::Submissions, external_related::repo_updater::is_plagiarism_enabled};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -17,6 +18,8 @@ pub struct Submission {
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
     pub disqualified: i32, // Boolean SQLite doesn't support booleans
+    pub mmr: f32,
+    pub matches_played: i32,
 }
 impl Submission {
     pub fn list(conn: &SqliteConnection) -> Vec<Self> {
@@ -79,6 +82,7 @@ impl Submission {
             script,
             comment,
             score,
+            MMR_START_RATING,
             issue_url,
             issue_number,
         );
@@ -108,6 +112,7 @@ impl Submission {
         script: &str,
         comment: Option<&str>,
         wins: i32,
+        mmr: f32,
         issue_url: &str,
         issue_number: i32,
     ) -> Self {
@@ -116,10 +121,12 @@ impl Submission {
             user: user_id.into(),
             script: script.into(),
             comment: comment.map(|c| c.into()),
-            wins: wins,
+            wins,
             disqualified: 0,
+            mmr,
+            matches_played: 0,
             issue_url: issue_url.into(),
-            issue_number: issue_number,
+            issue_number,
             created_at: chrono::Local::now().naive_local(),
             updated_at: chrono::Local::now().naive_local(),
         }

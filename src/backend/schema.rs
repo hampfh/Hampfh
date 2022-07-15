@@ -20,6 +20,8 @@ table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         disqualified -> Integer,
+        mmr -> Float,
+        matches_played -> Integer,
     }
 }
 

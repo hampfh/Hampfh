@@ -1,0 +1,3 @@
+-- Your SQL goes here
+ALTER TABLE Submissions ADD COLUMN mmr FLOAT NOT NULL DEFAULT 0;
+ALTER TABLE Submissions ADD COLUMN matches_played INTEGER NOT NULL DEFAULT 0;
