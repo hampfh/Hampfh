@@ -83,12 +83,13 @@ pub struct Repository {
     pub full_name: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Label {
-    pub id: i32,
+    //pub id: String,
     pub node_id: String,
     pub url: String,
     pub name: String,
     pub color: String,
     pub default: bool,
+    pub description: String,
 }
