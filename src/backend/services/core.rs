@@ -23,7 +23,7 @@ pub async fn submit_challenge(
     let conn = pool.get().unwrap();
 
     // Validate the the submission is a challenger submission
-    if valid_request(&webhook_post.action, &webhook_post.issue.labels) {
+    if !valid_request(&webhook_post.action, &webhook_post.issue.labels) {
         return Ok(format!(
             "Only accepts \"opened\" actions and must be marked with the \"challenger\" label"
         ));
@@ -144,7 +144,7 @@ pub async fn submit_challenge(
 }
 
 fn valid_request(action: &String, labels: &Vec<Label>) -> bool {
-    return action != "opened" || labels.iter().any(|current| current.name == "challenger");
+    return action == "opened" && labels.iter().any(|current| current.name == "challenger");
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {
