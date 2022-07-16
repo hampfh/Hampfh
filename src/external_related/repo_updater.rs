@@ -8,10 +8,8 @@ pub fn is_plagiarism_enabled() -> bool {
     return std::env::var("PLAGIARISM_CHECK").unwrap() == "true";
 }
 
-/**
- * This function will push changes to the repository.
- */
-pub fn update_repo(submission_id: &str, author: &str) {
+/// This function will push changes to the repository.
+pub fn update_repo(commit_msg: String) {
     if !is_live() {
         println!("[OFFLINE] Skipping update_repo");
         return;
@@ -25,7 +23,7 @@ pub fn update_repo(submission_id: &str, author: &str) {
     Command::new("git")
         .arg("commit")
         .arg("-m")
-        .arg(format!("\"Submission [{}] by @{}\"", submission_id, author))
+        .arg(commit_msg)
         .output()
         .expect("Could not create commit");
     Command::new("git")

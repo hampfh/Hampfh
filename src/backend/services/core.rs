@@ -1,17 +1,12 @@
 use crate::backend::db::DbPool;
-use crate::backend::models::match_model::Match;
 use crate::backend::models::submission_model::Submission;
-use crate::backend::models::turn_model::Turn;
 use crate::backend::models::user_model::User;
 use crate::external_related::code_unwrapper::unwrap_code;
 use crate::external_related::github::close_issue::{close_issue, CloseType};
 use crate::external_related::github::create_issue_comment::create_issue_comment;
 use crate::external_related::github::webhook_schema::{GithubPayload, Label};
-use crate::external_related::readme_factory::{
-    build_match_files_wrapper, clear_match_dir, generate_readme, write_file,
-};
-use crate::external_related::repo_updater::update_repo;
 use crate::match_maker::placements::run_placements;
+use crate::match_maker::regenerate_markdown_files::regen_markdown_files;
 use actix_web::{post, web};
 
 #[post("/api/challenge")]
@@ -58,7 +53,7 @@ pub async fn submit_challenge(
 
     // Create submission
     let challenger = match Submission::create(
-        &user.unwrap().id,
+        &user.as_ref().unwrap().id,
         &code,
         Some(&webhook_post.issue.title),
         0,
@@ -94,52 +89,21 @@ pub async fn submit_challenge(
     let reports = run_placements(&challenger.clone().unwrap(), &conn);
 
     let mut output = String::new();
-    for report in reports.clone() {
-        output += &report;
+    let mut opponent_output: Vec<(&str, i32)> = Vec::new();
+    for (challenger_report, opponent_report) in reports.iter() {
+        output += &challenger_report.report;
         output += "<br>";
+        opponent_output.push((&opponent_report.report, opponent_report.issue_number));
     }
     if reports.len() == 0 {
         create_issue_comment(webhook_post.issue.number, &format!("Bot has been registered but could not be match-maked against another bot, wait for someone else to create a bot..."));
     } else {
         create_issue_comment(webhook_post.issue.number, &output);
     }
+    close_issue(CloseType::Completed, webhook_post.issue.number);
 
-    clear_match_dir();
-    build_match_files_wrapper();
-    match write_file(
-        "README.md",
-        generate_readme(
-            User::list(&conn),
-            Submission::list(&conn),
-            Match::list(&conn),
-            Turn::list(&conn),
-        ),
-    ) {
-        Ok(_) => {
-            // Submit new files to repo
-            let challenger_id = challenger.unwrap().id;
-            update_repo(&challenger_id, &webhook_post.sender.login);
-            let close_type = match Submission::by_id(&challenger_id, &conn) {
-                Some(submission) => {
-                    if submission.disqualified >= 1 {
-                        CloseType::Completed
-                    } else {
-                        CloseType::NotPlanned
-                    }
-                }
-                None => CloseType::NotPlanned,
-            };
-            close_issue(close_type, webhook_post.issue.number);
-            return Ok("README.md updated".to_string());
-        }
-        Err(e) => {
-            create_issue_comment(
-                webhook_post.issue.number,
-                &format!("Internal error: Could not update README.md: {}", e),
-            );
-            close_issue(CloseType::NotPlanned, webhook_post.issue.number);
-            return Ok("Could not update README.md".to_string());
-        }
+    match regen_markdown_files(&conn) {
+        Ok(msg) | Err(msg) => Ok(msg),
     }
 }
 

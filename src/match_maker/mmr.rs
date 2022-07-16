@@ -3,8 +3,8 @@ use pathfinding::num_traits::ToPrimitive;
 use super::constants::DEFAULT_MATCH_GAIN;
 
 pub(crate) struct MMR {
-    rating: f32,
-    matches_played: i32,
+    pub(crate) rating: f32,
+    pub(crate) matches_played: i32,
 }
 
 fn get_max_and_min(p1_mmr: f32, p2_mmr: f32) -> (f32, f32) {
@@ -35,7 +35,18 @@ pub(crate) fn calculate_mmr(p1_mmr: MMR, p2_mmr: MMR, p1_winner: bool) -> (f32, 
         false => max / min, // high diff
     };
 
-    let p1_new_mmr = DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p1_mmr.matches_played);
-    let p2_new_mmr = DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p2_mmr.matches_played);
-    return (p1_new_mmr, p2_new_mmr);
+    match p1_winner {
+        true => {
+            return (
+                p1_mmr.rating + DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p1_mmr.matches_played),
+                p2_mmr.rating - DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p2_mmr.matches_played),
+            );
+        }
+        false => {
+            return (
+                p1_mmr.rating - DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p1_mmr.matches_played),
+                p1_mmr.rating + DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p2_mmr.matches_played),
+            );
+        }
+    }
 }

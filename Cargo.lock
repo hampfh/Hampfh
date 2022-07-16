@@ -753,6 +753,7 @@ dependencies = [
  "libc",
  "libsqlite3-sys",
  "pathfinding",
+ "rand",
  "reqwest",
  "rlua",
  "serde",
