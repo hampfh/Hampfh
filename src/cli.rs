@@ -18,7 +18,7 @@ pub fn cli(args: Vec<String>) {
         "generate-main" => generate_main(),
         "generate-matches" => build_match_files_wrapper(),
         "clear" => clear_match_dir(),
-        "scheduled_matchmaking" => scheduled_matchmaking(),
+        "schedule_matchmaking" => scheduled_matchmaking(),
         _ => {}
     }
 }
