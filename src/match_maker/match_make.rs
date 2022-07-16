@@ -68,7 +68,7 @@ fn find_least_played(submissions: &Vec<Submission>) -> Vec<Submission> {
 
     // TODO we probably don't want to sort the whole list to just find 10 least played bots
     submissions.sort_by(|a, b| a.matches_played.cmp(&b.matches_played));
-    for i in 0..std::cmp::min(10, submissions.len() - 1) {
+    for i in 0..std::cmp::min(10, submissions.len()) {
         selected_submissions.push(submissions[i].clone());
     }
     return selected_submissions;
