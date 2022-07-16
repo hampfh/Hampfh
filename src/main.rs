@@ -28,7 +28,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     println!("Listening on port {}", port);
     HttpServer::new(move || {
-        let db_connection = backend::db::establish_connection().get().unwrap();
+        let db_connection = backend::db::establish_connection();
         App::new()
             .app_data(Data::new(db_connection))
             .configure(config)

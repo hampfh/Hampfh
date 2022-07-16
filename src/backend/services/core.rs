@@ -1,3 +1,4 @@
+use crate::backend::db::DbPool;
 use crate::backend::models::submission_model::Submission;
 use crate::backend::models::user_model::User;
 use crate::external_related::code_unwrapper::unwrap_code;
@@ -7,14 +8,14 @@ use crate::external_related::github::webhook_schema::{GithubPayload, Label};
 use crate::match_maker::placements::run_placements;
 use crate::match_maker::regenerate_markdown_files::regen_markdown_files;
 use actix_web::{post, web};
-use diesel::SqliteConnection;
 
 #[post("/api/challenge")]
 #[allow(unreachable_code)]
 pub async fn submit_challenge(
     webhook_post: web::Json<GithubPayload>,
-    conn: web::Data<SqliteConnection>,
+    db_pool: web::Data<DbPool>,
 ) -> actix_web::Result<String> {
+    let conn = db_pool.get().unwrap();
     // Validate the the submission is a challenger submission
     if !valid_request(&webhook_post.action, &webhook_post.issue.labels) {
         return Ok(format!(
