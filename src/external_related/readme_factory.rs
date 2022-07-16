@@ -164,11 +164,16 @@ fn create_history_table(bor_submissions: &Vec<Submission>, bor_matches: &Vec<Mat
         let user = User::by_id(&current.user, &conn);
         if user.is_none() {
             continue;
-        }
+        };
         submission_list.push_str(&format!(
-            "<p>{} &#124; <a href=\"{}\">Submission</a> &#124; {}</p>  \n",
+            "<p>{} &#124; <a href=\"{}\">Submission</a> {} &#124; {}</p>  \n",
             user.unwrap().username,
             current.issue_url,
+            if current.disqualified >= 1 {
+                "❌"
+            } else {
+                "✅"
+            },
             current.created_at.format("%Y-%m-%d %H:%M")
         ));
     }
@@ -187,10 +192,10 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
     }
 
     let mut sorted_submissions = submissions.clone();
-    sorted_submissions.sort_by(|a, b| b.wins.cmp(&a.wins));
+    sorted_submissions.sort_by(|a, b| (b.mmr.round() as i32).cmp(&(a.mmr.round() as i32)));
 
     let mut output = format!(
-        "<div align=\"center\">\n\n| Scoreboard | (Top 10) | Submission  |\n| :-- | --: | :--: |\n"
+        "<div align=\"center\">\n\n| MMR | (Top 10) | Submission  |\n| :-- | --: | :--: |\n"
     );
 
     // Limit to only top 10
@@ -200,7 +205,7 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
             .find(|current| current.id == sorted_submissions[i].user);
         output.push_str(&format!(
             "| {} | {} | [Submission]({}) {} |\n",
-            sorted_submissions[i].wins.to_string(),
+            sorted_submissions[i].mmr.round().to_string(),
             match user {
                 Some(user) => user.username.clone(),
                 None => format!("<Unknown>"),
