@@ -1,11 +1,12 @@
 use actix_web::{web::Data, App, HttpServer};
 
-use crate::backend::services::core::config;
+use crate::backend::{db::run_migrations, services::core::config};
 
 #[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
+embed_migrations!();
 
 mod backend;
 mod cli;
@@ -16,6 +17,7 @@ mod match_maker;
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
     dotenv::dotenv().expect("Could not load .env file");
+    migrations();
     let args: Vec<String> = std::env::args().collect();
     if args.len() > 1 {
         cli::cli(args);
@@ -25,8 +27,8 @@ async fn main() -> Result<(), std::io::Error> {
     let port = 8095;
 
     println!("Listening on port {}", port);
-    HttpServer::new(|| {
-        let db_connection = backend::db::establish_connection();
+    HttpServer::new(move || {
+        let db_connection = backend::db::establish_connection().get().unwrap();
         App::new()
             .app_data(Data::new(db_connection))
             .configure(config)
@@ -35,4 +37,9 @@ async fn main() -> Result<(), std::io::Error> {
     .workers(2)
     .run()
     .await
+}
+
+fn migrations() {
+    let conn = backend::db::establish_connection().get().unwrap();
+    run_migrations(&conn);
 }
