@@ -10,3 +10,4 @@ storage.sql
 storage.db
 
 .DS_Store
+.VSCodeCounter
