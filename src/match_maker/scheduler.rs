@@ -16,6 +16,10 @@ use super::{
 pub(crate) fn run_scheduled_matchmaking(conn: &SqliteConnection) {
     let submissions = Submission::list(conn);
     let match_queue = create_match_making_queue(submissions);
+    if match_queue.len() < 2 {
+        println!("Not enough submissions to execute match-queue");
+        return;
+    }
     let match_reports = execute_match_queue(conn, match_queue);
     publish_match_reports(match_reports);
     match regen_markdown_files(conn) {

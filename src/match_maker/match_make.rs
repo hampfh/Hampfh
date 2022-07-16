@@ -12,6 +12,10 @@ pub(crate) fn create_match_making_queue(
         .filter(|submission| submission.disqualified == 0)
         .collect();
 
+    if submissions.len() < 2 {
+        return vec![];
+    }
+
     // Sort from lowest to highest
     submissions.sort_by(|a, b| (a.mmr.round() as i32).cmp(&(b.mmr.round() as i32)));
 
