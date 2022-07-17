@@ -211,10 +211,11 @@ fn create_submission_log(conn: &SqliteConnection, submissions: &Vec<Submission>)
             continue;
         };
         output.push_str(&format!(
-            "<p>MMR: {} &#124; @{} &#124; <a href=\"{}\">Submission</a> {} &#124; {}</p>  \n",
+            "<p>MMR: {} &#124; @{} &#124; <a href=\"{}\">{}</a> {} &#124; {}</p>  \n",
             current.mmr.round(),
             user.unwrap().username,
             current.issue_url,
+            current.id,
             if current.disqualified >= 1 {
                 "❌"
             } else {
