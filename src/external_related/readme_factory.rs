@@ -166,7 +166,7 @@ fn create_match_log(conn: &SqliteConnection, matches: &Vec<Match>) -> String {
         }
         let ((winner, winner_submission), (loser, loser_submission)) = result.unwrap();
         output.push_str(&format!(
-            "<p>\n\n{} vs {}</p>\n<p>@{} vs @{}</p>\n<p><a href=\"./data/matches/{}.md\">Match</a></p>\n<p>{}</p>\n\n---\n",
+            "<p>\n\n{} vs {}</p>\n<p>@{} vs @{}</p>\n<p><a href=\"./matches/{}.md\">Match</a></p>\n<p>{}</p>\n\n---\n",
             format!(
                 "[{}]({})",
                 winner_submission.id,
