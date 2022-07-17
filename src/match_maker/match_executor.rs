@@ -36,6 +36,20 @@ pub(super) fn execute_match_queue(
             turns,
         } = start_match(match_queue[i].clone());
 
+        // If the new challenger has a part in the error
+        // we disqualify it directly here
+        if error_msg.is_some()
+            && error_fault.is_some()
+            && error_fault.clone().unwrap() == PlayerType::Flipped
+            || winner_id.is_none()
+            || loser_id.is_none()
+        {
+            continue;
+        }
+
+        let winner_id = winner_id.unwrap();
+        let loser_id = loser_id.unwrap();
+
         let report = create_report_text(
             error_msg.clone(),
             error_fault.clone(),
@@ -43,6 +57,7 @@ pub(super) fn execute_match_queue(
             p1.issue_number,
             p2.id.clone(),
             p2.issue_number,
+            winner_id.clone(),
         );
         round_reports.push((
             MatchReport {
@@ -54,20 +69,6 @@ pub(super) fn execute_match_queue(
                 issue_number: p2.issue_number,
             },
         ));
-
-        // If the new challenger has a part in the error
-        // we disqualify it directly here
-        if error_msg.is_some()
-            && error_fault.is_some()
-            && error_fault.unwrap() == PlayerType::Flipped
-            || winner_id.is_none()
-            || loser_id.is_none()
-        {
-            continue;
-        }
-
-        let winner_id = winner_id.unwrap();
-        let loser_id = loser_id.unwrap();
 
         let (p1_new_mmr, p2_new_mmr) = calculate_mmr(
             MMR {
