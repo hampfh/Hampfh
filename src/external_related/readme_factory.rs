@@ -15,10 +15,16 @@ use super::repo_updater::get_issue_url;
 pub fn clear_match_dir() {
     match std::fs::remove_dir_all("data") {
         Ok(_) => (),
-        Err(_) => (),
+        Err(error) => println!("Could not clear data dir, reason: {}", error),
     };
-    std::fs::create_dir("data").unwrap();
-    std::fs::create_dir("data/matches").unwrap();
+    match std::fs::create_dir("data") {
+        Ok(_) => (),
+        Err(error) => println!("Could not create data dir, reason: {}", error),
+    }
+    match std::fs::create_dir("data/matches") {
+        Ok(_) => (),
+        Err(error) => println!("Could not create data/matches dir, reason: {}", error),
+    }
 }
 
 pub fn write_file(path: &str, data: String) -> std::io::Result<()> {
