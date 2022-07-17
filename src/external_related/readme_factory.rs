@@ -301,7 +301,7 @@ fn build_match(conn: &SqliteConnection, target_match: &Match) -> Option<String> 
 
     let mut file = format!(
         "<div align=\"center\"><h1>{} vs {}</h1><p><a href=\"{}\">{} {}</a> vs <a href=\"{}\">{} {}</a></p>\n<p>Winner: {}</p></div>\n\n---\n",
-        winner.username, loser.username, win_sub.issue_url, winner_color, win_sub.id, los_sub.issue_url, win_sub.id, loser_color, winner_color, 
+        winner.username, loser.username, win_sub.issue_url, winner_color, win_sub.id, los_sub.issue_url, los_sub.id, loser_color, winner_color, 
     );
     file.push_str(&get_match_from_tiles(
         turns
