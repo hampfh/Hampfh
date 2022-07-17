@@ -39,7 +39,9 @@ pub(super) fn execute_match_queue(
             error_msg.clone(),
             error_fault.clone(),
             p1.id.clone(),
+            p1.issue_number,
             p2.id.clone(),
+            p2.issue_number,
         );
         round_reports.push((
             MatchReport {
@@ -209,26 +211,47 @@ fn create_report_text(
     error_msg: Option<String>,
     fault: Option<PlayerType>,
     p1: String,
+    p1_issue_number: i32,
     p2: String,
+    p2_issue_number: i32,
 ) -> (String, String) {
+    let github_user = std::env::var("GITHUB_USER").unwrap();
+    let github_repo = std::env::var("GITHUB_REPO").unwrap();
+    let p1_issue = format!(
+        "https://github.com/{}/{}/issues/{}",
+        github_user, github_repo, p1_issue_number
+    );
+    let p2_issue = format!(
+        "https://github.com/{}/{}/issues/{}",
+        github_user, github_repo, p2_issue_number
+    );
+
     match error_msg {
         Some(error_msg) => {
             return (
-                get_error_report(p2, error_msg.clone(), fault.clone()),
-                get_error_report(p1, error_msg, fault),
+                get_error_report(
+                    format!("[{}]({})", p2, p2_issue),
+                    error_msg.clone(),
+                    fault.clone(),
+                ),
+                get_error_report(format!("[{}]({})", p1, p1_issue), error_msg, fault),
             );
         }
         None => (
-            format!("[SUCCESS] Opponent: {}", p2),
-            format!("[SUCCESS] Opponent: {}", p1),
+            format!("[SUCCESS] Opponent: [{}]({})", p2, p2_issue),
+            format!("[SUCCESS] Opponent: [{}]({})", p1, p1_issue),
         ),
     }
 }
 
-fn get_error_report(opponent: String, error_msg: String, fault: Option<PlayerType>) -> String {
+fn get_error_report(
+    opponent_issue_link: String,
+    error_msg: String,
+    fault: Option<PlayerType>,
+) -> String {
     format!(
         "[FAIL] Opponent: {}, Error: {}, {}",
-        opponent,
+        opponent_issue_link,
         error_msg,
         match fault {
             Some(PlayerType::Flipped) => format!("submission has been disqualified"),
