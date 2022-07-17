@@ -8,6 +8,7 @@
 *.temp.md
 storage.sql
 storage.db
+storage.*
 
 .DS_Store
 .VSCodeCounter
