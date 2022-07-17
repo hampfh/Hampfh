@@ -239,7 +239,7 @@ fn create_report_text(
         }
         None => (
             format!(
-                "[{}] Opponent: [{}]({}) &#124; {}",
+                "[{}] Opponent: [{}]({}) &#124; [Match]({})",
                 if winner_id == p1 { "WIN" } else { "LOSS" },
                 p2,
                 p2_issue,
