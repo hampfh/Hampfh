@@ -216,6 +216,7 @@ fn create_report_text(
     p1_issue_number: i32,
     p2: String,
     p2_issue_number: i32,
+    winner_id: String,
 ) -> (String, String) {
     let p1_issue = get_issue_url(p1_issue_number);
     let p2_issue = get_issue_url(p2_issue_number);
@@ -232,8 +233,18 @@ fn create_report_text(
             );
         }
         None => (
-            format!("[SUCCESS] Opponent: [{}]({})", p2, p2_issue),
-            format!("[SUCCESS] Opponent: [{}]({})", p1, p1_issue),
+            format!(
+                "[{}] Opponent: [{}]({})",
+                if winner_id == p1 { "WIN" } else { "LOSS" },
+                p2,
+                p2_issue
+            ),
+            format!(
+                "[{}] Opponent: [{}]({})",
+                if winner_id == p1 { "WIN" } else { "LOSS" },
+                p1,
+                p1_issue
+            ),
         ),
     }
 }
