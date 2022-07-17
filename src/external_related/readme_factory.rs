@@ -244,6 +244,7 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
 
     let mut sorted_submissions = submissions.clone();
     sorted_submissions.sort_by(|a, b| (b.mmr.round() as i32).cmp(&(a.mmr.round() as i32)));
+    sorted_submissions = sorted_submissions.into_iter().filter(|current| current.disqualified == 0).collect();
 
     let mut output = format!(
         "<div align=\"center\">\n\n| MMR | (Top 10) | Submission  |\n| :-- | --: | :--: |\n"
