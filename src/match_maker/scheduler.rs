@@ -2,15 +2,13 @@ use diesel::SqliteConnection;
 
 use crate::{
     backend::models::submission_model::Submission,
-    external_related::{
-        github::create_issue_comment::create_issue_comment, repo_updater::update_repo,
-    },
+    external_related::github::create_issue_comment::create_issue_comment,
 };
 
 use super::{
     match_executor::{execute_match_queue, MatchReport},
     match_make::create_match_making_queue,
-    regenerate_markdown_files::regen_markdown_files,
+    regenerate_markdown_files::regen_markdown_files_and_update_repo,
 };
 
 pub(crate) fn run_scheduled_matchmaking(conn: &SqliteConnection) {
@@ -22,14 +20,10 @@ pub(crate) fn run_scheduled_matchmaking(conn: &SqliteConnection) {
     }
     let match_reports = execute_match_queue(conn, match_queue);
     publish_match_reports(match_reports);
-    match regen_markdown_files(conn) {
+    match regen_markdown_files_and_update_repo(conn) {
         Ok(_) => (),
         Err(error) => println!("Could not update README.md: {}", error),
     }
-    update_repo(format!(
-        "Match Making: {}",
-        chrono::Local::now().format("%Y-%m-%d %H:%M:%S")
-    ));
 }
 
 fn publish_match_reports(match_reports: Vec<(MatchReport, MatchReport)>) {

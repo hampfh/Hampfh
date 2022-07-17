@@ -6,7 +6,7 @@ use crate::external_related::github::close_issue::{close_issue, CloseType};
 use crate::external_related::github::create_issue_comment::create_issue_comment;
 use crate::external_related::github::webhook_schema::{GithubPayload, Label};
 use crate::match_maker::placements::run_placements;
-use crate::match_maker::regenerate_markdown_files::regen_markdown_files;
+use crate::match_maker::regenerate_markdown_files::regen_markdown_files_and_update_repo;
 use actix_web::{post, web};
 
 #[post("/api/challenge")]
@@ -101,7 +101,7 @@ pub async fn submit_challenge(
     }
     close_issue(CloseType::Completed, webhook_post.issue.number);
 
-    match regen_markdown_files(&conn) {
+    match regen_markdown_files_and_update_repo(&conn) {
         Ok(msg) | Err(msg) => Ok(msg),
     }
 }

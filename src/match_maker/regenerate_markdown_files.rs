@@ -13,7 +13,9 @@ use crate::{
     },
 };
 
-pub(crate) fn regen_markdown_files(conn: &SqliteConnection) -> Result<String, String> {
+pub(crate) fn regen_markdown_files_and_update_repo(
+    conn: &SqliteConnection,
+) -> Result<String, String> {
     clear_match_dir();
     build_match_files_wrapper();
     build_match_log_wrapper();
