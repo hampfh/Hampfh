@@ -44,7 +44,7 @@ pub(super) fn execute_match_queue(
             || winner_id.is_none()
             || loser_id.is_none()
         {
-            create_report_text(
+            let report = create_report_text(
                 error_msg,
                 error_fault,
                 p1.id.clone(),
@@ -54,6 +54,16 @@ pub(super) fn execute_match_queue(
                 None,
                 None,
             );
+            round_reports.push((
+                MatchReport {
+                    report: report.0,
+                    issue_number: p1.issue_number,
+                },
+                MatchReport {
+                    report: report.1,
+                    issue_number: p2.issue_number,
+                },
+            ));
             p1.save(conn);
             p2.save(conn);
             continue;
