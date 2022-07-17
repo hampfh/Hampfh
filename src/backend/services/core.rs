@@ -116,7 +116,3 @@ pub async fn submit_challenge(
 fn valid_request(action: &String, labels: &Vec<Label>) -> bool {
     return action == "opened" && labels.iter().any(|current| current.name == "challenger");
 }
-
-pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(submit_challenge);
-}

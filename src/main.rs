@@ -1,6 +1,6 @@
 use actix_web::{web::Data, App, HttpServer};
 
-use crate::backend::{db::run_migrations, services::core::config};
+use crate::backend::{db::run_migrations, services::routes::routes};
 
 #[macro_use]
 extern crate diesel;
@@ -31,7 +31,7 @@ async fn main() -> Result<(), std::io::Error> {
         let db_connection = backend::db::establish_connection();
         App::new()
             .app_data(Data::new(db_connection))
-            .configure(config)
+            .configure(routes)
     })
     .bind((std::env::var("IP").unwrap(), port))?
     .workers(2)
