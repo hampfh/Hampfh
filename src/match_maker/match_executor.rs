@@ -50,26 +50,6 @@ pub(super) fn execute_match_queue(
         let winner_id = winner_id.unwrap();
         let loser_id = loser_id.unwrap();
 
-        let report = create_report_text(
-            error_msg.clone(),
-            error_fault.clone(),
-            p1.id.clone(),
-            p1.issue_number,
-            p2.id.clone(),
-            p2.issue_number,
-            winner_id.clone(),
-        );
-        round_reports.push((
-            MatchReport {
-                report: report.0,
-                issue_number: p1.issue_number,
-            },
-            MatchReport {
-                report: report.1,
-                issue_number: p2.issue_number,
-            },
-        ));
-
         let (p1_new_mmr, p2_new_mmr) = calculate_mmr(
             MMR {
                 rating: p1.mmr,
@@ -102,7 +82,7 @@ pub(super) fn execute_match_queue(
         // If there are errors, then we stop the match-making process
         // This is because the submitted bot is obviously not working
         // and should therefore not be matchmaked against future bots
-        match Match::create(&winner_id, &loser_id, conn) {
+        let match_record = match Match::create(&winner_id, &loser_id, conn) {
             Some(match_record) => {
                 // Generate turns
                 let mut turn_index = 1;
@@ -110,11 +90,34 @@ pub(super) fn execute_match_queue(
                     Turn::create(&match_record.id, turn_index, &board_to_string(turn), conn);
                     turn_index += 1;
                 }
+                match_record
             }
             None => {
                 println!("Internal error, could not create match");
+                continue;
             }
-        }
+        };
+
+        let report = create_report_text(
+            error_msg.clone(),
+            error_fault.clone(),
+            p1.id.clone(),
+            p1.issue_number,
+            p2.id.clone(),
+            p2.issue_number,
+            winner_id.clone(),
+            format!("./data/matches/{}.md", match_record.id),
+        );
+        round_reports.push((
+            MatchReport {
+                report: report.0,
+                issue_number: p1.issue_number,
+            },
+            MatchReport {
+                report: report.1,
+                issue_number: p2.issue_number,
+            },
+        ));
     }
     return round_reports;
 }
@@ -218,6 +221,7 @@ fn create_report_text(
     p2: String,
     p2_issue_number: i32,
     winner_id: String,
+    relative_match_url: String,
 ) -> (String, String) {
     let p1_issue = get_issue_url(p1_issue_number);
     let p2_issue = get_issue_url(p2_issue_number);
@@ -235,16 +239,18 @@ fn create_report_text(
         }
         None => (
             format!(
-                "[{}] Opponent: [{}]({})",
+                "[{}] Opponent: [{}]({}) &#124; {}",
                 if winner_id == p1 { "WIN" } else { "LOSS" },
                 p2,
-                p2_issue
+                p2_issue,
+                relative_match_url
             ),
             format!(
-                "[{}] Opponent: [{}]({})",
+                "[{}] Opponent: [{}]({}) &#124; [Match]({})",
                 if winner_id == p1 { "WIN" } else { "LOSS" },
                 p1,
-                p1_issue
+                p1_issue,
+                relative_match_url
             ),
         ),
     }
