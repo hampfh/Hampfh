@@ -53,6 +53,9 @@ fn get_readme_header() -> String {
     return String::from(
 "<div align=\"center\">
 <h3>🎉🎉🎉 Welcome to the scripting game! 🎉🎉🎉</h3>
+<img src=\"https://img.shields.io/badge/-BETA-yellow\"/>
+<img src=\"https://img.shields.io/github/issues-closed-raw/hampfh/hampfh/challenger?color=limegreen&label=Bots\"/>
+<img src=\"https://img.shields.io/website?down_message=offline&label=status&up_message=online&url=https%3A%2F%2Fgithub.hampushallkvist.com%2Fapi%2Fping\">
 </div>
 
 <div align=\"center\"> 
