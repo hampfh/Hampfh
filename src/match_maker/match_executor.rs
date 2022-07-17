@@ -104,7 +104,8 @@ pub(super) fn execute_match_queue(
         // If there are errors, then we stop the match-making process
         // This is because the submitted bot is obviously not working
         // and should therefore not be matchmaked against future bots
-        let match_record = match Match::create(&winner_id, &loser_id, conn) {
+        let p1_is_winner = p1.id == winner_id;
+        let match_record = match Match::create(&winner_id, &loser_id, p1_is_winner, conn) {
             Some(match_record) => {
                 // Generate turns
                 let mut turn_index = 1;

@@ -5,6 +5,7 @@ table! {
         loser -> Text,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        p1_is_winner -> Integer,
     }
 }
 
