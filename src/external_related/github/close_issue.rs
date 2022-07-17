@@ -17,11 +17,11 @@ pub fn close_issue(state: CloseType, issue_number: i32) {
     // use reqwest to send a post request to https://api.github.com
     let client = reqwest::blocking::Client::new();
     let url = format!(
-        "https://api.github.com/repos/{}/{}/issues/{}/comments",
+        "https://api.github.com/repos/{}/{}/issues/{}",
         user, repo, issue_number
     );
     let req = client
-        .post(&url)
+        .patch(&url)
         .header("User-Agent", user)
         .header("Accept", "application/vnd.github.v3+json")
         .header("Authorization", format!("token {}", secret))
