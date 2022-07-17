@@ -5,6 +5,7 @@ use crate::external_related::code_unwrapper::unwrap_code;
 use crate::external_related::github::close_issue::{close_issue, CloseType};
 use crate::external_related::github::create_issue_comment::create_issue_comment;
 use crate::external_related::github::webhook_schema::{GithubPayload, Label};
+use crate::match_maker::match_executor::MatchReport;
 use crate::match_maker::placements::run_placements;
 use crate::match_maker::regenerate_markdown_files::regen_markdown_files_and_update_repo;
 use actix_web::{post, web};
@@ -88,17 +89,23 @@ pub async fn submit_challenge(
     let reports = run_placements(&challenger.clone().unwrap(), &conn);
 
     let mut output = String::new();
-    let mut opponent_output: Vec<(&str, i32)> = Vec::new();
+    let mut opponent_output: Vec<&MatchReport> = Vec::new();
     for (challenger_report, opponent_report) in reports.iter() {
         output += &challenger_report.report;
         output += "<br>";
-        opponent_output.push((&opponent_report.report, opponent_report.issue_number));
+        opponent_output.push(opponent_report);
     }
     if reports.len() == 0 {
         create_issue_comment(webhook_post.issue.number, &format!("Bot has been registered but could not be match-maked against another bot, wait for someone else to create a bot..."));
     } else {
         create_issue_comment(webhook_post.issue.number, &output);
     }
+
+    // Notify opponents too
+    for opponent in opponent_output.iter() {
+        create_issue_comment(opponent.issue_number, &opponent.report);
+    }
+
     close_issue(CloseType::Completed, webhook_post.issue.number);
 
     match regen_markdown_files_and_update_repo(&conn) {
