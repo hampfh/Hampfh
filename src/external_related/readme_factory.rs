@@ -37,7 +37,7 @@ pub fn generate_readme(
         get_last_turn_of_last_match(players.clone(), submissions.clone(), &matches, turns),
         generate_score_board(&submissions, &players),
         format!(
-            "🕹 [Match log](./data/match_logs.md) &#124; [Submission log](./data/submission_logs.md) 🤖"
+            "🕹 [Match log](./data/match_log.md) &#124; [Submission log](./data/submission_log.md) 🤖"
         ),
         credits(chrono::Local::now().naive_local())
     );
@@ -166,7 +166,7 @@ fn create_match_log(conn: &SqliteConnection, matches: &Vec<Match>) -> String {
         }
         let ((winner, winner_submission), (loser, loser_submission)) = result.unwrap();
         output.push_str(&format!(
-            "<p>\n\n{} vs {}</p>\n<p>@{} vs @{}</p>\n<p><a href=\"./data/matches/{}.md\">Match</a></p>\n<p>{}</p>\n\n---\n",
+            "<p>\n\n{} vs {}</p>\n<p>@{} vs @{}</p>\n<p><a href=\"./matches/{}.md\">Match</a></p>\n<p>{}</p>\n\n---\n",
             format!(
                 "[{}]({})",
                 winner_submission.id,
