@@ -329,7 +329,7 @@ pub(crate) fn get_match_from_tiles(turns: Vec<Vec<Tile>>) -> String {
 fn credits(last_updated: NaiveDateTime) -> String {
     let spacing = format!("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
     return format!(
-        "<br/><div align=\"center\"><a href=\"https://www.craft.do/s/ges8o08lvj4cfd\">What is this? </a> {}&#124;{} Hampus Hallkvist {}&#124;{} {}</div>",
+        "<br/><div align=\"center\"><a href=\"https://www.craft.do/s/geS8o08lvJ4cfD\">What is this? </a> {}&#124;{} Hampus Hallkvist {}&#124;{} {}</div>",
         spacing,
         spacing,
         spacing,
