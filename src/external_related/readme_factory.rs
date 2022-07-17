@@ -13,7 +13,10 @@ use std::fs;
 use super::repo_updater::get_issue_url;
 
 pub fn clear_match_dir() {
-    std::fs::remove_dir_all("data").unwrap();
+    match std::fs::remove_dir_all("data") {
+        Ok(_) => (),
+        Err(_) => (),
+    };
     std::fs::create_dir("data").unwrap();
     std::fs::create_dir("data/matches").unwrap();
 }
