@@ -30,6 +30,7 @@ pub(crate) fn calculate_mmr(p1_mmr: MMR, p2_mmr: MMR, p1_winner: bool) -> (f32, 
     let (max, min) = get_max_and_min(p1_mmr.rating, p2_mmr.rating);
     let p1_highest = p1_mmr.rating > p2_mmr.rating;
 
+    // If the MMR wins we lower the mmr diff otherwise, increase it
     let mmr_diff = match p1_highest == p1_winner {
         true => min / max,  // low diff
         false => max / min, // high diff
@@ -45,7 +46,7 @@ pub(crate) fn calculate_mmr(p1_mmr: MMR, p2_mmr: MMR, p1_winner: bool) -> (f32, 
         false => {
             return (
                 p1_mmr.rating - DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p1_mmr.matches_played),
-                p1_mmr.rating + DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p2_mmr.matches_played),
+                p2_mmr.rating + DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p2_mmr.matches_played),
             );
         }
     }
