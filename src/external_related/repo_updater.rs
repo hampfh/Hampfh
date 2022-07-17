@@ -8,6 +8,15 @@ pub fn is_plagiarism_enabled() -> bool {
     return std::env::var("PLAGIARISM_CHECK").unwrap() == "true";
 }
 
+pub(crate) fn get_issue_url(issue_number: i32) -> String {
+    format!(
+        "https://github.com/{}/{}/issues/{}",
+        std::env::var("GITHUB_USER").unwrap(),
+        std::env::var("GITHUB_REPO").unwrap(),
+        issue_number
+    )
+}
+
 /// This function will push changes to the repository.
 pub fn update_repo(commit_msg: String) {
     if !is_live() {

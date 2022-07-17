@@ -26,7 +26,12 @@ fn calc_decay(matches_played: i32) -> f32 {
             .unwrap()
 }
 
-pub(crate) fn calculate_mmr(p1_mmr: MMR, p2_mmr: MMR, p1_winner: bool) -> (f32, f32) {
+pub(crate) fn calculate_mmr(
+    p1_mmr: MMR,
+    p2_mmr: MMR,
+    p1_winner: bool,
+    amplifier: f32,
+) -> (f32, f32) {
     let (max, min) = get_max_and_min(p1_mmr.rating, p2_mmr.rating);
     let p1_highest = p1_mmr.rating > p2_mmr.rating;
 
@@ -39,14 +44,18 @@ pub(crate) fn calculate_mmr(p1_mmr: MMR, p2_mmr: MMR, p1_winner: bool) -> (f32, 
     match p1_winner {
         true => {
             return (
-                p1_mmr.rating + DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p1_mmr.matches_played),
-                p2_mmr.rating - DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p2_mmr.matches_played),
+                p1_mmr.rating
+                    + DEFAULT_MATCH_GAIN * amplifier * mmr_diff * calc_decay(p1_mmr.matches_played),
+                p2_mmr.rating
+                    - DEFAULT_MATCH_GAIN * amplifier * mmr_diff * calc_decay(p2_mmr.matches_played),
             );
         }
         false => {
             return (
-                p1_mmr.rating - DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p1_mmr.matches_played),
-                p2_mmr.rating + DEFAULT_MATCH_GAIN * mmr_diff * calc_decay(p2_mmr.matches_played),
+                p1_mmr.rating
+                    - DEFAULT_MATCH_GAIN * amplifier * mmr_diff * calc_decay(p1_mmr.matches_played),
+                p2_mmr.rating
+                    + DEFAULT_MATCH_GAIN * amplifier * mmr_diff * calc_decay(p2_mmr.matches_played),
             );
         }
     }

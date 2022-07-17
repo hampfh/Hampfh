@@ -5,7 +5,10 @@ use crate::{
         match_model::Match, submission_model::Submission, turn_model::Turn, user_model::User,
     },
     external_related::{
-        readme_factory::{build_match_files_wrapper, clear_match_dir, generate_readme, write_file},
+        readme_factory::{
+            build_match_files_wrapper, build_match_log_wrapper, build_submission_log_wrapper,
+            clear_match_dir, generate_readme, write_file,
+        },
         repo_updater,
     },
 };
@@ -13,6 +16,8 @@ use crate::{
 pub(crate) fn regen_markdown_files(conn: &SqliteConnection) -> Result<String, String> {
     clear_match_dir();
     build_match_files_wrapper();
+    build_match_log_wrapper();
+    build_submission_log_wrapper();
     match write_file(
         "README.md",
         generate_readme(

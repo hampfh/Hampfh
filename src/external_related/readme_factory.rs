@@ -10,8 +10,11 @@ use crate::game::board::{board_from_string, Tile};
 
 use std::fs;
 
+use super::repo_updater::get_issue_url;
+
 pub fn clear_match_dir() {
-    std::fs::remove_dir_all("data/matches").unwrap();
+    std::fs::remove_dir_all("data").unwrap();
+    std::fs::create_dir("data").unwrap();
     std::fs::create_dir("data/matches").unwrap();
 }
 
@@ -30,7 +33,9 @@ pub fn generate_readme(
         get_readme_header(),
         get_last_turn_of_last_match(players.clone(), submissions.clone(), &matches, turns),
         generate_score_board(&submissions, &players),
-        create_history_table(&submissions, &matches),
+        format!(
+            "🕹 [Match log](./data/match_logs.md) &#124; [Submission log](./data/submission_logs.md) 🤖"
+        ),
         credits(chrono::Local::now().naive_local())
     );
 }
@@ -135,29 +140,66 @@ fn generate_board(board: Vec<Tile>) -> String {
     return output;
 }
 
-fn create_history_table(bor_submissions: &Vec<Submission>, bor_matches: &Vec<Match>) -> String {
+pub(crate) fn build_match_log_wrapper() {
     let conn = backend::db::establish_connection().get().unwrap();
-    let mut match_list = format!("<details><summary>Matches</summary>  \n");
-    let mut submission_list = format!("<details><summary>Submissions</summary>  \n");
+    match write_file(
+        "./data/match_log.md",
+        create_match_log(&conn, &Match::list(&conn)),
+    ) {
+        Ok(_) => (),
+        Err(e) => println!("Error writing match log: {}", e),
+    }
+}
 
-    let mut matches = bor_matches.clone();
+fn create_match_log(conn: &SqliteConnection, matches: &Vec<Match>) -> String {
+    let mut output = format!("<div align=\"center\">\n\n# Matches\n");
+    let mut matches = matches.clone();
     matches.reverse();
-    let mut submissions = bor_submissions.clone();
-    submissions.reverse();
-
     // Get matches
     for current in matches {
         let result = current.players(&conn);
         if result.is_none() {
             continue;
         }
-        let ((winner, _), (loser, _)) = result.unwrap();
-        match_list.push_str(&format!(
-            "<p>{} vs {} &#124; <a href=\"./data/matches/{}.md\">Match</a></p>  \n",
-            winner.username, loser.username, current.id
+        let ((winner, winner_submission), (loser, loser_submission)) = result.unwrap();
+        output.push_str(&format!(
+            "<p>\n\n{} vs {}</p>\n<p>@{} vs @{}</p>\n<p><a href=\"./data/matches/{}.md\">Match</a></p>\n<p>{}</p>\n\n---\n",
+            format!(
+                "[{}]({})",
+                winner_submission.id,
+                get_issue_url(winner_submission.issue_number)
+            ),
+            format!(
+                "[{}]({})",
+                loser_submission.id,
+                get_issue_url(loser_submission.issue_number)
+            ),
+            winner.username,
+            loser.username,
+            current.id,
+            current.created_at.format("%Y-%m-%d %H:%M:%S")
         ));
     }
-    match_list.push_str("</details>\n");
+    output.push_str("</div>\n");
+    return output;
+}
+
+pub(crate) fn build_submission_log_wrapper() {
+    let conn = backend::db::establish_connection().get().unwrap();
+    match write_file(
+        "./data/submission_log.md",
+        create_submission_log(&conn, &Submission::list(&conn)),
+    ) {
+        Ok(_) => (),
+        Err(e) => println!("Error writing submission log: {}", e),
+    }
+}
+fn create_submission_log(conn: &SqliteConnection, submissions: &Vec<Submission>) -> String {
+    let mut output = format!("<div align=\"center\">\n\n# Submissions\n");
+
+    let mut submissions = submissions.clone();
+    submissions.sort_by(|a, b| (a.mmr.round() as i32).cmp(&(b.mmr.round() as i32)));
+    submissions.reverse();
 
     // Get submissions
     for current in submissions {
@@ -165,8 +207,9 @@ fn create_history_table(bor_submissions: &Vec<Submission>, bor_matches: &Vec<Mat
         if user.is_none() {
             continue;
         };
-        submission_list.push_str(&format!(
-            "<p>{} &#124; <a href=\"{}\">Submission</a> {} &#124; {}</p>  \n",
+        output.push_str(&format!(
+            "<p>MMR: {} &#124; @{} &#124; <a href=\"{}\">Submission</a> {} &#124; {}</p>  \n",
+            current.mmr.round(),
             user.unwrap().username,
             current.issue_url,
             if current.disqualified >= 1 {
@@ -177,12 +220,7 @@ fn create_history_table(bor_submissions: &Vec<Submission>, bor_matches: &Vec<Mat
             current.created_at.format("%Y-%m-%d %H:%M")
         ));
     }
-    submission_list.push_str("</details>  \n");
-
-    let mut output = format!("<div align=\"center\">\n\n<table><tr><td>Matches played</td><td>Challenger submissions</td></tr><tr><td>{}</td><td>{}</td></tr></table></div>", match_list, submission_list);
-
     output.push_str("</div>");
-
     return output;
 }
 

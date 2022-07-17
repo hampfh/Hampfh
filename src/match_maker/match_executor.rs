@@ -2,6 +2,7 @@ use diesel::SqliteConnection;
 
 use crate::{
     backend::models::{match_model::Match, submission_model::Submission, turn_model::Turn},
+    external_related::repo_updater::get_issue_url,
     game::{
         board::{board_to_string, Tile},
         entry_point::initialize_game_session,
@@ -78,6 +79,7 @@ pub(super) fn execute_match_queue(
                 matches_played: p2.matches_played,
             },
             p1.id == winner_id,
+            0.5,
         );
 
         // Assign new mmr
@@ -215,16 +217,8 @@ fn create_report_text(
     p2: String,
     p2_issue_number: i32,
 ) -> (String, String) {
-    let github_user = std::env::var("GITHUB_USER").unwrap();
-    let github_repo = std::env::var("GITHUB_REPO").unwrap();
-    let p1_issue = format!(
-        "https://github.com/{}/{}/issues/{}",
-        github_user, github_repo, p1_issue_number
-    );
-    let p2_issue = format!(
-        "https://github.com/{}/{}/issues/{}",
-        github_user, github_repo, p2_issue_number
-    );
+    let p1_issue = get_issue_url(p1_issue_number);
+    let p2_issue = get_issue_url(p2_issue_number);
 
     match error_msg {
         Some(error_msg) => {

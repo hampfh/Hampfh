@@ -8,7 +8,8 @@ use crate::{
         },
     },
     external_related::readme_factory::{
-        build_match_files_wrapper, clear_match_dir, generate_readme, write_file,
+        build_match_files_wrapper, build_match_log_wrapper, build_submission_log_wrapper,
+        clear_match_dir, generate_readme, write_file,
     },
     match_maker::scheduler::run_scheduled_matchmaking,
 };
@@ -17,6 +18,10 @@ pub fn cli(args: Vec<String>) {
     match args[1].as_str() {
         "generate-main" => generate_main(),
         "generate-matches" => build_match_files_wrapper(),
+        "generate-logs" => {
+            build_match_log_wrapper();
+            build_submission_log_wrapper();
+        }
         "clear" => clear_match_dir(),
         "schedule_matchmaking" => scheduled_matchmaking(),
         _ => {}
