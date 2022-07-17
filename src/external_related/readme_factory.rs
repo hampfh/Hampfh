@@ -37,7 +37,7 @@ pub fn generate_readme(
         get_last_turn_of_last_match(players.clone(), submissions.clone(), &matches, turns),
         generate_score_board(&submissions, &players),
         format!(
-            "🕹 [Match log](./data/match_logs.md) &#124; [Submission log](./data/submission_logs.md) 🤖"
+            "🕹 [Match log](./data/match_log.md) &#124; [Submission log](./data/submission_log.md) 🤖"
         ),
         credits(chrono::Local::now().naive_local())
     );
