@@ -106,7 +106,7 @@ pub(super) fn execute_match_queue(
             p2.id.clone(),
             p2.issue_number,
             winner_id.clone(),
-            format!("./data/matches/{}.md", match_record.id),
+            format!("../blob/live/data/matches/{}.md", match_record.id),
         );
         round_reports.push((
             MatchReport {
@@ -221,7 +221,7 @@ fn create_report_text(
     p2: String,
     p2_issue_number: i32,
     winner_id: String,
-    relative_match_url: String,
+    match_url: String,
 ) -> (String, String) {
     let p1_issue = get_issue_url(p1_issue_number);
     let p2_issue = get_issue_url(p2_issue_number);
@@ -243,14 +243,14 @@ fn create_report_text(
                 if winner_id == p1 { "WIN" } else { "LOSS" },
                 p2,
                 p2_issue,
-                relative_match_url
+                match_url
             ),
             format!(
                 "[{}] Opponent: [{}]({}) &#124; [Match]({})",
                 if winner_id == p1 { "WIN" } else { "LOSS" },
                 p1,
                 p1_issue,
-                relative_match_url
+                match_url
             ),
         ),
     }
