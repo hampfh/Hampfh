@@ -44,6 +44,18 @@ pub(super) fn execute_match_queue(
             || winner_id.is_none()
             || loser_id.is_none()
         {
+            create_report_text(
+                error_msg,
+                error_fault,
+                p1.id.clone(),
+                p1.issue_number,
+                p2.id.clone(),
+                p2.issue_number,
+                None,
+                None,
+            );
+            p1.save(conn);
+            p2.save(conn);
             continue;
         }
 
@@ -105,8 +117,8 @@ pub(super) fn execute_match_queue(
             p1.issue_number,
             p2.id.clone(),
             p2.issue_number,
-            winner_id.clone(),
-            format!("../blob/live/data/matches/{}.md", match_record.id),
+            Some(winner_id.clone()),
+            Some(format!("../blob/live/data/matches/{}.md", match_record.id)),
         );
         round_reports.push((
             MatchReport {
@@ -168,16 +180,13 @@ fn start_match(players: (Submission, Submission)) -> MatchReturn {
                 | ErrorType::RuntimeError { reason, fault } => {
                     error_fault = fault;
                     error_msg = Some(reason);
-                    p2.disqualified = 1;
                 }
                 ErrorType::TurnTimeout { fault } => {
                     error_fault = fault;
                     error_msg = Some("Turn timeout".to_string());
-                    p2.disqualified = 1;
                 }
                 ErrorType::GameDeadlock => {
                     error_msg = Some("Deadlock, both bots failed".to_string());
-                    p2.disqualified = 1;
                 }
             }
 
@@ -220,8 +229,8 @@ fn create_report_text(
     p1_issue_number: i32,
     p2: String,
     p2_issue_number: i32,
-    winner_id: String,
-    match_url: String,
+    winner_id: Option<String>,
+    match_url: Option<String>,
 ) -> (String, String) {
     let p1_issue = get_issue_url(p1_issue_number);
     let p2_issue = get_issue_url(p2_issue_number);
@@ -240,17 +249,25 @@ fn create_report_text(
         None => (
             format!(
                 "[{}] Opponent: [{}]({}) &#124; [Match]({})",
-                if winner_id == p1 { "WIN" } else { "LOSS" },
+                if winner_id.clone().unwrap() == p1 {
+                    "WIN"
+                } else {
+                    "LOSS"
+                },
                 p2,
                 p2_issue,
-                match_url
+                match_url.clone().unwrap()
             ),
             format!(
                 "[{}] Opponent: [{}]({}) &#124; [Match]({})",
-                if winner_id == p1 { "WIN" } else { "LOSS" },
+                if winner_id.unwrap() == p2 {
+                    "WIN"
+                } else {
+                    "LOSS"
+                },
                 p1,
                 p1_issue,
-                match_url
+                match_url.unwrap()
             ),
         ),
     }
