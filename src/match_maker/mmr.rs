@@ -26,6 +26,13 @@ fn calc_decay(matches_played: i32) -> f32 {
             .unwrap()
 }
 
+fn enforce_floor(mmr: f32) -> f32 {
+    if mmr < 0.0 {
+        return 0.0;
+    }
+    return mmr;
+}
+
 pub(crate) fn calculate_mmr(
     p1_mmr: MMR,
     p2_mmr: MMR,
@@ -44,18 +51,38 @@ pub(crate) fn calculate_mmr(
     match p1_winner {
         true => {
             return (
-                p1_mmr.rating
-                    + DEFAULT_MATCH_GAIN * amplifier * mmr_diff * calc_decay(p1_mmr.matches_played),
-                p2_mmr.rating
-                    - DEFAULT_MATCH_GAIN * amplifier * mmr_diff * calc_decay(p2_mmr.matches_played),
+                enforce_floor(
+                    p1_mmr.rating
+                        + DEFAULT_MATCH_GAIN
+                            * amplifier
+                            * mmr_diff
+                            * calc_decay(p1_mmr.matches_played),
+                ),
+                enforce_floor(
+                    p2_mmr.rating
+                        - DEFAULT_MATCH_GAIN
+                            * amplifier
+                            * mmr_diff
+                            * calc_decay(p2_mmr.matches_played),
+                ),
             );
         }
         false => {
             return (
-                p1_mmr.rating
-                    - DEFAULT_MATCH_GAIN * amplifier * mmr_diff * calc_decay(p1_mmr.matches_played),
-                p2_mmr.rating
-                    + DEFAULT_MATCH_GAIN * amplifier * mmr_diff * calc_decay(p2_mmr.matches_played),
+                enforce_floor(
+                    p1_mmr.rating
+                        - DEFAULT_MATCH_GAIN
+                            * amplifier
+                            * mmr_diff
+                            * calc_decay(p1_mmr.matches_played),
+                ),
+                enforce_floor(
+                    p2_mmr.rating
+                        + DEFAULT_MATCH_GAIN
+                            * amplifier
+                            * mmr_diff
+                            * calc_decay(p2_mmr.matches_played),
+                ),
             );
         }
     }
