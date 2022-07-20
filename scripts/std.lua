@@ -7,8 +7,8 @@ function STD__CHECK_OUT_OF_BOUNDS(x, y)
 	return x >= MAP_SIZE or y >= MAP_SIZE
 end
 
-function STD__OCCUPIED(gameObj, x, y)
-	return STD__CHECK_OUT_OF_BOUNDS(x, y) or STD__GET_TILE(gameObj, x, y) ~= 0
+function STD__OCCUPIED(context, x, y)
+	return STD__CHECK_OUT_OF_BOUNDS(x, y) or STD__GET_TILE(context, x, y) ~= 0
 end
 
 
@@ -16,8 +16,8 @@ end
 -- 1: P1
 -- 2: P2
 -- 3: Wall
-function STD__GET_TILE(gameObj, x, y)
+function STD__GET_TILE(context, x, y)
 	-- Since lua always starts at 1 we need to compensate for that
-	return gameObj.board[x + MAP_SIZE * y + 1]
+	return context.board[x + MAP_SIZE * y + 1]
 end
 
