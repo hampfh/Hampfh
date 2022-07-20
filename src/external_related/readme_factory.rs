@@ -107,7 +107,7 @@ fn get_last_turn_of_last_match(
     turns: Vec<Turn>,
 ) -> String {
     if turns.len() == 0 {
-        return format!("No matches yet...");
+        return format!("No matches yet...\n\n");
     }
 
     let last_turn = &turns[turns.len() - 1];
@@ -313,6 +313,9 @@ fn build_match(conn: &SqliteConnection, target_match: &Match) -> Option<String> 
         "<div align=\"center\"><h1>{} vs {}</h1><p><a href=\"{}\">{} {}</a> vs <a href=\"{}\">{} {}</a></p>\n<p>Winner: {}</p></div>\n\n---\n",
         winner.username, loser.username, win_sub.issue_url, winner_color, win_sub.id, los_sub.issue_url, los_sub.id, loser_color, winner_color, 
     );
+    if target_match.match_error.is_some() {
+        file.push_str(&format!("<div align=\"center\"><p>{}</p></div>\n\n", target_match.match_error.as_ref().unwrap()));
+    }
     file.push_str(&get_match_from_tiles(
         turns
             .unwrap()

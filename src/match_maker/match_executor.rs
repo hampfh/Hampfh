@@ -34,6 +34,7 @@ pub(super) fn execute_match_queue(
             error_msg,
             error_fault,
             turns,
+            critical_error,
         } = start_match(match_queue[i].clone());
 
         // If the new challenger has a part in the error
@@ -45,8 +46,8 @@ pub(super) fn execute_match_queue(
             || loser_id.is_none()
         {
             let report = create_report_text(
-                error_msg,
-                error_fault,
+                error_msg.clone(),
+                error_fault.clone(),
                 p1.id.clone(),
                 p1.issue_number,
                 p2.id.clone(),
@@ -64,9 +65,14 @@ pub(super) fn execute_match_queue(
                     issue_number: p2.issue_number,
                 },
             ));
-            p1.save(conn);
-            p2.save(conn);
-            continue;
+
+            // GameErrors are not considered critical
+            // There these games are still registered
+            if critical_error {
+                p1.save(conn);
+                p2.save(conn);
+                continue;
+            }
         }
 
         let winner_id = winner_id.unwrap();
@@ -101,25 +107,23 @@ pub(super) fn execute_match_queue(
         // If we get to this point we know there
         // were no errors
 
-        // If there are errors, then we stop the match-making process
-        // This is because the submitted bot is obviously not working
-        // and should therefore not be matchmaked against future bots
         let p1_is_winner = p1.id == winner_id;
-        let match_record = match Match::create(&winner_id, &loser_id, p1_is_winner, conn) {
-            Some(match_record) => {
-                // Generate turns
-                let mut turn_index = 1;
-                for turn in turns {
-                    Turn::create(&match_record.id, turn_index, &board_to_string(turn), conn);
-                    turn_index += 1;
+        let match_record =
+            match Match::create(&winner_id, &loser_id, p1_is_winner, error_msg.clone(), conn) {
+                Some(match_record) => {
+                    // Generate turns
+                    let mut turn_index = 1;
+                    for turn in turns {
+                        Turn::create(&match_record.id, turn_index, &board_to_string(turn), conn);
+                        turn_index += 1;
+                    }
+                    match_record
                 }
-                match_record
-            }
-            None => {
-                println!("Internal error, could not create match");
-                continue;
-            }
-        };
+                None => {
+                    println!("Internal error, could not create match");
+                    continue;
+                }
+            };
 
         let report = create_report_text(
             error_msg.clone(),
@@ -153,6 +157,7 @@ struct MatchReturn {
     turns: Vec<Vec<Tile>>,
     error_msg: Option<String>,
     error_fault: Option<PlayerType>,
+    critical_error: bool,
 }
 
 fn start_match(players: (Submission, Submission)) -> MatchReturn {
@@ -162,12 +167,13 @@ fn start_match(players: (Submission, Submission)) -> MatchReturn {
     let (mut p1, mut p2) = players;
 
     let (result, turns) = initialize_game_session(&p1.script, &p2.script);
-    let winner: Option<String>;
-    let loser: Option<String>;
+    let mut winner: Option<String> = None;
+    let mut loser: Option<String> = None;
 
     let p1_id = p1.id.clone();
     let p2_id = p2.id.clone();
 
+    let mut critical_error = false;
     match result {
         GameResult::PlayerOneWon => {
             p1.wins += 1;
@@ -180,42 +186,55 @@ fn start_match(players: (Submission, Submission)) -> MatchReturn {
             loser = Some(p1_id);
         }
         GameResult::Error(error) => {
-            // If an error occur, it's no longer a matter
-            // of who is the winner, it's rather a matter
-            // of who is the going to be disqualified.
-            winner = None;
-            loser = None;
-
             match error {
-                ErrorType::GameError { reason, fault }
-                | ErrorType::RuntimeError { reason, fault } => {
+                ErrorType::GameError { reason, fault } => {
+                    match fault {
+                        Some(PlayerType::Regular) => {
+                            winner = Some(p1_id);
+                            loser = Some(p2_id)
+                        }
+                        Some(PlayerType::Flipped) => {
+                            winner = Some(p2_id);
+                            loser = Some(p1_id)
+                        }
+                        None => (),
+                    }
                     error_fault = fault;
                     error_msg = Some(reason);
+                }
+                ErrorType::RuntimeError { reason, fault } => {
+                    error_fault = fault;
+                    error_msg = Some(reason);
+                    critical_error = true;
                 }
                 ErrorType::TurnTimeout { fault } => {
                     error_fault = fault;
                     error_msg = Some("Turn timeout".to_string());
+                    critical_error = true;
                 }
                 ErrorType::GameDeadlock => {
                     error_msg = Some("Deadlock, both bots failed".to_string());
+                    critical_error = true;
                 }
             }
 
             // Challenger is always the flipped player
-            match error_fault {
-                Some(PlayerType::Regular) => {
-                    println!("Disq reg");
-                    p2.disqualified = 1;
-                }
-                Some(PlayerType::Flipped) => {
-                    println!("Disq flip");
-                    p1.disqualified = 1;
-                }
-                None => {
-                    println!("Disq both");
-                    // Both are disqualified
-                    p1.disqualified = 1;
-                    p2.disqualified = 1;
+            if critical_error {
+                match error_fault {
+                    Some(PlayerType::Regular) => {
+                        println!("Disq reg");
+                        p2.disqualified = 1;
+                    }
+                    Some(PlayerType::Flipped) => {
+                        println!("Disq flip");
+                        p1.disqualified = 1;
+                    }
+                    None => {
+                        println!("Disq both");
+                        // Both are disqualified
+                        p1.disqualified = 1;
+                        p2.disqualified = 1;
+                    }
                 }
             }
         }
@@ -229,6 +248,7 @@ fn start_match(players: (Submission, Submission)) -> MatchReturn {
         turns,
         error_msg,
         error_fault,
+        critical_error,
     };
 }
 

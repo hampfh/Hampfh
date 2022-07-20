@@ -16,6 +16,7 @@ pub struct Match {
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
     pub p1_is_winner: i32,
+    pub match_error: Option<String>,
 }
 impl Match {
     pub fn list(conn: &SqliteConnection) -> Vec<Self> {
@@ -78,6 +79,7 @@ impl Match {
         winner_id: &str,
         loser_id: &str,
         p1_is_winner: bool,
+        match_error: Option<String>,
         conn: &SqliteConnection,
     ) -> Option<Self> {
         let new_id = Uuid::new_v4().to_hyphenated().to_string();
@@ -89,7 +91,8 @@ impl Match {
             return None;
         }
 
-        let new_match = Self::new_match_struct(&new_id, winner_id, loser_id, p1_is_winner);
+        let new_match =
+            Self::new_match_struct(&new_id, winner_id, loser_id, p1_is_winner, match_error);
 
         diesel::insert_into(matches_dsl)
             .values(&new_match)
@@ -97,7 +100,13 @@ impl Match {
             .expect("Error saving new matches");
         Self::by_id(&new_id, conn)
     }
-    fn new_match_struct(id: &str, winner: &str, loser: &str, p1_is_winner: bool) -> Self {
+    fn new_match_struct(
+        id: &str,
+        winner: &str,
+        loser: &str,
+        p1_is_winner: bool,
+        match_error: Option<String>,
+    ) -> Self {
         Match {
             id: id.into(),
             winner: winner.into(),
@@ -105,6 +114,7 @@ impl Match {
             created_at: chrono::Local::now().naive_local(),
             updated_at: chrono::Local::now().naive_local(),
             p1_is_winner: if p1_is_winner { 1 } else { 0 },
+            match_error,
         }
     }
 }

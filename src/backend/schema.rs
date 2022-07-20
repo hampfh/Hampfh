@@ -6,6 +6,7 @@ table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         p1_is_winner -> Integer,
+        match_error -> Nullable<Text>,
     }
 }
 
