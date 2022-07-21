@@ -1,3 +1,5 @@
+use rlua::Lua;
+
 use crate::{
     external_related::readme_factory::{get_match_from_tiles, write_file},
     game::{
@@ -68,4 +70,47 @@ pub(super) fn mock_player(x: i32, y: i32, wall_count: i32, player_type: PlayerTy
         wall_count,
         player_type,
     };
+}
+
+#[allow(dead_code)]
+fn load_std() -> String {
+    return std::fs::read_to_string("./scripts/std.lua").expect("Could not load standard library");
+}
+
+#[allow(dead_code)]
+pub(super) fn test_std(scripts: Vec<String>, asserts: fn(ctx: rlua::Context) -> Result<(), ()>) {
+    let sandbox = Lua::new();
+    sandbox.context(|ctx| {
+        ctx.load(&load_std()).exec().unwrap();
+        for script in scripts {
+            ctx.load(&script).exec().unwrap();
+        }
+        asserts(ctx).unwrap();
+    });
+}
+
+#[allow(dead_code)]
+pub(super) fn test_std_bool(scripts: Vec<(String, bool)>, game_context: Option<String>) {
+    let sandbox = Lua::new();
+    sandbox.context(|ctx| {
+        ctx.load(&load_std()).exec().unwrap();
+        for (script, expected_result) in scripts {
+            let var = convert_uuid_to_variable(uuid::Uuid::new_v4().to_string());
+            ctx.load(
+                &script
+                    .replace("[]", &format!("{} = ", var))
+                    .replace("[c]", &format!("{}", game_context.as_ref().unwrap())),
+            )
+            .exec()
+            .unwrap();
+            assert_eq!(ctx.globals().get::<_, bool>(var).unwrap(), expected_result);
+        }
+    });
+}
+
+#[allow(dead_code)]
+fn convert_uuid_to_variable(uuid: String) -> String {
+    let mut uuid = uuid;
+    uuid.insert(0, '_');
+    return uuid.split("-").collect::<Vec<&str>>().join("_");
 }

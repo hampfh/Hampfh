@@ -4,7 +4,7 @@
 local MAP_SIZE = 9
 
 function STD__CHECK_OUT_OF_BOUNDS(x, y)
-	return x >= MAP_SIZE or y >= MAP_SIZE
+	return x >= MAP_SIZE or y >= MAP_SIZE or x < 0 or y < 0
 end
 
 function STD__OCCUPIED(context, x, y)

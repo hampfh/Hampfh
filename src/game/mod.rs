@@ -15,5 +15,6 @@ mod tests {
     mod game_tests;
     mod on_jump_tests;
     mod security_tests;
+    mod std_tests;
     mod util;
 }

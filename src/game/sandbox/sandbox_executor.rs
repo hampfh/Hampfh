@@ -112,7 +112,7 @@ fn get_lua_script(function_name: String, game_object: String) -> String {
     );
 }
 
-fn create_lua_game_object(
+pub(crate) fn create_lua_game_object(
     walls: Vec<Wall>,
     player_one_turn: bool,
     player_one: Player,
