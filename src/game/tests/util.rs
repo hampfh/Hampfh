@@ -96,11 +96,14 @@ pub(super) fn test_std_bool(scripts: Vec<(String, bool)>, game_context: Option<S
         ctx.load(&load_std()).exec().unwrap();
         for (script, expected_result) in scripts {
             let var = convert_uuid_to_variable(uuid::Uuid::new_v4().to_string());
-            ctx.load(
-                &script
-                    .replace("[]", &format!("{} = ", var))
-                    .replace("[c]", &format!("{}", game_context.as_ref().unwrap())),
-            )
+            ctx.load(&script.replace("[]", &format!("{} = ", var)).replace(
+                "[c]",
+                &if game_context.is_some() {
+                    format!("{}", game_context.as_ref().unwrap())
+                } else {
+                    String::new()
+                },
+            ))
             .exec()
             .unwrap();
             assert_eq!(ctx.globals().get::<_, bool>(var).unwrap(), expected_result);
