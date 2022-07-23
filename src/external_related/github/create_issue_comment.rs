@@ -1,4 +1,4 @@
-use crate::external_related::repo_updater::is_live;
+use crate::external_related::{repo_updater::is_live, string_escape::escape_string};
 
 pub fn create_issue_comment(issue_number: i32, msg: &str) {
     let secret = std::env::var("GITHUB_POST_SECRET").unwrap();
@@ -22,9 +22,17 @@ pub fn create_issue_comment(issue_number: i32, msg: &str) {
         .header("Authorization", format!("token {}", secret))
         .body(format!(
             "{{\"body\": \"[THIS MESSAGE IS AUTOMATIC]<br> {}\"}}",
-            msg
+            escape_string(msg.to_string())
         ));
 
     // Send request
-    req.send().unwrap();
+    match req.send() {
+        Ok(_) => (),
+        Err(e) => {
+            println!(
+                "[ERROR] Could not post issue comment for {}: Error: {}",
+                issue_number, e
+            );
+        }
+    }
 }
