@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub(crate) fn _run_core_test(script: String, script2: String, is_equal: fn(GameResult) -> bool) {
-    let mut game_session = methods::new(String::new());
+    let mut game_session = methods::new(load_std());
     _run_test_with_custom_game_session(script, script2, &mut game_session, is_equal);
 }
 
@@ -116,4 +116,10 @@ fn convert_uuid_to_variable(uuid: String) -> String {
     let mut uuid = uuid;
     uuid.insert(0, '_');
     return uuid.split("-").collect::<Vec<&str>>().join("_");
+}
+
+#[allow(dead_code)]
+pub(super) fn load_script(filename: &str) -> String {
+    std::fs::read_to_string(format!("{}{}.lua", "./src/game/tests/", filename))
+        .expect("Could not load script")
 }
