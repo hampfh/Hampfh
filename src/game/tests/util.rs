@@ -73,7 +73,7 @@ pub(super) fn mock_player(x: i32, y: i32, wall_count: i32, player_type: PlayerTy
 }
 
 #[allow(dead_code)]
-fn load_std() -> String {
+pub(super) fn load_std() -> String {
     return std::fs::read_to_string("./scripts/std.lua").expect("Could not load standard library");
 }
 

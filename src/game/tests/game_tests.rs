@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{ErrorType, GameResult, MAP_SIZE},
-        player::PlayerType,
-        tests::util::{_run_core_test, aj},
+        game::{ErrorType, GameResult, MAP_SIZE, Wall},
+        player::{PlayerType, Player},
+        tests::util::{_run_core_test, aj, load_script, _run_test_with_custom_game_session, load_std}, methods,
     };
 
     #[test]
@@ -359,6 +359,39 @@ mod tests {
                 GameResult::Error(ErrorType::GameError { reason: _, fault: __ }) => true,
                 _ => false,
             }
+        );
+    }
+
+    #[test]
+    /// More
+    /// 
+    /// 
+    fn dodger_bot() {
+        let script = load_script("around_the_world");
+
+        let forward = format!(
+            "
+                round = 0
+                function onTurn()
+                    round = round + 1
+                    if round % 2 == 1 then
+                        return \"0\"
+                    end
+                    return \"2\"
+                end
+                function onJump()
+                    return \"0\"
+                end
+            "
+        );
+
+        _run_test_with_custom_game_session(script, forward, 
+            &mut methods::custom_new(
+                Player { player_type: PlayerType::Flipped, x: 4, y: 8, wall_count: 5 }, 
+                Player { player_type: PlayerType::Regular, x: 4, y: 0, wall_count: 0 }, 
+                vec![Wall { x1: 4, y1: 2, x2: 5, y2: 2 }], load_std()
+            ), 
+            |game_state| game_state == GameResult::PlayerOneWon
         );
     }
 }
