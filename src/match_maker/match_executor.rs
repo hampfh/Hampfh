@@ -39,7 +39,8 @@ pub(super) fn execute_match_queue(
 
         // If the new challenger has a part in the error
         // we disqualify it directly here
-        if error_msg.is_some()
+        if critical_error
+            && error_msg.is_some()
             && error_fault.is_some()
             && error_fault.clone().unwrap() == PlayerType::Flipped
             || winner_id.is_none()
@@ -54,7 +55,9 @@ pub(super) fn execute_match_queue(
                 p2.issue_number,
                 None,
                 None,
+                critical_error,
             );
+
             round_reports.push((
                 MatchReport {
                     report: report.0,
@@ -66,13 +69,9 @@ pub(super) fn execute_match_queue(
                 },
             ));
 
-            // GameErrors are not considered critical
-            // There these games are still registered
-            if critical_error {
-                p1.save(conn);
-                p2.save(conn);
-                continue;
-            }
+            p1.save(conn);
+            p2.save(conn);
+            continue;
         }
 
         let winner_id = winner_id.unwrap();
@@ -134,6 +133,7 @@ pub(super) fn execute_match_queue(
             p2.issue_number,
             Some(winner_id.clone()),
             Some(format!("../blob/live/data/matches/{}.md", match_record.id)),
+            critical_error,
         );
         round_reports.push((
             MatchReport {
@@ -262,6 +262,7 @@ fn create_report_text(
     p2_issue_number: i32,
     winner_id: Option<String>,
     match_url: Option<String>,
+    critical_error: bool,
 ) -> (String, String) {
     let p1_issue = get_issue_url(p1_issue_number);
     let p2_issue = get_issue_url(p2_issue_number);
@@ -269,12 +270,30 @@ fn create_report_text(
     match error_msg {
         Some(error_msg) => {
             return (
+                // Sent to submission that represents p1
                 get_error_report(
                     format!("[{}]({})", p2, p2_issue),
                     error_msg.clone(),
-                    fault.clone(),
+                    match fault.clone() {
+                        Some(PlayerType::Regular) => Some(false),
+                        Some(PlayerType::Flipped) => Some(true),
+                        None => None,
+                    },
+                    match_url.clone(),
+                    critical_error,
                 ),
-                get_error_report(format!("[{}]({})", p1, p1_issue), error_msg, fault),
+                // Send to submission that represents p2
+                get_error_report(
+                    format!("[{}]({})", p1, p1_issue),
+                    error_msg,
+                    match fault.clone() {
+                        Some(PlayerType::Regular) => Some(true),
+                        Some(PlayerType::Flipped) => Some(false),
+                        None => None,
+                    },
+                    match_url,
+                    critical_error,
+                ),
             );
         }
         None => (
@@ -307,16 +326,35 @@ fn create_report_text(
 fn get_error_report(
     opponent_issue_link: String,
     error_msg: String,
-    fault: Option<PlayerType>,
+    fault: Option<bool>,
+    match_url: Option<String>,
+    critical_error: bool,
 ) -> String {
-    format!(
-        "[FAIL] Opponent: {}, Error: {}, {}",
-        opponent_issue_link,
-        error_msg,
-        match fault {
-            Some(PlayerType::Flipped) => format!("submission has been disqualified"),
-            Some(PlayerType::Regular) => format!("opponent has been disqualified"),
-            None => format!("both players have been disqualifed"),
-        }
-    )
+    let mut output = match fault {
+        Some(false) => format!("[SUCCESS] Opponent: {}", opponent_issue_link),
+        Some(true) => format!(
+            "[ERROR] Opponent: {}\n**Error:**\n{}\n\n{}",
+            opponent_issue_link,
+            error_msg,
+            if critical_error {
+                "This submission has been disqualififed"
+            } else {
+                ""
+            }
+        ),
+        None => format!(
+            "[UNKNOWN FAULT] Opponent: {}\n**Error:**\n{}\n\n{}",
+            opponent_issue_link,
+            error_msg,
+            if critical_error {
+                "Both submissions have been disualified"
+            } else {
+                ""
+            }
+        ),
+    };
+    if match_url.is_some() && !critical_error {
+        output.push_str(&format!("\n[Match]({})", match_url.unwrap()));
+    }
+    return output;
 }
