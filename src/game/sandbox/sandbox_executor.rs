@@ -49,9 +49,6 @@ pub(crate) fn execute_lua_in_sandbox(
             active_sandbox = player_two_sandbox_mutex.lock().unwrap();
         }
 
-        if cfg!(debug_assertions) {
-            println!("Starting script");
-        }
         match active_sandbox.context(|ctx| ctx.load(&starting_script).exec()) {
             Ok(_) => (),
             Err(err) => {
