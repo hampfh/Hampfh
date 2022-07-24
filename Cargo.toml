@@ -14,6 +14,7 @@ pathfinding = "3.0.12"
 # Web dependencies
 actix-rt = "1.0"
 actix-web = "4"
+actix-files = "0.6.2"
 futures = "0.3"
 
 rand = "0.8.5"

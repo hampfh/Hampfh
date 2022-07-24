@@ -1,6 +1,10 @@
+use std::path::PathBuf;
+
+use actix_files::NamedFile;
 use actix_web::get;
 
 #[get("/")]
-pub(super) async fn get_ping() -> actix_web::Result<String> {
-    return Ok(format!("Hi there, welcome to the github profile project!\nGoto my github profile (@hampfh) and start writing your own bot!"));
+pub(super) async fn get_ping() -> actix_web::Result<NamedFile> {
+    let path: PathBuf = "./src/backend/static/index.html".parse().unwrap();
+    return Ok(NamedFile::open(path).unwrap());
 }
