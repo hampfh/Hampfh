@@ -55,7 +55,7 @@ fn get_readme_header() -> String {
 <h3>🎉🎉🎉 Welcome to the scripting game! 🎉🎉🎉</h3>
 <img src=\"https://img.shields.io/badge/-BETA-yellow\"/>
 <img src=\"https://img.shields.io/github/issues-closed-raw/hampfh/hampfh/challenger?color=limegreen&label=Bots\"/>
-<img src=\"https://img.shields.io/website?down_color=lightgrey&down_message=offline&up_color=limegreen&up_message=online&url=https%3A%2F%2Fgithub.hampushallkvist.com\">
+<img src=\"https://img.shields.io/badge/-lua-darkblue\">
 </div>
 
 <div align=\"center\"> 
