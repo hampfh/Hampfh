@@ -38,7 +38,7 @@ pub fn generate_readme(
     turns: Vec<Turn>,
 ) -> String {
     return format!(
-        "{}<br/><br/>{}{}{}{}",
+        "{}<br/>{}{}{}{}",
         get_readme_header(),
         get_last_turn_of_last_match(players.clone(), submissions.clone(), &matches, turns),
         generate_score_board(&submissions, &players),
