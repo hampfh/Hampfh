@@ -37,9 +37,8 @@ pub(crate) enum ErrorType {
         fault: Option<PlayerType>,
     },
     /// The script takes to much time during a round
-    TurnTimeout {
-        fault: Option<PlayerType>,
-    },
+    TurnTimeout { fault: Option<PlayerType> },
+    /// The game doesn't progress anymore
     GameDeadlock,
 }
 

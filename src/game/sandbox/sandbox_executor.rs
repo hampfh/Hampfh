@@ -49,15 +49,12 @@ pub(crate) fn execute_lua_in_sandbox(
             active_sandbox = player_two_sandbox_mutex.lock().unwrap();
         }
 
-        match active_sandbox.context(|ctx| ctx.load(&starting_script).exec()) {
-            Ok(_) => (),
-            Err(err) => {
-                tx.send(ThreadReturn {
-                    thread_id: None,
-                    player_move: Err(err),
-                })
-                .unwrap();
-            }
+        if let Err(err) = active_sandbox.context(|ctx| ctx.load(&starting_script).exec()) {
+            tx.send(ThreadReturn {
+                thread_id: None,
+                player_move: Err(err),
+            })
+            .unwrap();
         }
 
         let raw_player_move =
