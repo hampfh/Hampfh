@@ -40,15 +40,12 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 	}
 	
 	let mut player_move = convert_player_move_from_string_to_object(Some(player_move));
-	match player_move {
-		Some(Move::Invalid { reason }) => {
-			return Err(ErrorType::GameError { 
-				reason,
-				fault: Some(get_active_player_type(game.player_one_turn))
-			});
-		},
-		_ => ()
-	};
+	if let Some(Move::Invalid { reason }) = player_move {
+		return Err(ErrorType::GameError { 
+			reason,
+			fault: Some(get_active_player_type(game.player_one_turn))
+		});
+	}
 
 	if should_reverse_player_move(player_one_turn, &player_move) {
 		player_move = Some(reverse_move(player_move.unwrap()));
@@ -96,15 +93,12 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 			});
 		}
 		let mut converted_on_jump_player_move = convert_player_move_from_string_to_object(Some(on_jump_player_move));
-		match converted_on_jump_player_move {
-			Some(Move::Invalid { reason }) => {
-				return Err(ErrorType::GameError { 
-					reason,
-					fault: Some(get_active_player_type(game.player_one_turn))
-				});
-			},
-			_ => ()
-		};
+		if let Some(Move::Invalid { reason }) = converted_on_jump_player_move {
+			return Err(ErrorType::GameError { 
+				reason,
+				fault: Some(get_active_player_type(game.player_one_turn))
+			});
+		}
 
 		if should_reverse_player_move(player_one_turn, &converted_on_jump_player_move) {
 			converted_on_jump_player_move = Some(reverse_move(converted_on_jump_player_move.unwrap()));
@@ -117,10 +111,9 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
 			});
 		}
 		
-		match execute_move_jump(first, other, &converted_on_jump_player_move.clone().unwrap()) {
-			Ok(()) => (),
-			Err(error) => return Err(error)
-		};
+		if let Err(error) = execute_move_jump(first, other, &converted_on_jump_player_move.clone().unwrap()) {
+			return Err(error);
+		}
 	} else {
 		execute_move(&mut mutable_walls, first, &player_move.clone().unwrap()).unwrap();
 		// Reassign walls

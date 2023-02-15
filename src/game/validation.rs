@@ -31,38 +31,34 @@ pub(super) fn valid_move(
     };
 
     // If move is wall, make sure it is valid
-    match player_move.clone() {
-        Move::Wall(wall) => {
-            if !valid_wall_format(&wall) {
-                return Err(ErrorType::GameError { 
-                    reason: format!(
-                        "Invalid wall format, a wall must consist of two adjacent coordinates: (({},{}), ({},{}))",
-                        wall.x1, wall.y1, wall.x2, wall.y2
-                    ), 
-                    fault: Some(get_active_player_type(player_one_turn))
-                });
-            }
-            // Check that wall is not out of bounds
-            // or tries to populate another tile
-            if tile_is_valid(Pos(wall.x1, wall.y1), false).is_err()
-                || tile_is_valid(Pos(wall.x2, wall.y2), false).is_err()
-            {
-                return Err(ErrorType::GameError { 
-                    reason: format!(
-                        "Invalid wall placement at (({},{}),({},{})), coordinates are either occupied or out of bounds",
-                        wall.x1, wall.y1, wall.x2, wall.y2
-                    ),
-                    fault: Some(get_active_player_type(player_one_turn))
-                });
-            }
+    if let Move::Wall(wall) = player_move.clone() {
+        if !valid_wall_format(&wall) {
+            return Err(ErrorType::GameError { 
+                reason: format!(
+                    "Invalid wall format, a wall must consist of two adjacent coordinates: (({},{}), ({},{}))",
+                    wall.x1, wall.y1, wall.x2, wall.y2
+                ), 
+                fault: Some(get_active_player_type(player_one_turn))
+            });
         }
-        _ => (),
+        // Check that wall is not out of bounds
+        // or tries to populate another tile
+        if tile_is_valid(Pos(wall.x1, wall.y1), false).is_err()
+            || tile_is_valid(Pos(wall.x2, wall.y2), false).is_err()
+        {
+            return Err(ErrorType::GameError { 
+                reason: format!(
+                    "Invalid wall placement at (({},{}),({},{})), coordinates are either occupied or out of bounds",
+                    wall.x1, wall.y1, wall.x2, wall.y2
+                ),
+                fault: Some(get_active_player_type(player_one_turn))
+            });
+        }
     }
 
     // Execute a fake move to check if the move is valid
-    match execute_move(&mut walls, &mut temp_active_player, &player_move) {
-        Ok(_) => (),
-        Err(error) => return Err(error),
+    if let Err(error) = execute_move(&mut walls, &mut temp_active_player, &player_move) {
+        return Err(error);
     }
 
     let result = tile_is_valid(Pos(temp_active_player.x, temp_active_player.y), true);
