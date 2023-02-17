@@ -1,8 +1,8 @@
 --[[
 	This bot is a dodger bot, it will always attemt
 	to go to the finish line, if that isn't possible
-	it will try to take another direction and hope
-	hope for.
+	it will try to take another direction attempt to
+	go to finish line next turn.
 
 	If the opponent is one tile from winning the bot
 	will try to place a wall in front of the opponent.
