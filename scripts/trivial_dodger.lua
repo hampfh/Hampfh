@@ -58,16 +58,18 @@ function onTurn(context)
 	local player_y = context.player.y
 
 	if context.opponent.y == 7 then
-		try_place_wall_in_front_of_player(context, context.opponent)
+		local wall_result = try_place_wall_in_front_of_player(context, context.opponent)
+		-- If wall can be placed return the wall
+		if #wall_result > 0 then
+			return wall_result
+		end
 	end
 
 	-- If we are not walking up try to turn to face the finish line
 	if (current_direction == 1 or current_direction == 2) and possible_to_turn_left(context, context.player, current_direction) then
 		turn_left()
-		return ""
 	elseif (current_direction == 3) and possible_to_turn_right(context, context.player, current_direction) then
 		turn_right()
-		return ""
 	end
 
 	local next_coords = get_next_tile(player_x, player_y, current_direction)
