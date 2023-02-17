@@ -367,7 +367,7 @@ mod tests {
     /// 
     /// 
     fn dodger_bot() {
-        let script = load_script("around_the_world");
+        let script = load_script("trivial_dodger");
 
         let forward = format!(
             "
@@ -388,8 +388,8 @@ mod tests {
         _run_test_with_custom_game_session(script, forward, 
             &mut methods::custom_new(
                 Player { player_type: PlayerType::Flipped, x: 4, y: 8, wall_count: 5 }, 
-                Player { player_type: PlayerType::Regular, x: 4, y: 0, wall_count: 0 }, 
-                vec![Wall { x1: 4, y1: 2, x2: 5, y2: 2 }], load_std()
+                Player { player_type: PlayerType::Regular, x: 4, y: 0, wall_count: 5 }, 
+                vec![], load_std()
             ), 
             |game_state| game_state == GameResult::PlayerOneWon
         );

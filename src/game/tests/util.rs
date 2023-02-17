@@ -72,9 +72,8 @@ pub(super) fn mock_player(x: i32, y: i32, wall_count: i32, player_type: PlayerTy
     };
 }
 
-#[allow(dead_code)]
 pub(super) fn load_std() -> String {
-    return std::fs::read_to_string("./scripts/std.lua").expect("Could not load standard library");
+    return load_script("std");
 }
 
 #[allow(dead_code)]
@@ -120,6 +119,6 @@ fn convert_uuid_to_variable(uuid: String) -> String {
 
 #[allow(dead_code)]
 pub(super) fn load_script(filename: &str) -> String {
-    std::fs::read_to_string(format!("{}{}.lua", "./src/game/tests/", filename))
+    std::fs::read_to_string(format!("{}{}.lua", "./scripts/", filename))
         .expect("Could not load script")
 }
