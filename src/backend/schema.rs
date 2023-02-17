@@ -50,9 +50,4 @@ table! {
 joinable!(Submissions -> Users (user));
 joinable!(Turns -> Matches (match_id));
 
-allow_tables_to_appear_in_same_query!(
-    Matches,
-    Submissions,
-    Turns,
-    Users,
-);
+allow_tables_to_appear_in_same_query!(Matches, Submissions, Turns, Users,);

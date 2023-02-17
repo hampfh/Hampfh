@@ -1,9 +1,12 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{ErrorType, GameResult, MAP_SIZE, Wall},
-        player::{PlayerType, Player},
-        tests::util::{_run_core_test, aj, load_script, _run_test_with_custom_game_session, load_std}, methods,
+        game::{ErrorType, GameResult, Wall, MAP_SIZE},
+        methods,
+        player::{Player, PlayerType},
+        tests::util::{
+            _run_core_test, _run_test_with_custom_game_session, aj, load_script, load_std,
+        },
     };
 
     #[test]
@@ -57,7 +60,7 @@ mod tests {
 
     #[test]
     /// Place invalid wall
-    /// 
+    ///
     /// Place a wall that is not contiguous
     fn place_invalid_wall() {
         let script = aj(format!(
@@ -71,9 +74,9 @@ mod tests {
         ));
 
         _run_core_test(script.clone(), script, |state| {
-            state == GameResult::Error(ErrorType::GameError { 
+            state == GameResult::Error(ErrorType::GameError {
                 reason: "Invalid wall format, a wall must consist of two adjacent coordinates: ((0,4), (8,8))".to_string(),
-                fault: Some(PlayerType::Flipped), 
+                fault: Some(PlayerType::Flipped),
             })
         });
     }
@@ -190,8 +193,9 @@ mod tests {
         ));
 
         _run_core_test(script, p2_script, |game_state| match game_state {
-            GameResult::Error(ErrorType::GameError { reason, fault }) => 
-                reason.contains("walls") && fault.is_some() && fault.unwrap() == PlayerType::Flipped,
+            GameResult::Error(ErrorType::GameError { reason, fault }) => {
+                reason.contains("walls") && fault.is_some() && fault.unwrap() == PlayerType::Flipped
+            }
             _ => false,
         });
     }
@@ -210,10 +214,10 @@ mod tests {
         ));
         _run_core_test(script.clone(), script, |game_state| match game_state {
             GameResult::Error(ErrorType::GameError { reason, fault }) => {
-                reason.contains("out of bounds") && 
-                reason.contains(&MAP_SIZE.to_string()) && 
-                fault.is_some() && 
-                fault.unwrap() == PlayerType::Flipped
+                reason.contains("out of bounds")
+                    && reason.contains(&MAP_SIZE.to_string())
+                    && fault.is_some()
+                    && fault.unwrap() == PlayerType::Flipped
             }
             _ => false,
         });
@@ -226,10 +230,10 @@ mod tests {
         ));
         _run_core_test(script.clone(), script, |game_state| match game_state {
             GameResult::Error(ErrorType::GameError { reason, fault }) => {
-                reason.contains("out of bounds") && 
-                reason.contains(&MAP_SIZE.to_string()) &&
-                fault.is_some() &&
-                fault.unwrap() == PlayerType::Flipped
+                reason.contains("out of bounds")
+                    && reason.contains(&MAP_SIZE.to_string())
+                    && fault.is_some()
+                    && fault.unwrap() == PlayerType::Flipped
             }
             _ => false,
         });
@@ -242,10 +246,10 @@ mod tests {
         ));
         _run_core_test(script.clone(), script, |game_state| match game_state {
             GameResult::Error(ErrorType::GameError { reason, fault }) => {
-                reason.contains("out of bounds") && 
-                reason.contains("-1") &&
-                fault.is_some() &&
-                fault.unwrap() == PlayerType::Flipped
+                reason.contains("out of bounds")
+                    && reason.contains("-1")
+                    && fault.is_some()
+                    && fault.unwrap() == PlayerType::Flipped
             }
             _ => false,
         });
@@ -317,7 +321,7 @@ mod tests {
 
     #[test]
     /// Place wall on player
-    /// 
+    ///
     /// Create a bot that will attempt to
     /// place a wall on top of another player.
     fn place_wall_on_player() {
@@ -333,16 +337,16 @@ mod tests {
             function onTurn()
                 return \"0\"
             end
-            "));
+            "
+        ));
 
-        _run_core_test(
-            wall_script, 
-            script.clone(), 
-            |game_state| match game_state {
-                GameResult::Error(ErrorType::GameError { reason: _, fault: __ }) => true,
-                _ => false,
-            }
-        );
+        _run_core_test(wall_script, script.clone(), |game_state| match game_state {
+            GameResult::Error(ErrorType::GameError {
+                reason: _,
+                fault: __,
+            }) => true,
+            _ => false,
+        });
 
         let wall_script = aj(format!(
             "
@@ -352,20 +356,19 @@ mod tests {
             "
         ));
 
-        _run_core_test(
-            wall_script, 
-            script, 
-            |game_state| match game_state {
-                GameResult::Error(ErrorType::GameError { reason: _, fault: __ }) => true,
-                _ => false,
-            }
-        );
+        _run_core_test(wall_script, script, |game_state| match game_state {
+            GameResult::Error(ErrorType::GameError {
+                reason: _,
+                fault: __,
+            }) => true,
+            _ => false,
+        });
     }
 
     #[test]
     /// More
-    /// 
-    /// 
+    ///
+    ///
     fn dodger_bot() {
         let script = load_script("trivial_dodger");
 
@@ -385,13 +388,26 @@ mod tests {
             "
         );
 
-        _run_test_with_custom_game_session(script, forward, 
+        _run_test_with_custom_game_session(
+            script,
+            forward,
             &mut methods::custom_new(
-                Player { player_type: PlayerType::Flipped, x: 4, y: 8, wall_count: 5 }, 
-                Player { player_type: PlayerType::Regular, x: 4, y: 0, wall_count: 5 }, 
-                vec![], load_std()
-            ), 
-            |game_state| game_state == GameResult::PlayerOneWon
+                Player {
+                    player_type: PlayerType::Flipped,
+                    x: 4,
+                    y: 8,
+                    wall_count: 5,
+                },
+                Player {
+                    player_type: PlayerType::Regular,
+                    x: 4,
+                    y: 0,
+                    wall_count: 5,
+                },
+                vec![],
+                load_std(),
+            ),
+            |game_state| game_state == GameResult::PlayerOneWon,
         );
     }
 }

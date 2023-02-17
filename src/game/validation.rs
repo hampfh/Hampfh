@@ -9,10 +9,10 @@ use crate::game::path_find::path_exists_for_players;
 /// Return false: success, perform jump
 pub(super) fn valid_move(
     player_one_turn: bool,
-    active_player: &Player, 
-    other: &Player, 
-    walls: &Vec<Wall>, 
-    player_move: Move
+    active_player: &Player,
+    other: &Player,
+    walls: &Vec<Wall>,
+    player_move: Move,
 ) -> Result<bool, ErrorType> {
     let mut walls = walls.clone();
     let clousure_walls = walls.clone();
@@ -33,11 +33,11 @@ pub(super) fn valid_move(
     // If move is wall, make sure it is valid
     if let Move::Wall(wall) = player_move.clone() {
         if !valid_wall_format(&wall) {
-            return Err(ErrorType::GameError { 
+            return Err(ErrorType::GameError {
                 reason: format!(
                     "Invalid wall format, a wall must consist of two adjacent coordinates: (({},{}), ({},{}))",
                     wall.x1, wall.y1, wall.x2, wall.y2
-                ), 
+                ),
                 fault: Some(get_active_player_type(player_one_turn))
             });
         }
@@ -46,7 +46,7 @@ pub(super) fn valid_move(
         if tile_is_valid(Pos(wall.x1, wall.y1), false).is_err()
             || tile_is_valid(Pos(wall.x2, wall.y2), false).is_err()
         {
-            return Err(ErrorType::GameError { 
+            return Err(ErrorType::GameError {
                 reason: format!(
                     "Invalid wall placement at (({},{}),({},{})), coordinates are either occupied or out of bounds",
                     wall.x1, wall.y1, wall.x2, wall.y2
@@ -65,19 +65,20 @@ pub(super) fn valid_move(
     if result.is_err() {
         return Err(ErrorType::GameError {
             reason: format!("Invalid move: {}", result.err().unwrap()),
-            fault: Some(get_active_player_type(player_one_turn))
+            fault: Some(get_active_player_type(player_one_turn)),
         });
     }
 
     let on_top_of_opponent = temp_active_player.x == other.x && temp_active_player.y == other.y;
-    if on_top_of_opponent{
-        if tile_is_valid(Pos(other.x, other.y - 1), false).is_err() &&
-        tile_is_valid(Pos(other.x + 1, other.y), false).is_err() && 
-        tile_is_valid(Pos(other.x, other.y + 1), false).is_err() &&
-        tile_is_valid(Pos(other.x - 1, other.y), false).is_err() {
+    if on_top_of_opponent {
+        if tile_is_valid(Pos(other.x, other.y - 1), false).is_err()
+            && tile_is_valid(Pos(other.x + 1, other.y), false).is_err()
+            && tile_is_valid(Pos(other.x, other.y + 1), false).is_err()
+            && tile_is_valid(Pos(other.x - 1, other.y), false).is_err()
+        {
             return Err(ErrorType::GameError {
                 reason: format!("Invalid move, cannot jump, no free position around opponent"),
-                fault: Some(get_active_player_type(player_one_turn))
+                fault: Some(get_active_player_type(player_one_turn)),
             });
         }
     }
@@ -93,7 +94,7 @@ pub(super) fn valid_move(
         Err(error) => {
             return Err(ErrorType::GameError {
                 reason: error.to_string(),
-                fault: Some(get_active_player_type(player_one_turn))
+                fault: Some(get_active_player_type(player_one_turn)),
             })
         }
     }
