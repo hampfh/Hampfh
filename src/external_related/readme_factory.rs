@@ -7,6 +7,7 @@ use crate::backend::models::submission_model::Submission;
 use crate::backend::models::turn_model::Turn;
 use crate::backend::models::user_model::User;
 use crate::game::board::{board_from_string, Tile};
+use crate::game::game::MAP_SIZE;
 
 use std::fs;
 
@@ -129,18 +130,22 @@ fn get_last_turn_of_last_match(
     );
 }
 
+fn get_string_from_tile(tile: Tile) -> String {
+    return match tile {
+        Tile::Empty => String::from("⬜️"),
+        Tile::P1 => String::from("🟩"),
+        Tile::P2 => String::from("🟥"),
+        Tile::Wall => String::from("⬛️"),
+    };
+}
+
 #[allow(dead_code)]
 fn generate_board(board: Vec<Tile>) -> String {
     let mut output = String::from("\n<div align=\"center\">\n");
 
     let mut count = 1;
     for tile in board {
-        output.push_str(match tile {
-            Tile::Empty => "⬜️",
-            Tile::P1 => "🟩",
-            Tile::P2 => "🟥",
-            Tile::Wall => "⬛️",
-        });
+        output.push_str(&get_string_from_tile(tile));
         if count % 9 == 0 {
             output.push_str("<br>");
         }
@@ -244,7 +249,10 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
 
     let mut sorted_submissions = submissions.clone();
     sorted_submissions.sort_by(|a, b| (b.mmr.round() as i32).cmp(&(a.mmr.round() as i32)));
-    sorted_submissions = sorted_submissions.into_iter().filter(|current| current.disqualified == 0).collect();
+    sorted_submissions = sorted_submissions
+        .into_iter()
+        .filter(|current| current.disqualified == 0)
+        .collect();
 
     let mut output = format!(
         "<div align=\"center\">\n\n| MMR | (Top 10) | Submission  |\n| :-- | --: | :--: |\n"
@@ -280,7 +288,11 @@ pub fn build_match_files_wrapper() {
 }
 fn build_match_files(conn: &SqliteConnection, matches: Vec<Match>) {
     for current in matches {
-        let build_result = build_match(conn, &current);
+        let build_result = build_match_with_players(
+            Match::get_players(&current.id, &conn),
+            Match::get_turns(&current.id, &conn),
+            &current,
+        );
         match match build_result {
             Some(file) => write_file(&format!("data/matches/{}.md", current.id), file),
             None => Ok(()),
@@ -291,15 +303,17 @@ fn build_match_files(conn: &SqliteConnection, matches: Vec<Match>) {
     }
 }
 
-fn build_match(conn: &SqliteConnection, target_match: &Match) -> Option<String> {
-    let result = Match::get_players(&target_match.id, &conn);
-    if result.is_none() {
+fn build_match_with_players(
+    player_result: Option<((User, Submission), (User, Submission))>,
+    turns_result: Option<Vec<Turn>>,
+    target_match: &Match,
+) -> Option<String> {
+    if player_result.is_none() {
         return None;
     }
-    let ((winner, win_sub), (loser, los_sub)) = result.unwrap();
+    let ((winner, win_sub), (loser, los_sub)) = player_result.unwrap();
 
-    let turns = Match::get_turns(&target_match.id, &conn);
-    if turns.is_none() {
+    if turns_result.is_none() {
         return None;
     }
     let p1_is_winner = target_match.p1_is_winner;
@@ -311,18 +325,25 @@ fn build_match(conn: &SqliteConnection, target_match: &Match) -> Option<String> 
 
     let mut file = format!(
         "<div align=\"center\"><h1>{} vs {}</h1><p><a href=\"{}\">{} {}</a> vs <a href=\"{}\">{} {}</a></p>\n<p>Winner: {}</p></div>\n\n---\n",
-        winner.username, loser.username, win_sub.issue_url, winner_color, win_sub.id, los_sub.issue_url, los_sub.id, loser_color, winner_color, 
+        winner.username, loser.username, win_sub.issue_url, winner_color, win_sub.id, los_sub.issue_url, los_sub.id, loser_color, winner_color,
     );
+
     if target_match.match_error.is_some() {
-        file.push_str(&format!("<div align=\"center\"><p>{}</p></div>\n\n", target_match.match_error.as_ref().unwrap()));
+        file.push_str(&format!(
+            "<div align=\"center\"><p>{}</p></div>\n\n",
+            target_match.match_error.as_ref().unwrap()
+        ));
     }
-    file.push_str(&get_match_from_tiles(
-        turns
-            .unwrap()
-            .iter()
-            .map(|turn| board_from_string(turn.board.clone()))
-            .collect(),
-    ));
+    file.push_str(
+        &get_match_from_tiles(
+            turns_result
+                .unwrap()
+                .iter()
+                .map(|turn| board_from_string(turn.board.clone()))
+                .collect(),
+        )
+        .as_str(),
+    );
 
     return Some(file);
 }
@@ -335,6 +356,53 @@ pub(crate) fn get_match_from_tiles(turns: Vec<Vec<Tile>>) -> String {
         output.push_str(&generate_board(turn));
         output.push_str(&format!("\n---\n\n"));
         round += 1;
+    }
+    return output;
+}
+pub(crate) fn get_match_from_tiles_compact(turns: Vec<Vec<Tile>>) -> String {
+    let mut output = String::new();
+    for i in (0..turns.len()).step_by(3) {
+        let mut rows: Vec<String> = vec![];
+
+        let left = turns[i].clone();
+        let mid = if i + 1 < turns.len() {
+            Some(turns[i + 1].clone())
+        } else {
+            None
+        };
+        let right = if i + 2 < turns.len() {
+            Some(turns[i + 2].clone())
+        } else {
+            None
+        };
+
+        for j in 0..MAP_SIZE {
+            let mut row: String = "".to_string();
+            let tile_index = |column: i32| (j * MAP_SIZE + column) as usize;
+            for k in 0..MAP_SIZE {
+                let left_tile = left[tile_index(k)];
+                row.push_str(&get_string_from_tile(left_tile));
+            }
+
+            if let Some(mid_tile) = mid.clone() {
+                row.push_str(" ");
+                for k in 0..MAP_SIZE {
+                    row.push_str(&get_string_from_tile(mid_tile[tile_index(k)]));
+                }
+            }
+
+            if let Some(right_tile) = right.clone() {
+                row.push_str(" ");
+                for k in 0..MAP_SIZE {
+                    row.push_str(&get_string_from_tile(right_tile[tile_index(k)]));
+                }
+            }
+            rows.push(format!("{}  ", &row));
+        }
+        output.push_str(&format!(
+            "<div align=\"center\">{}</div><br/>",
+            rows.join("\n")
+        ));
     }
     return output;
 }
