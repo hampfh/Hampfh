@@ -77,8 +77,8 @@ fn run_local_match(script1_path: &str, script2_path: &str) {
     file.push_str(&format!(
         "<div align=\"center\"><p>{}</p></div>\n\n",
         match results {
-            GameResult::PlayerOneWon => "Script 1 won",
-            GameResult::PlayerTwoWon => "Script 2 won",
+            GameResult::PlayerOneWon => "Script 1 (🟩) won",
+            GameResult::PlayerTwoWon => "Script 2 (🟥) won",
             _ => "",
         }
     ));
