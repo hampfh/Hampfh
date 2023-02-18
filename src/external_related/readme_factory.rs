@@ -397,10 +397,10 @@ pub(crate) fn get_match_from_tiles_compact(turns: Vec<Vec<Tile>>) -> String {
                     row.push_str(&get_string_from_tile(right_tile[tile_index(k)]));
                 }
             }
-            rows.push(format!("{}  ", &row));
+            rows.push(format!("  {}<br/>  ", &row));
         }
         output.push_str(&format!(
-            "<div align=\"center\">{}</div><br/>",
+            "<div align=\"center\">\n{}</div><br/>",
             rows.join("\n")
         ));
     }

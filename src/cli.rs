@@ -105,7 +105,7 @@ fn run_local_match(script1_path: &str, script2_path: &str) {
             }
         ))
     }
-    file.push_str(&&get_match_from_tiles_compact(turns));
+    file.push_str(&get_match_from_tiles_compact(turns));
 
     fs::write("match.temp.md", file).expect("Could not write match file");
 }
