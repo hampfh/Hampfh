@@ -9,7 +9,8 @@ use crate::{
     },
     external_related::readme_factory::{
         build_match_files_wrapper, build_match_log_wrapper, build_submission_log_wrapper,
-        clear_match_dir, generate_readme, get_match_from_tiles_compact, write_file,
+        clear_match_dir, create_and_encode_file, generate_gif_from_turn, generate_readme,
+        get_match_from_tiles_compact, write_file,
     },
     game::{
         entry_point::initialize_game_session,
@@ -83,7 +84,7 @@ fn run_local_match(script1_path: &str, script2_path: &str) {
         }
     ));
 
-    if let GameResult::Error(error) = results {
+    if let GameResult::Error(error) = results.clone() {
         let string: String;
         file.push_str(&format!(
             "<div align=\"center\"><p>--- Match has errors ---</p>\n\n{}</div>",
@@ -105,9 +106,11 @@ fn run_local_match(script1_path: &str, script2_path: &str) {
             }
         ))
     }
-    file.push_str(&get_match_from_tiles_compact(turns));
+    file.push_str(&get_match_from_tiles_compact(turns.clone()));
 
     fs::write("match.temp.md", file).expect("Could not write match file");
+    let (color_palette, images) = generate_gif_from_turn(turns, Some(results), 50);
+    create_and_encode_file("match.temp.gif".to_string(), images, &color_palette, 50);
 }
 
 fn print_error(reason: Option<String>, fault: Option<PlayerType>) -> String {

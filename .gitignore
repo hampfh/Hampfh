@@ -6,6 +6,7 @@
 .env
 *.temp.lua
 *.temp.md
+*.temp.gif
 storage.sql
 storage.db
 storage.*

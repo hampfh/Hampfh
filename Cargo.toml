@@ -34,3 +34,4 @@ diesel_migrations = "1.4.0"
 reqwest = { version = "0.11.10", features = ["blocking"]}
 # For compiling on linux
 libsqlite3-sys = { version = "0.9.1", features = ["bundled"] }
+gif = "0.12.0"

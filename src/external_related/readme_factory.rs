@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 use diesel::SqliteConnection;
+use gif::{Encoder, Frame, Repeat};
 
 use crate::backend;
 use crate::backend::models::match_model::Match;
@@ -7,24 +8,25 @@ use crate::backend::models::submission_model::Submission;
 use crate::backend::models::turn_model::Turn;
 use crate::backend::models::user_model::User;
 use crate::game::board::{board_from_string, Tile};
-use crate::game::game::MAP_SIZE;
+use crate::game::game::{GameResult, MAP_SIZE};
 
-use std::fs;
+use std::borrow::Cow;
+use std::fs::{self, File};
 
 use super::repo_updater::get_issue_url;
 
 pub fn clear_match_dir() {
-    match std::fs::remove_dir_all("data") {
-        Ok(_) => (),
-        Err(error) => println!("Could not clear data dir, reason: {}", error),
+    if let Err(error) = std::fs::remove_dir_all("data") {
+        println!("Could not clear data dir, reason: {}", error)
     };
-    match std::fs::create_dir("data") {
-        Ok(_) => (),
-        Err(error) => println!("Could not create data dir, reason: {}", error),
+    if let Err(error) = std::fs::create_dir("data") {
+        println!("Could not create data dir, reason: {}", error)
     }
-    match std::fs::create_dir("data/matches") {
-        Ok(_) => (),
-        Err(error) => println!("Could not create data/matches dir, reason: {}", error),
+    if let Err(error) = std::fs::create_dir("data/matches") {
+        println!("Could not create data/matches dir, reason: {}", error)
+    }
+    if let Err(error) = fs::create_dir("data/gifs") {
+        println!("Could not create data/gifs dir, reason: {}", error);
     }
 }
 
@@ -38,22 +40,35 @@ pub fn generate_readme(
     matches: Vec<Match>,
     turns: Vec<Turn>,
 ) -> String {
+    let is_live = std::env::var("LIVE").unwrap_or("false".to_string()) == "true";
+    let url_prepend = if is_live { "" } else { "." };
+
+    let image_scale: u16 = 50;
+    let selected_matches = pick_front_page_matches(&matches, &turns);
+    let selection_count = selected_matches.len();
+    render_matches_to_gif(&selected_matches, image_scale);
+
     return format!(
-        "{}<br/>{}{}{}{}",
-        get_readme_header(),
-        get_last_turn_of_last_match(players.clone(), submissions.clone(), &matches, turns),
-        generate_score_board(&submissions, &players),
-        format!(
-            "🕹 [Match log](./data/match_log.md) &#124; [Submission log](./data/submission_log.md) 🤖"
-        ),
-        credits(chrono::Local::now().naive_local())
-    );
+            "{}<br/>  \n\n| {} | {} | {} |  \n| :--: | :--: | :--: |  \n|{}|{}|{}|  \n</div>{}{}{}",
+            get_readme_header(),
+            get_match_header(&selected_matches[0].0, &players, &submissions),
+            if selection_count > 1 { get_match_header(&selected_matches[1].0, &players, &submissions) } else { String::from("") },
+            if selection_count > 2 { get_match_header(&selected_matches[2].0, &players, &submissions) } else { String::from("") },
+            format!("<img style=\"margin: 10px\" src=\"{}/data/gifs/one.gif?raw=true\" width=\"{}\" height=\"{}\" />", url_prepend, 200, 200),
+            if selection_count > 1 { format!("<img style=\"margin: 10px\" src=\"{}/data/gifs/two.gif?raw=true\" width=\"{}\" height=\"{}\" />", url_prepend, 200, 200) } else { String::from("") },
+            if selection_count > 2 { format!("<img style=\"margin: 10px\" src=\"{}/data/gifs/three.gif?raw=true\" width=\"{}\" height=\"{}\" />", url_prepend, 200, 200) } else { String::from("") },
+    /*         get_last_turn_of_last_match(players.clone(), submissions.clone(), &matches, turns), */
+            generate_score_board(&submissions, &players),
+            format!(
+                "🕹 [Match log](./data/match_log.md) &#124; [Submission log](./data/submission_log.md) 🤖"
+            ),
+            credits(chrono::Local::now().naive_local())
+        );
 }
 
 fn get_readme_header() -> String {
     return String::from(
 "<div align=\"center\">
-<h3>🎉🎉🎉 Welcome to the scripting game! 🎉🎉🎉</h3>
 <img src=\"https://img.shields.io/badge/-BETA-yellow\"/>
 <img src=\"https://img.shields.io/github/issues-closed-raw/hampfh/hampfh/challenger?color=limegreen&label=Bots\"/>
 <img src=\"https://img.shields.io/badge/-lua-darkblue\">
@@ -65,24 +80,38 @@ fn get_readme_header() -> String {
 ");
 }
 
-fn get_players_from_turn(
-    turn: &Turn,
+fn get_match_header(
+    selected_match: &Match,
     players: &Vec<User>,
     submissions: &Vec<Submission>,
-    matches: &Vec<Match>,
-) -> Option<(User, User)> {
-    let last_match = matches.iter().find(|current| current.id == turn.match_id);
-    if last_match.is_none() {
-        return None;
+) -> String {
+    let m1_result = get_players_from_turn(&selected_match, &players, &submissions);
+    if let Some((user1, user2)) = m1_result {
+        return format!(
+            "<a href=\"{}\">{}</a> vs <a href=\"{}\">{}</a><br/>  <a href=\"{}\">Match</a>  ",
+            format!("https://github.com/{}", user1.username),
+            user1.username,
+            format!("https://github.com/{}", user2.username),
+            user2.username,
+            format!("./matches/{}.md", selected_match.id)
+        );
     }
+    return String::new();
+}
 
+#[allow(dead_code)]
+fn get_players_from_turn(
+    selected_match: &Match,
+    players: &Vec<User>,
+    submissions: &Vec<Submission>,
+) -> Option<(User, User)> {
     let winning_submission = submissions
         .iter()
-        .find(|current| current.id == last_match.unwrap().winner);
+        .find(|current| current.id == selected_match.winner);
 
     let loosing_submission = submissions
         .iter()
-        .find(|current| current.id == last_match.unwrap().loser);
+        .find(|current| current.id == selected_match.loser);
 
     if winning_submission.is_none() || loosing_submission.is_none() {
         return None;
@@ -101,33 +130,81 @@ fn get_players_from_turn(
     return Some((winner.to_owned(), loser.to_owned()));
 }
 
-fn get_last_turn_of_last_match(
-    players: Vec<User>,
-    submissions: Vec<Submission>,
+/**
+ * Pick 3 matches to render to gifs, try to take the latest matches
+ * but if they aren't longer than 5 moves then attempt to take
+ * other matches that are at least 5 moves long.
+ */
+fn pick_front_page_matches(
     matches: &Vec<Match>,
-    turns: Vec<Turn>,
-) -> String {
-    if turns.len() == 0 {
-        return format!("No matches yet...\n\n");
+    turns: &Vec<Turn>,
+) -> Vec<(Match, Vec<Turn>, i32)> {
+    let mut processed_matches: Vec<(Match, Vec<Turn>, i32)> = vec![];
+    let turn_iter = turns.iter();
+
+    let mut not_short_matches = 0;
+    for current_match in matches.iter().rev() {
+        if not_short_matches >= 3 {
+            break;
+        }
+        let id = current_match.id.clone();
+        let rounds = turn_iter
+            .clone()
+            .filter(|turn| turn.match_id == id)
+            .map(|turn| turn.clone());
+
+        let round_count = rounds.clone().count();
+        processed_matches.push((
+            current_match.to_owned(),
+            rounds.collect(),
+            round_count as i32,
+        ));
+        if round_count > 5 {
+            not_short_matches += 1;
+        }
     }
 
-    let last_turn = &turns[turns.len() - 1];
-    let (winner, loser) = match get_players_from_turn(last_turn, &players, &submissions, &matches) {
-        Some(players) => players,
-        None => {
-            return format!("");
-        }
-    };
+    // Side effect here, write to file
+    processed_matches.sort_by(|a, b| b.2.cmp(&a.2));
+    return processed_matches;
+}
 
-    return format!(
-        "<div align=\"center\"><p>Latest game:</p><p><a href=\"https://github.com/{}\">@{}</a> vs <a href=\"https://github.com/{}\">@{}</a></p>\n<a href=\"./data/matches/{}.md\">Go to match</a></div>\n\n---\n\n{}\n---\n",
-        winner.username,
-        winner.username,
-        loser.username,
-        loser.username,
-        matches.iter().find(|current| current.id == last_turn.match_id).unwrap().id,
-        generate_board(board_from_string(last_turn.board.clone()))
+fn render_matches_to_gif(matches_to_render: &Vec<(Match, Vec<Turn>, i32)>, image_scale: u16) {
+    let mut counter = 0;
+
+    for (match_to_render, turns, _) in matches_to_render.iter().take(3) {
+        render_match_gif(
+            match_to_render.to_owned(),
+            turns,
+            format!(
+                "./data/gifs/{}.gif",
+                match counter {
+                    0 => "one",
+                    1 => "two",
+                    _ => "three",
+                }
+            ),
+            image_scale,
+        );
+        counter += 1;
+    }
+}
+
+fn render_match_gif(match_to_render: Match, turns: &Vec<Turn>, render_path: String, scale: u16) {
+    let last_match_turns = turns
+        .iter()
+        .filter(|turn| turn.match_id == match_to_render.id)
+        .collect::<Vec<&Turn>>();
+
+    let (color_palette, last_match_image) = generate_gif_from_turn(
+        last_match_turns
+            .iter()
+            .map(|turn| board_from_string(turn.board.clone()))
+            .collect(),
+        Some(GameResult::PlayerOneWon),
+        scale,
     );
+    create_and_encode_file(render_path, last_match_image, &color_palette, scale);
 }
 
 fn get_string_from_tile(tile: Tile) -> String {
@@ -405,6 +482,70 @@ pub(crate) fn get_match_from_tiles_compact(turns: Vec<Vec<Tile>>) -> String {
         ));
     }
     return output;
+}
+
+pub(crate) fn generate_gif_from_turn(
+    turns: Vec<Vec<Tile>>,
+    game_result: Option<GameResult>,
+    image_scale: u16,
+) -> ([u8; 12], Vec<Vec<u8>>) {
+    #[rustfmt::skip]
+    let color_map = [
+        0xFF,   0xFF,   0xFF,   // White
+        0x00,   0xAF,   0x00,   // Green
+        0xEF,   0x01,   0x08,   // Red
+        0x00,   0x00,   0x00,   // Black
+    ];
+    let mut beacon_states: Vec<Vec<u8>> = vec![];
+
+    for turn in &turns {
+        let mut current_image: Vec<u8> = vec![];
+        for y in 0..(MAP_SIZE as u16 * image_scale) {
+            for x in 0..(MAP_SIZE as u16 * image_scale) {
+                let tile = turn[(y / image_scale * MAP_SIZE as u16 + x / image_scale) as usize];
+                current_image.push(match tile {
+                    Tile::Empty => 0,
+                    Tile::P1 => 1,
+                    Tile::P2 => 2,
+                    Tile::Wall => 3,
+                });
+            }
+        }
+        beacon_states.push(current_image);
+    }
+    if game_result.is_some() && turns.len() > 5 {
+        let mut win_screen: Vec<u8> = vec![];
+        for _ in 0..(MAP_SIZE * MAP_SIZE * image_scale as i32 * image_scale as i32) {
+            win_screen.push(match game_result.as_ref().unwrap() {
+                GameResult::PlayerOneWon => 1,
+                GameResult::PlayerTwoWon => 2,
+                GameResult::Error(_) => 3,
+            });
+        }
+        for _ in 0..3 {
+            beacon_states.push(win_screen.clone());
+        }
+    }
+    return (color_map, beacon_states);
+}
+pub(crate) fn create_and_encode_file(
+    path: String,
+    beacon_states: Vec<Vec<u8>>,
+    color_map: &[u8; 12],
+    image_scale: u16,
+) {
+    let image_size = MAP_SIZE as u16 * image_scale;
+    let mut image = File::create(path).unwrap();
+    let mut encoder = Encoder::new(&mut image, image_size, image_size, color_map).unwrap();
+    encoder.set_repeat(Repeat::Infinite).unwrap();
+    for state in &beacon_states {
+        let mut frame = Frame::default();
+        frame.delay = if beacon_states.len() < 5 { 50 } else { 20 };
+        frame.width = image_size;
+        frame.height = image_size;
+        frame.buffer = Cow::Borrowed(&*state);
+        encoder.write_frame(&frame).unwrap();
+    }
 }
 
 fn credits(last_updated: NaiveDateTime) -> String {
