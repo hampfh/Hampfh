@@ -13,15 +13,15 @@ local current_direction = 0 -- 0 UP, 1 RIGHT, 2 DOWN, 3 LEFT
 
 local function get_next_tile(x, y, direction)
 	if direction == 0 then
-		return {x, y - 1}
+		return { x, y - 1 }
 	elseif direction == 1 then
-		return {x + 1, y}
+		return { x + 1, y }
 	elseif direction == 2 then
-		return {x, y + 1}
+		return { x, y + 1 }
 	elseif direction == 3 then
-		return {x-1, y}
+		return { x - 1, y }
 	end
-	return {-1, -1}
+	return { -1, -1 }
 end
 
 local function turn_right()
@@ -36,10 +36,10 @@ end
 
 local function try_place_wall_in_front_of_player(context, player)
 	-- If opponent is about to win we attempt to block that
-	if STD__OCCUPIED(context, player.x, player.y + 1) == 0 and STD__OCCUPIED(context, player.x + 1, player.y + 1) then
+	if not STD__OCCUPIED(context, player.x, player.y + 1) and not STD__OCCUPIED(context, player.x + 1, player.y + 1) then
 		return place_wall(player.x, player.y + 1, player.x + 1, player.y + 1)
-	elseif STD__OCCUPIED(context, player.x - 1, player.y + 1) == 0 and STD__OCCUPIED(context, player.x, player.y + 1) then
-		return place_wall(player.x - 1, player.y + 1, player.x, player.y + 1)
+	elseif not STD__OCCUPIED(context, player.x, player.y + 1) and not STD__OCCUPIED(context, player.x - 1, player.y + 1) then
+		return place_wall(player.x, player.y + 1, player.x - 1, player.y + 1)
 	end
 end
 
@@ -59,8 +59,7 @@ function onTurn(context)
 
 	if context.opponent.y == 7 then
 		local wall_result = try_place_wall_in_front_of_player(context, context.opponent)
-		-- If wall can be placed return the wall
-		if #wall_result > 0 then
+		if wall_result then
 			return wall_result
 		end
 	end
