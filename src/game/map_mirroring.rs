@@ -65,16 +65,19 @@ pub fn conditionally_reverse_player(player: &Player, condition: bool) -> Player 
         return player.clone();
     }
     let mut new_player = player.clone();
-    new_player.x = MAP_SIZE - new_player.x;
-    new_player.y = MAP_SIZE - new_player.y;
+    new_player.x = reverse_coordinate(player.x);
+    new_player.y = reverse_coordinate(player.y);
     return new_player;
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::game::game::{Move, Wall, MAP_SIZE};
+    use crate::game::{
+        game::{Move, Wall, MAP_SIZE},
+        player::{Player, PlayerType},
+    };
 
-    use super::{reverse_coordinate, reverse_move, reverse_wall};
+    use super::{conditionally_reverse_player, reverse_coordinate, reverse_move, reverse_wall};
 
     #[test]
     fn test_reverse_move() {
@@ -106,6 +109,20 @@ mod tests {
         reverse_wall_compare_utility(vec![4, 8, 5, 8], vec![4, 0, 3, 0]);
         reverse_wall_compare_utility(vec![7, 8, 8, 8], vec![1, 0, 0, 0]);
         reverse_wall_compare_utility(vec![0, 0, 0, 1], vec![8, 8, 8, 7]);
+    }
+
+    fn assert_reverse_player_utility(x: i32, y: i32, expected_x: i32, expected_y: i32) {
+        let player = Player::new(x, y, 10, PlayerType::Regular);
+        let expected_reverse_player = Player::new(expected_x, expected_y, 10, PlayerType::Regular);
+        let reversed_player = conditionally_reverse_player(&player, true);
+        assert_eq!(reversed_player, expected_reverse_player);
+    }
+
+    #[test]
+    fn test_conditionally_reverse_player() {
+        assert_reverse_player_utility(0, 0, MAP_SIZE - 1, MAP_SIZE - 1);
+        assert_reverse_player_utility(1, 1, MAP_SIZE - 2, MAP_SIZE - 2);
+        assert_reverse_player_utility(0, MAP_SIZE - 1, MAP_SIZE - 1, 0);
     }
 
     #[test]
