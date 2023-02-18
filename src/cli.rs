@@ -29,6 +29,13 @@ pub fn cli(args: Vec<String>) {
             }
             run_local_match(args[2].as_str(), args[3].as_str())
         }
+        "generate" => {
+            clear_match_dir();
+            generate_main();
+            build_match_files_wrapper();
+            build_match_log_wrapper();
+            build_submission_log_wrapper();
+        }
         "generate-main" => generate_main(),
         "generate-matches" => build_match_files_wrapper(),
         "generate-logs" => {
