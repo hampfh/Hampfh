@@ -49,7 +49,7 @@ pub fn generate_readme(
     render_matches_to_gif(&selected_matches, image_scale);
 
     return format!(
-            "{}<br/>  \n\n| {} | {} | {} |  \n| :--: | :--: | :--: |  \n|{}|{}|{}|  \n</div>{}{}{}",
+            "{}<br/>  <div align=\"center\">\n\n| {} | {} | {} |  \n| :--: | :--: | :--: |  \n|{}|{}|{}|  \n</div>{}{}{}",
             get_readme_header(),
             get_match_header(&selected_matches[0].0, &players, &submissions),
             if selection_count > 1 { get_match_header(&selected_matches[1].0, &players, &submissions) } else { String::from("") },
