@@ -21,10 +21,10 @@ pub(crate) fn reverse_move(player_move: Move) -> Move {
 
 pub(crate) fn reverse_wall(wall: &Wall) -> Wall {
     return Wall {
-        x1: reverse_coordinate(wall.x2),
-        y1: reverse_coordinate(wall.y2),
-        x2: reverse_coordinate(wall.x1),
-        y2: reverse_coordinate(wall.y1),
+        x1: reverse_coordinate(wall.x1),
+        y1: reverse_coordinate(wall.y1),
+        x2: reverse_coordinate(wall.x2),
+        y2: reverse_coordinate(wall.y2),
     };
 }
 
@@ -84,21 +84,28 @@ mod tests {
         assert_eq!(Move::Left, reverse_move(Move::Right));
     }
 
-    #[test]
-    fn test_reverse_wall() {
+    fn reverse_wall_compare_utility(input: Vec<i32>, expected: Vec<i32>) {
         let wall = Wall {
-            x1: 1,
-            y1: 1,
-            x2: 2,
-            y2: 1,
+            x1: input[0],
+            y1: input[1],
+            x2: input[2],
+            y2: input[3],
         };
         let reversed_wall = Wall {
-            x1: 6,
-            y1: 7,
-            x2: 7,
-            y2: 7,
+            x1: expected[0],
+            y1: expected[1],
+            x2: expected[2],
+            y2: expected[3],
         };
         assert_eq!(reversed_wall, reverse_wall(&wall));
+    }
+
+    #[test]
+    fn test_reverse_wall() {
+        reverse_wall_compare_utility(vec![1, 1, 2, 1], vec![7, 7, 6, 7]);
+        reverse_wall_compare_utility(vec![4, 8, 5, 8], vec![4, 0, 3, 0]);
+        reverse_wall_compare_utility(vec![7, 8, 8, 8], vec![1, 0, 0, 0]);
+        reverse_wall_compare_utility(vec![0, 0, 0, 1], vec![8, 8, 8, 7]);
     }
 
     #[test]
