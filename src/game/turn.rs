@@ -29,6 +29,24 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
         Err(error) => return Err(error),
     };
 
+    let debugging_enabled = std::env::var("DEBUG")
+        .expect("LIVE env variable not set")
+        .to_lowercase()
+        == "true";
+
+    // Check for debug flag
+    let split = player_move.split(" ");
+    if debugging_enabled && split.clone().count() > 0 && split.clone().next().unwrap() == "#debug" {
+        println!("Incoming {}", player_move);
+        return Err(ErrorType::GameError {
+            reason: format!(
+                "Player: {:?}\n<br/>Opponent: {:?}\n<br/>Walls: {:?}\n<br/>Bot ({}) debugging log:\n```\n{}\n```\n<br/>",
+                player_one, player_two, walls, if player_one_turn {"🟩"} else {"🟥"}, split.skip(1).collect::<Vec<&str>>().join(" ")
+            ),
+            fault: None,
+        });
+    }
+
     // onTurn fail if: not 1 and not 7
     // onJump fail if: not 1
     if player_move.len() != 1 && player_move.len() != 7 {
