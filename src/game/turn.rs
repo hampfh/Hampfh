@@ -30,7 +30,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
     };
 
     let debugging_enabled = std::env::var("DEBUG")
-        .expect("LIVE env variable not set")
+        .unwrap_or(String::from("false"))
         .to_lowercase()
         == "true";
 
