@@ -93,7 +93,7 @@ fn get_match_header(
             user1.username,
             format!("https://github.com/{}", user2.username),
             user2.username,
-            format!("./matches/{}.md", selected_match.id)
+            format!("./data/matches/{}.md", selected_match.id)
         );
     }
     return String::new();
