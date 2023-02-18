@@ -6,7 +6,7 @@ pub enum PlayerType {
     Flipped, // Player 1
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Player {
     pub player_type: PlayerType,
     pub x: i32,

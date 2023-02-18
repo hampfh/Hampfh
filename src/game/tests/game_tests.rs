@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{ErrorType, GameResult, Wall, MAP_SIZE},
+        game::{ErrorType, GameResult, MAP_SIZE},
         methods,
         player::{Player, PlayerType},
         tests::util::{
