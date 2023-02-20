@@ -130,4 +130,9 @@ mod tests {
         assert_eq!(reverse_coordinate(0), MAP_SIZE - 1);
         assert_eq!(reverse_coordinate(MAP_SIZE - 1), 0);
     }
+
+    #[test]
+    fn test_board_mirroring() {
+        assert!(false);
+    }
 }

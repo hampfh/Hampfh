@@ -145,6 +145,30 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
         ) {
             return Err(error);
         }
+
+        // Check that move was correct
+        if first.x == other.x && first.y == other.y {
+            return Err(ErrorType::GameError {
+                reason: format!(
+                    "Player ended up on top of opponent in jump at ({}, {})",
+                    first.x, first.y
+                ),
+                fault: Some(get_active_player_type(game.player_one_turn)),
+            });
+        }
+
+        for wall in &mutable_walls {
+            if wall.x1 == first.x && wall.y1 == first.y || wall.x2 == first.x && wall.y2 == first.y
+            {
+                return Err(ErrorType::GameError {
+                    reason: format!(
+                        "Player tried to jump into a wall at ({}, {})",
+                        first.x, first.y
+                    ),
+                    fault: Some(get_active_player_type(game.player_one_turn)),
+                });
+            }
+        }
     } else {
         execute_move(&mut mutable_walls, first, &player_move.clone().unwrap()).unwrap();
         // Reassign walls
