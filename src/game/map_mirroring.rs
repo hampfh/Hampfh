@@ -1,6 +1,8 @@
 use crate::game::game::{Move, Wall, MAP_SIZE};
 use crate::game::player::Player;
 
+use super::board::Tile;
+
 /**
  * This file includes all logic for the map mirroring process.
  * Aka: All of the scripts will always think they are playing from the
@@ -26,6 +28,13 @@ pub(crate) fn reverse_wall(wall: &Wall) -> Wall {
         x2: reverse_coordinate(wall.x2),
         y2: reverse_coordinate(wall.y2),
     };
+}
+
+pub(crate) fn conditionally_reverse_board(board: Vec<Tile>, condition: bool) -> Vec<Tile> {
+    if !condition {
+        return board;
+    }
+    return board.into_iter().rev().collect();
 }
 
 pub(crate) fn conditionally_reverse_walls(walls: &Vec<Wall>, condition: bool) -> Vec<Wall> {
@@ -129,5 +138,10 @@ mod tests {
     fn correct_mirroring_of_corners() {
         assert_eq!(reverse_coordinate(0), MAP_SIZE - 1);
         assert_eq!(reverse_coordinate(MAP_SIZE - 1), 0);
+    }
+
+    #[test]
+    fn test_board_mirroring() {
+        assert!(false);
     }
 }

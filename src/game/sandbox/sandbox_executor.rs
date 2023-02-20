@@ -4,7 +4,8 @@ use std::{
 };
 
 use crate::game::{
-    game::ErrorType, methods::get_active_player_type, sandbox::terminate_thread::terminate_thread,
+    game::ErrorType, map_mirroring::conditionally_reverse_board, methods::get_active_player_type,
+    sandbox::terminate_thread::terminate_thread,
 };
 
 use crate::game::{
@@ -116,7 +117,10 @@ pub(crate) fn create_lua_game_object(
 
     let walls = conditionally_reverse_walls(&walls, reverse);
 
-    let serialized_board = serialize_board(populate_board(&player_one, &player_two, &walls));
+    let serialized_board = serialize_board(conditionally_reverse_board(
+        populate_board(&player_one, &player_two, &walls),
+        reverse,
+    ));
     let (serialized_player, serialized_opponent) = match player_one_turn {
         true => (
             serialize_player(&conditionally_reverse_player(&player_one, false)),
