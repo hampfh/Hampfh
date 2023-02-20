@@ -4,8 +4,7 @@ use std::{
 };
 
 use crate::game::{
-    game::ErrorType, map_mirroring::conditionally_reverse_board, methods::get_active_player_type,
-    sandbox::terminate_thread::terminate_thread,
+    game::ErrorType, methods::get_active_player_type, sandbox::terminate_thread::terminate_thread,
 };
 
 use crate::game::{
@@ -116,19 +115,23 @@ pub(crate) fn create_lua_game_object(
     let reverse = !player_one_turn;
 
     let walls = conditionally_reverse_walls(&walls, reverse);
+    let conditionally_reversed_player_one = conditionally_reverse_player(&player_one, reverse);
+    let conditionally_reversed_player_two = conditionally_reverse_player(&player_two, reverse);
 
-    let serialized_board = serialize_board(conditionally_reverse_board(
-        populate_board(&player_one, &player_two, &walls),
-        reverse,
+    let serialized_board = serialize_board(populate_board(
+        &conditionally_reversed_player_one,
+        &conditionally_reversed_player_two,
+        &walls,
     ));
+
     let (serialized_player, serialized_opponent) = match player_one_turn {
         true => (
-            serialize_player(&conditionally_reverse_player(&player_one, false)),
-            serialize_player(&conditionally_reverse_player(&player_two, false)),
+            serialize_player(&conditionally_reversed_player_one),
+            serialize_player(&conditionally_reversed_player_two),
         ),
         false => (
-            serialize_player(&conditionally_reverse_player(&player_two, true)),
-            serialize_player(&conditionally_reverse_player(&player_one, true)),
+            serialize_player(&conditionally_reversed_player_two),
+            serialize_player(&conditionally_reversed_player_one),
         ),
     };
 
