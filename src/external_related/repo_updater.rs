@@ -24,6 +24,35 @@ pub fn update_repo(commit_msg: String) {
         return;
     }
 
+    /*
+       ! This action is very important since what we're doing
+       ! here is destructive to the git history. Hence we need
+       ! to make sure that we are not on a branch with actual data.
+    */
+    Command::new("git")
+        .arg("switch")
+        .arg("live")
+        .output()
+        .expect("Could not switch to live branch");
+
+    Command::new("git")
+        .arg("stash")
+        .output()
+        .expect("Could not stash");
+
+    Command::new("git")
+        .arg("reset")
+        .arg("--hard")
+        .arg("origin/master")
+        .output()
+        .expect("Could not reset live to master branch");
+
+    Command::new("git")
+        .arg("stash")
+        .arg("pop")
+        .output()
+        .expect("Could not pop stash");
+
     Command::new("git")
         .arg("add")
         .arg("-A")
@@ -37,6 +66,7 @@ pub fn update_repo(commit_msg: String) {
         .expect("Could not create commit");
     Command::new("git")
         .arg("push")
+        .arg("-f") // ! This is a potentially dangerous flag but we need it here to overwrite old match data.
         .output()
         .expect("Could not push");
     println!("Commands executed!");
