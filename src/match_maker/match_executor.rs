@@ -331,7 +331,7 @@ fn get_error_report(
     critical_error: bool,
 ) -> String {
     let mut output = match fault {
-        Some(false) => format!("[SUCCESS] Opponent: {}", opponent_issue_link),
+        Some(false) => format!("[WIN] Opponent: {}", opponent_issue_link),
         Some(true) => format!(
             "[ERROR] Opponent: {}\n**Error:**\n{}\n\n{}",
             opponent_issue_link,
