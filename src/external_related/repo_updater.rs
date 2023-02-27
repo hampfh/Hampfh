@@ -24,6 +24,11 @@ pub fn update_repo(commit_msg: String) {
         return;
     }
 
+    Command::new("git")
+        .arg("fetch")
+        .output()
+        .expect("Could not fetch");
+
     /*
        ! This action is very important since what we're doing
        ! here is destructive to the git history. Hence we need
