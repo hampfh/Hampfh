@@ -11,7 +11,6 @@ use crate::match_maker::regenerate_markdown_files::regen_markdown_files_and_upda
 use actix_web::{post, web};
 
 #[post("/api/challenge")]
-#[allow(unreachable_code)]
 pub async fn submit_challenge(
     webhook_post: web::Json<GithubPayload>,
     db_pool: web::Data<DbPool>,

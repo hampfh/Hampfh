@@ -9,7 +9,7 @@ pub(crate) fn run_placements(
 ) -> Vec<(MatchReport, MatchReport)> {
     // Order by score and pick the submission with the higest score
     let submissions = Submission::list(conn);
-    let matches = make_selection(submissions, challenger.id.clone());
+    let matches = make_selection(submissions, challenger);
 
     return execute_match_queue(
         conn,
@@ -20,14 +20,18 @@ pub(crate) fn run_placements(
     );
 }
 
-fn make_selection(submissions: Vec<Submission>, challenger_id: String) -> Vec<Submission> {
+fn make_selection(submissions: Vec<Submission>, challenger: &Submission) -> Vec<Submission> {
     let mut submissions = submissions;
     let mut match_queue: Vec<Submission> = Vec::new();
 
-    // Remove all submissions of disqualified bots
+    // Filter submissions: We don't allow the challenger to play against: itself, disqualified bots, or bots that are by the same author
     submissions = submissions
         .into_iter()
-        .filter(|submission| submission.disqualified == 0 && submission.id != challenger_id)
+        .filter(|submission| {
+            submission.disqualified == 0
+                && submission.id != challenger.id
+                && submission.user != challenger.user
+        })
         .collect();
     // Sort from lowest to highest
     submissions.sort_by(|a, b| a.wins.cmp(&b.wins));
