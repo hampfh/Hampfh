@@ -17,17 +17,11 @@ pub(crate) fn get_issue_url(issue_number: i32) -> String {
     )
 }
 
-/// This function will push changes to the repository.
-pub fn update_repo(commit_msg: String) {
+pub fn reset_to_master_branch() {
     if !is_live() {
-        println!("[OFFLINE] Skipping update_repo");
+        println!("[OFFLINE] Skipping reset_to_master_branch");
         return;
     }
-
-    Command::new("git")
-        .arg("fetch")
-        .output()
-        .expect("Could not fetch");
 
     /*
        ! This action is very important since what we're doing
@@ -41,22 +35,19 @@ pub fn update_repo(commit_msg: String) {
         .expect("Could not switch to live branch");
 
     Command::new("git")
-        .arg("stash")
-        .output()
-        .expect("Could not stash");
-
-    Command::new("git")
         .arg("reset")
         .arg("--hard")
         .arg("origin/master")
         .output()
         .expect("Could not reset live to master branch");
+}
 
-    Command::new("git")
-        .arg("stash")
-        .arg("pop")
-        .output()
-        .expect("Could not pop stash");
+/// This function will push changes to the repository.
+pub fn update_repo(commit_msg: String) {
+    if !is_live() {
+        println!("[OFFLINE] Skipping update_repo");
+        return;
+    }
 
     Command::new("git")
         .arg("add")

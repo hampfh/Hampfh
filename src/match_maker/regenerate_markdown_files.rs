@@ -16,6 +16,7 @@ use crate::{
 pub(crate) fn regen_markdown_files_and_update_repo(
     conn: &SqliteConnection,
 ) -> Result<String, String> {
+    repo_updater::reset_to_master_branch();
     clear_match_dir();
     build_match_files_wrapper();
     build_match_log_wrapper();
