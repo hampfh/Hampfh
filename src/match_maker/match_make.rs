@@ -21,11 +21,15 @@ pub(crate) fn create_match_making_queue(
 
     let least_played_bots = find_least_played(&submissions);
     let mut match_queue: Vec<(Submission, Submission)> = Vec::new();
+    let mut match_count = 10;
     for submission in least_played_bots {
-        match_queue.push(match pair_close_bots(submission, &submissions) {
-            Ok(pair) => pair,
-            Err(_) => continue,
-        });
+        if match_count <= 0 {
+            break;
+        }
+        if let Ok(pair) = pair_close_bots(submission, &submissions) {
+            match_queue.push(pair);
+            match_count -= 1;
+        }
     }
 
     return match_queue;
@@ -56,6 +60,11 @@ fn pair_close_bots(
         }
     }
 
+    // Wo don't allow bot to play against another bot of the same author
+    if sorted_submissions_by_mmr[random_number as usize].user == submission.user {
+        return Err("Don't allow bots to play against same owner".to_string());
+    }
+
     Ok((
         submission.clone(),
         sorted_submissions_by_mmr[random_number as usize].clone(),
@@ -64,14 +73,10 @@ fn pair_close_bots(
 
 fn find_least_played(submissions: &Vec<Submission>) -> Vec<Submission> {
     let mut submissions = submissions.clone();
-    let mut selected_submissions: Vec<Submission> = Vec::new();
 
-    // TODO we probably don't want to sort the whole list to just find 10 least played bots
+    // Return a list of the bots listed in order of played matches
     submissions.sort_by(|a, b| a.matches_played.cmp(&b.matches_played));
-    for i in 0..std::cmp::min(10, submissions.len()) {
-        selected_submissions.push(submissions[i].clone());
-    }
-    return selected_submissions;
+    return submissions;
 }
 
 fn get_index_of_submission(
