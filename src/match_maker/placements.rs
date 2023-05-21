@@ -9,7 +9,7 @@ pub(crate) fn run_placements(
 ) -> Vec<(MatchReport, MatchReport)> {
     // Order by score and pick the submission with the higest score
     let submissions = Submission::list(conn);
-    let matches = make_selection(submissions, challenger);
+    let matches = make_selection(submissions, challenger, 10);
 
     return execute_match_queue(
         conn,
@@ -20,7 +20,11 @@ pub(crate) fn run_placements(
     );
 }
 
-fn make_selection(submissions: Vec<Submission>, challenger: &Submission) -> Vec<Submission> {
+fn make_selection(
+    submissions: Vec<Submission>,
+    challenger: &Submission,
+    match_count: usize,
+) -> Vec<Submission> {
     let mut submissions = submissions;
     let mut match_queue: Vec<Submission> = Vec::new();
 
@@ -36,12 +40,12 @@ fn make_selection(submissions: Vec<Submission>, challenger: &Submission) -> Vec<
     // Sort from lowest to highest
     submissions.sort_by(|a, b| a.wins.cmp(&b.wins));
 
-    if submissions.len() < 10 {
+    if submissions.len() < match_count {
         return submissions;
     }
 
     // Only pick out ten submissions, equally spread
-    for i in 0..10 {
+    for i in 0..match_count {
         let index = i * submissions.len() / 10;
         match_queue.push(submissions[index].clone());
     }
