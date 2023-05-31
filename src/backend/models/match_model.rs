@@ -1,6 +1,6 @@
-use crate::backend::schema::Matches;
 use crate::backend::schema::Matches::dsl::Matches as matches_dsl;
 use crate::backend::schema::Turns::dsl::Turns as turns_dsl;
+use crate::backend::{self, schema::Matches};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -24,6 +24,14 @@ impl Match {
             .load::<Match>(conn)
             .expect("Error loading matches")
     }
+
+    pub fn list_ids(conn: &SqliteConnection) -> Vec<String> {
+        matches_dsl
+            .select(backend::schema::Matches::id)
+            .load::<String>(conn)
+            .expect("Error loading matches")
+    }
+
     pub fn by_id(id: &str, conn: &SqliteConnection) -> Option<Self> {
         if let Ok(record) = matches_dsl.find(id).get_result::<Match>(conn) {
             Some(record)
