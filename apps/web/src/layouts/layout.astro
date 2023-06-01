@@ -1,0 +1,17 @@
+---
+const { title, winner, loser, matchId } = Astro.props
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={`${winner} vs ${loser}`} />
+    <meta name="og:title" content={title} />
+    <meta name="og:image" content={`${matchId}.svg`} />
+  </head>
+  <body class="bg-zinc-800">
+    <slot />
+  </body>
+</html>

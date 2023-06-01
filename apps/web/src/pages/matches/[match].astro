@@ -1,0 +1,102 @@
+---
+import { Board } from "../../components/board"
+import Layout from "../../layouts/layout.astro"
+
+export async function getStaticPaths() {
+  const result = (await (
+    await fetch(`http://localhost:8095/api/matches`)
+  ).json()) as MatchesResponse
+
+  // Fetch each match
+  const match_promises = result.matches.map((matchId) =>
+    fetch(`http://localhost:8095/api/matches/${matchId}`).then((r) => r.json())
+  ) as Promise<MatchResponse>[]
+
+  const matches = await Promise.all(match_promises)
+
+  const return_result = matches.map((match) => ({
+    params: { match: match.result.id },
+    props: { match }
+  }))
+
+  return return_result
+}
+
+const match = Astro.props.match as MatchResponse
+---
+
+<Layout
+  title={`Match ${match.result.id}`}
+  winner={match.result.winner.username}
+  loser={match.result.loser.username}
+  matchId={match.result.id}
+>
+  <div class="flex h-full w-full flex-col justify-center p-8">
+    <a href="https://www.craft.do/s/geS8o08lvJ4cfD">
+      <div
+        class="absolute right-5 top-5 hidden cursor-pointer rounded bg-zinc-700 p-5 transition-all duration-200 hover:scale-95 lg:block"
+      >
+        <h3 class="text-zinc-400">What is this?</h3>
+        <p class="text-zinc-400">Read more about this game</p>
+      </div>
+    </a>
+    <h1 class="my-5 text-center text-4xl text-zinc-100">
+      The Github Profile Game
+    </h1>
+    <div>
+      <h2 class="text-center text-zinc-200">{match.result.id}</h2>
+      <div class="mt-5 flex items-center justify-center gap-x-4">
+        <a href={`https://github.com/${match.result.winner.username}`}>
+          <img
+            src={`https://avatars.githubusercontent.com/${match.result.winner.username}`}
+            class="h-10 w-10 rounded-full"
+          />
+        </a>
+        <div class="rounded bg-green-800 px-4 py-2">
+          <a href={match.result.winner_submission.issue_url}>
+            <p class="text-center text-zinc-200 hover:underline">
+              Winner: {match.result.winner.username}
+            </p>
+          </a>
+        </div>
+        <div class="rounded bg-red-800 px-4 py-2">
+          <a href={match.result.loser_submission.issue_url}>
+            <p class="text-center text-zinc-200 hover:underline">
+              Loser: {match.result.loser.username}
+            </p>
+          </a>
+        </div>
+        <a href={`https://github.com/${match.result.loser.username}`}>
+          <img
+            src={`https://avatars.githubusercontent.com/${match.result.loser.username}`}
+            class="h-10 w-10 rounded-full"
+          />
+        </a>
+      </div>
+      <div class="my-10 flex justify-center">
+        <Board
+          client:load
+          winner={match.result.p1_is_winner}
+          board={match.turns.map((turn) => turn.board)}
+        />
+      </div>
+      {
+        match.result.match_error && (
+          <div>
+            <h2 class="mb-2 text-center text-2xl text-orange-600">
+              Game ended with errors
+            </h2>
+            <div>
+              <p class="text-center text-zinc-200">
+                {match.result.match_error}
+              </p>
+              <p class="text-center text-zinc-200">
+                Caused by: {match.result.loser.username}
+              </p>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </div>
+</Layout>
