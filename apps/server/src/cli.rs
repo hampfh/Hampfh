@@ -51,7 +51,7 @@ pub fn cli(args: Vec<String>) {
 fn generate_main() {
     let conn = backend::db::establish_connection().get().unwrap();
     write_file(
-        "README.md",
+        "../../README.md",
         generate_readme(
             User::list(&conn),
             Submission::list(&conn),
