@@ -16,16 +16,16 @@ use std::fs::{self, File};
 use super::repo_updater::get_issue_url;
 
 pub fn clear_match_dir() {
-    if let Err(error) = std::fs::remove_dir_all("data") {
+    if let Err(error) = std::fs::remove_dir_all("../../data") {
         println!("Could not clear data dir, reason: {}", error)
     };
-    if let Err(error) = std::fs::create_dir("data") {
+    if let Err(error) = std::fs::create_dir("../../data") {
         println!("Could not create data dir, reason: {}", error)
     }
-    if let Err(error) = std::fs::create_dir("data/matches") {
+    if let Err(error) = std::fs::create_dir("../../data/matches") {
         println!("Could not create data/matches dir, reason: {}", error)
     }
-    if let Err(error) = fs::create_dir("data/gifs") {
+    if let Err(error) = fs::create_dir("../../data/gifs") {
         println!("Could not create data/gifs dir, reason: {}", error);
     }
 }
@@ -177,7 +177,7 @@ fn render_matches_to_gif(matches_to_render: &Vec<(Match, Vec<Turn>, i32)>, image
             match_to_render.to_owned(),
             turns,
             format!(
-                "./data/gifs/{}.gif",
+                "../../data/gifs/{}.gif",
                 match counter {
                     0 => "one",
                     1 => "two",
@@ -237,7 +237,7 @@ fn generate_board(board: Vec<Tile>) -> String {
 pub(crate) fn build_match_log_wrapper() {
     let conn = backend::db::establish_connection().get().unwrap();
     match write_file(
-        "./data/match_log.md",
+        "../../data/match_log.md",
         create_match_log(&conn, &Match::list(&conn)),
     ) {
         Ok(_) => (),
@@ -281,7 +281,7 @@ fn create_match_log(conn: &SqliteConnection, matches: &Vec<Match>) -> String {
 pub(crate) fn build_submission_log_wrapper() {
     let conn = backend::db::establish_connection().get().unwrap();
     match write_file(
-        "./data/submission_log.md",
+        "../../data/submission_log.md",
         create_submission_log(&conn, &Submission::list(&conn)),
     ) {
         Ok(_) => (),
@@ -371,7 +371,7 @@ fn build_match_files(conn: &SqliteConnection, matches: Vec<Match>) {
             &current,
         );
         match match build_result {
-            Some(file) => write_file(&format!("data/matches/{}.md", current.id), file),
+            Some(file) => write_file(&format!("../../data/matches/{}.md", current.id), file),
             None => Ok(()),
         } {
             Ok(()) => (),

@@ -119,6 +119,6 @@ fn convert_uuid_to_variable(uuid: String) -> String {
 
 #[allow(dead_code)]
 pub(super) fn load_script(filename: &str) -> String {
-    std::fs::read_to_string(format!("{}{}.lua", "./scripts/", filename))
+    std::fs::read_to_string(format!("{}{}.lua", "../scripts/", filename))
         .expect("Could not load script")
 }

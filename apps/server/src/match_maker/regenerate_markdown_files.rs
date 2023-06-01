@@ -22,7 +22,7 @@ pub(crate) fn regen_markdown_files_and_update_repo(
     build_match_log_wrapper();
     build_submission_log_wrapper();
     match write_file(
-        "README.md",
+        "../../README.md",
         generate_readme(
             User::list(&conn),
             Submission::list(&conn),
