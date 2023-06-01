@@ -4,12 +4,12 @@ import Layout from "../../layouts/layout.astro"
 
 export async function getStaticPaths() {
   const result = (await (
-    await fetch(`http://localhost:8095/api/matches`)
+    await fetch(`${import.meta.env.API_HOST}/api/matches`)
   ).json()) as MatchesResponse
 
   // Fetch each match
   const match_promises = result.matches.map((matchId) =>
-    fetch(`http://localhost:8095/api/matches/${matchId}`).then((r) => r.json())
+    fetch(`${import.meta.env.API_HOST}/api/matches/${matchId}`).then((r) => r.json())
   ) as Promise<MatchResponse>[]
 
   const matches = await Promise.all(match_promises)
