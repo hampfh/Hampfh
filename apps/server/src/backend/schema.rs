@@ -1,4 +1,6 @@
-table! {
+// @generated automatically by Diesel CLI.
+
+diesel::table! {
     Matches (id) {
         id -> Text,
         winner -> Text,
@@ -10,7 +12,7 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     Submissions (id) {
         id -> Text,
         user -> Text,
@@ -27,7 +29,7 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     Turns (id) {
         id -> Text,
         match_id -> Text,
@@ -38,7 +40,7 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     Users (id) {
         id -> Text,
         username -> Text,
@@ -47,10 +49,10 @@ table! {
     }
 }
 
-joinable!(Submissions -> Users (user));
-joinable!(Turns -> Matches (match_id));
+diesel::joinable!(Submissions -> Users (user));
+diesel::joinable!(Turns -> Matches (match_id));
 
-allow_tables_to_appear_in_same_query!(
+diesel::allow_tables_to_appear_in_same_query!(
     Matches,
     Submissions,
     Turns,
