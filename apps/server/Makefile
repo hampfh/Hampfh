@@ -1,6 +1,6 @@
 # Makefile
 
-all: check_rust prepare_env run_migration build
+all: check_rust prepare_env run_migration build info
 
 check_rust:
 	@if ! command -v cargo &> /dev/null; then \
