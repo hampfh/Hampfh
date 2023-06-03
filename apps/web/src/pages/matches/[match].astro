@@ -9,10 +9,19 @@ export async function getStaticPaths() {
 
   // Fetch each match
   const match_promises = result.matches.map((matchId) =>
-    fetch(`${import.meta.env.API_HOST}/api/matches/${matchId}`).then((r) => r.json())
+    fetch(`${import.meta.env.API_HOST}/api/matches/${matchId}`).then((r) =>
+      r.json()
+    )
   ) as Promise<MatchResponse>[]
 
-  const matches = await Promise.all(match_promises)
+  /*   const matches = await Promise.all(match_promises) */
+  // Perform fetching synchronously as promise.all cannot handle
+  // large array of promises
+  const matches: MatchResponse[] = []
+  for (const match_promise of match_promises) {
+    const match = await match_promise
+    matches.push(match)
+  }
 
   const return_result = matches.map((match) => ({
     params: { match: match.result.id },
@@ -22,14 +31,14 @@ export async function getStaticPaths() {
   return return_result
 }
 
-const match = Astro.props.match as MatchResponse
+const match_arg = Astro.props.match as MatchResponse
 ---
 
 <Layout
-  title={`Match ${match.result.id}`}
-  winner={match.result.winner.username}
-  loser={match.result.loser.username}
-  matchId={match.result.id}
+  title={`Match ${match_arg.result.id}`}
+  winner={match_arg.result.winner.username}
+  loser={match_arg.result.loser.username}
+  matchId={match_arg.result.id}
 >
   <div class="flex h-full w-full flex-col justify-center p-8">
     <a href="https://www.craft.do/s/geS8o08lvJ4cfD">
@@ -44,31 +53,31 @@ const match = Astro.props.match as MatchResponse
       The Github Profile Game
     </h1>
     <div>
-      <h2 class="text-center text-zinc-200">{match.result.id}</h2>
+      <h2 class="text-center text-zinc-200">{match_arg.result.id}</h2>
       <div class="mt-5 flex items-center justify-center gap-x-4">
-        <a href={`https://github.com/${match.result.winner.username}`}>
+        <a href={`https://github.com/${match_arg.result.winner.username}`}>
           <img
-            src={`https://avatars.githubusercontent.com/${match.result.winner.username}`}
+            src={`https://avatars.githubusercontent.com/${match_arg.result.winner.username}`}
             class="h-10 w-10 rounded-full"
           />
         </a>
         <div class="rounded bg-green-800 px-4 py-2">
-          <a href={match.result.winner_submission.issue_url}>
+          <a href={match_arg.result.winner_submission.issue_url}>
             <p class="text-center text-zinc-200 hover:underline">
-              Winner: {match.result.winner.username}
+              Winner: {match_arg.result.winner.username}
             </p>
           </a>
         </div>
         <div class="rounded bg-red-800 px-4 py-2">
-          <a href={match.result.loser_submission.issue_url}>
+          <a href={match_arg.result.loser_submission.issue_url}>
             <p class="text-center text-zinc-200 hover:underline">
-              Loser: {match.result.loser.username}
+              Loser: {match_arg.result.loser.username}
             </p>
           </a>
         </div>
-        <a href={`https://github.com/${match.result.loser.username}`}>
+        <a href={`https://github.com/${match_arg.result.loser.username}`}>
           <img
-            src={`https://avatars.githubusercontent.com/${match.result.loser.username}`}
+            src={`https://avatars.githubusercontent.com/${match_arg.result.loser.username}`}
             class="h-10 w-10 rounded-full"
           />
         </a>
@@ -76,22 +85,22 @@ const match = Astro.props.match as MatchResponse
       <div class="my-10 flex justify-center">
         <Board
           client:load
-          winner={match.result.p1_is_winner}
-          board={match.turns.map((turn) => turn.board)}
+          winner={match_arg.result.p1_is_winner}
+          board={match_arg.turns.map((turn) => turn.board)}
         />
       </div>
       {
-        match.result.match_error && (
+        match_arg.result.match_error && (
           <div>
             <h2 class="mb-2 text-center text-2xl text-orange-600">
               Game ended with errors
             </h2>
             <div>
               <p class="text-center text-zinc-200">
-                {match.result.match_error}
+                {match_arg.result.match_error}
               </p>
               <p class="text-center text-zinc-200">
-                Caused by: {match.result.loser.username}
+                Caused by: {match_arg.result.loser.username}
               </p>
             </div>
           </div>
