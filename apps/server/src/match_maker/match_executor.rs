@@ -5,8 +5,8 @@ use crate::{
     external_related::repo_updater::get_issue_url,
     game::{
         board::{board_to_string, Tile},
-        entry_point::initialize_game_session,
-        game::{ErrorType, GameResult},
+        game_state::{ErrorType, GameConfig, GameResult},
+        initialize_game::initialize_game,
         player::PlayerType,
     },
 };
@@ -166,7 +166,7 @@ fn start_match(players: (Submission, Submission)) -> MatchReturn {
 
     let (mut p1, mut p2) = players;
 
-    let (result, turns) = initialize_game_session(&p1.script, &p2.script);
+    let (result, turns, _) = initialize_game(&p1.script, &p2.script, GameConfig::new());
     let mut winner: Option<String> = None;
     let mut loser: Option<String> = None;
 

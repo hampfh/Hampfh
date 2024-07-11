@@ -25,5 +25,5 @@ run_migration:
 info:
 	@echo "\033[32mSuccessfully set up local environment for bot creation!"
 	@echo "Execute your first match here:"
-	@echo "\033[36mcargo run --release match ../scripts/trivial_dodger.lua ../scripts/bfs.lua\033[0m"
+	@echo "\033[36mcargo run --release match --path-one ../scripts/trivial_dodger.lua --path-two ../scripts/bfs.lua\033[0m"
 	@echo "\033[32mYour output should now end up in the file match.temp.gif and match.temp.md\033[0m"

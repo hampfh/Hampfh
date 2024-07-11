@@ -1,4 +1,4 @@
-use crate::game::game::{Move, Wall, MAP_SIZE};
+use crate::game::game_state::{Move, Wall, MAP_SIZE};
 use crate::game::player::Player;
 
 /**
@@ -73,7 +73,7 @@ pub fn conditionally_reverse_player(player: &Player, condition: bool) -> Player 
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{Move, Wall, MAP_SIZE},
+        game_state::{Move, Wall, MAP_SIZE},
         player::{Player, PlayerType},
     };
 
@@ -129,10 +129,5 @@ mod tests {
     fn correct_mirroring_of_corners() {
         assert_eq!(reverse_coordinate(0), MAP_SIZE - 1);
         assert_eq!(reverse_coordinate(MAP_SIZE - 1), 0);
-    }
-
-    #[test]
-    fn test_board_mirroring() {
-        assert!(false);
     }
 }

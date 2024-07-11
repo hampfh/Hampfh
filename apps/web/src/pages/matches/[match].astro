@@ -7,19 +7,15 @@ export async function getStaticPaths() {
     await fetch(`${import.meta.env.API_HOST}/api/matches`)
   ).json()) as MatchesResponse
 
-  // Fetch each match
-  const match_promises = result.matches.map((matchId) =>
-    fetch(`${import.meta.env.API_HOST}/api/matches/${matchId}`).then((r) =>
-      r.json()
-    )
-  ) as Promise<MatchResponse>[]
-
   /*   const matches = await Promise.all(match_promises) */
   // Perform fetching synchronously as promise.all cannot handle
   // large array of promises
   const matches: MatchResponse[] = []
-  for (const match_promise of match_promises) {
-    const match = await match_promise
+  for (const matchId of result.matches) {
+    const match = await fetch(
+      `${import.meta.env.API_HOST}/api/matches/${matchId}`
+    ).then((r) => r.json())
+
     matches.push(match)
   }
 

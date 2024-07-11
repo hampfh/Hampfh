@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{ErrorType, GameResult},
+        game_state::{ErrorType, GameResult},
         player::PlayerType,
         tests::util::{_run_core_test, aj, at},
     };

@@ -1,4 +1,4 @@
-use super::game::Move;
+use super::game_state::{ErrorType, Move};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PlayerType {
@@ -39,7 +39,41 @@ impl Player {
         };
     }
 
-    pub fn decrement_wall_count(&mut self) {
+    pub fn decrement_wall_count(&mut self) -> Result<(), ErrorType> {
+        if self.wall_count <= 0 {
+            return Err(ErrorType::GameError {
+                reason: format!(
+                    "No more walls to place, all walls already used, active player: {:?}",
+                    self.player_type.clone()
+                ),
+                fault: Some(self.player_type.clone()),
+            });
+        }
         self.wall_count -= 1;
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_player_move() {
+        let player = Player::new(0, 0, 0, PlayerType::Regular);
+        assert_eq!(player.move_player(&Move::Up), (0, -1));
+        assert_eq!(player.move_player(&Move::Down), (0, 1));
+        assert_eq!(player.move_player(&Move::Left), (-1, 0));
+        assert_eq!(player.move_player(&Move::Right), (1, 0));
+    }
+
+    #[test]
+    fn test_decrement_wall_count() {
+        let mut player = Player::new(0, 0, 1, PlayerType::Regular);
+        assert_eq!(player.decrement_wall_count(), Ok(()));
+        assert_eq!(0, player.wall_count);
+
+        assert!(player.decrement_wall_count().is_err());
+        assert_eq!(0, player.wall_count);
     }
 }

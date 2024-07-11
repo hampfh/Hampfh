@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{ErrorType, Game, GameResult, Wall},
-        methods::custom_new,
+        game::custom_new,
+        game_state::{ErrorType, Game, GameConfig, GameResult, Wall},
         player::{Player, PlayerType},
         tests::util::{_run_core_test, _run_test_with_custom_game_session, aj, at, mock_player},
     };
@@ -94,6 +94,7 @@ mod tests {
             },
             Vec::new(),
             String::new(),
+            GameConfig::new(),
         );
     }
 
@@ -182,6 +183,7 @@ mod tests {
                     y2: 2,
                 }],
                 String::new(),
+                GameConfig::new(),
             ),
             |result| match result {
                 GameResult::Error(ErrorType::GameError { reason, fault }) => {
@@ -209,6 +211,7 @@ mod tests {
                 mock_player(0, 1, 0, PlayerType::Flipped),
                 Vec::new(),
                 String::new(),
+                GameConfig::new(),
             ),
             |result| result == GameResult::PlayerOneWon,
         );
@@ -232,6 +235,7 @@ mod tests {
                 mock_player(7, 4, 0, PlayerType::Flipped),
                 Vec::new(),
                 String::new(),
+                GameConfig::new(),
             ),
             |result| match result {
                 GameResult::Error(ErrorType::GameError { reason, fault }) => {

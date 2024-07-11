@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::{ErrorType, GameResult, MAP_SIZE},
-        methods,
+        game,
+        game_state::{ErrorType, GameConfig, GameResult, MAP_SIZE},
         player::{Player, PlayerType},
         tests::util::{
             _run_core_test, _run_test_with_custom_game_session, aj, load_script, load_std,
@@ -391,7 +391,7 @@ mod tests {
         _run_test_with_custom_game_session(
             script,
             forward,
-            &mut methods::custom_new(
+            &mut game::custom_new(
                 Player {
                     player_type: PlayerType::Flipped,
                     x: 4,
@@ -406,6 +406,7 @@ mod tests {
                 },
                 vec![],
                 load_std(),
+                GameConfig::new(),
             ),
             |game_state| game_state == GameResult::PlayerOneWon,
         );

@@ -1,7 +1,7 @@
 extern crate pathfinding;
 use pathfinding::prelude::astar;
 
-use super::game::{Wall, MAP_SIZE};
+use super::game_state::{Wall, MAP_SIZE};
 use super::player::Player;
 use super::validation::valid_tile;
 
@@ -131,5 +131,119 @@ fn path_exists(walls: &Vec<Wall>, p1: &Player, p2: &Player, player: &Player, tar
     match result {
         Some(_) => true,
         None => false,
+    }
+}
+
+#[cfg(test)]
+
+mod tests {
+    use crate::game::{
+        game_state::Wall,
+        player::{Player, PlayerType},
+    };
+
+    use super::{path_exists, path_exists_for_players, Pos};
+
+    fn create_wall(y: i32) -> Vec<Wall> {
+        return vec![
+            Wall {
+                x1: 0,
+                y1: y,
+                x2: 1,
+                y2: y,
+            },
+            Wall {
+                x1: 2,
+                y1: y,
+                x2: 3,
+                y2: y,
+            },
+            Wall {
+                x1: 4,
+                y1: y,
+                x2: 5,
+                y2: y,
+            },
+            Wall {
+                x1: 6,
+                y1: y,
+                x2: 7,
+                y2: y,
+            },
+            Wall {
+                x1: 8,
+                y1: y,
+                x2: 8,
+                y2: 6,
+            },
+        ];
+    }
+
+    #[test]
+    fn tests_clear_path() {
+        let p1 = Player {
+            x: 4,
+            y: 8,
+            player_type: PlayerType::Regular,
+            wall_count: 10,
+        };
+        let p2 = Player {
+            x: 0,
+            y: 4,
+            player_type: PlayerType::Flipped,
+            wall_count: 10,
+        };
+        let mut horizontal_wall = create_wall(5);
+        // Clear path
+        assert!(path_exists(&Vec::new(), &p1, &p2, &p1, Pos(0, 0)));
+        // Horizontal wall in middle
+        assert_eq!(
+            path_exists(&horizontal_wall, &p1, &p2, &p1, Pos(0, 0)),
+            false
+        );
+
+        // Horizontal wall with 1-block gap
+        horizontal_wall.pop();
+
+        // Player doesn't affect path
+        assert!(path_exists(
+            &horizontal_wall,
+            &p1,
+            &Player {
+                x: 8,
+                y: 5,
+                player_type: PlayerType::Flipped,
+                wall_count: 10
+            },
+            &p1,
+            Pos(0, 0)
+        ),);
+    }
+
+    #[test]
+    fn test_all_permutations_for_players() {
+        let p1 = Player {
+            x: 4,
+            y: 7,
+            player_type: PlayerType::Regular,
+            wall_count: 10,
+        };
+        let p2 = Player {
+            x: 4,
+            y: 1,
+            player_type: PlayerType::Flipped,
+            wall_count: 10,
+        };
+
+        for i in 0..5 {
+            for j in 0..5 {
+                let mut walls = create_wall(0);
+                walls.append(&mut create_wall(8));
+                walls.remove(i);
+                assert!(path_exists_for_players(&walls, &p1, &p2).is_err());
+                walls.remove(4 + j);
+                assert!(path_exists_for_players(&walls, &p1, &p2).is_ok());
+            }
+        }
     }
 }

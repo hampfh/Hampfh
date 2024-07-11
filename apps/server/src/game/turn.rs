@@ -1,9 +1,10 @@
-use crate::game::methods::{self, get_active_player_type};
+use crate::game::game::{self, get_active_player_type};
 
 use super::board::populate_board;
 use super::execute_move::{execute_move, execute_move_jump};
-use super::game::{ErrorType, Game, Move};
+use super::game_state::{ErrorType, Game, Move};
 use super::map_mirroring::reverse_move;
+use super::parsing::deserialize_wall::deserialize_wall;
 use super::sandbox::sandbox_executor::execute_lua_in_sandbox;
 use super::validation::valid_move;
 
@@ -75,6 +76,9 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
         });
     }
 
+    // Add move to logger
+    game.logger.push(player_move.clone().unwrap());
+
     let (active_player, opponent) = match player_one_turn {
         true => (player_one.clone(), player_two.clone()),
         false => (player_two.clone(), player_one.clone()),
@@ -92,7 +96,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
     };
 
     let mut mutable_walls = game.walls.clone();
-    let (first, other) = methods::get_active_player(game);
+    let (first, other) = game::get_active_player(game);
 
     if run_on_jump {
         // TODO refactor this, this should recursivly call on turn again, instead of this code repeat
@@ -186,6 +190,10 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
     Ok(())
 }
 
+/// Check if we should reverse the player move
+///
+/// We do not reverse if it is player one's turn,
+/// or if there player move is an error.
 fn should_reverse_player_move(player_one_turn: bool, player_move: &Option<Move>) -> bool {
     return !player_one_turn && player_move.is_some() &&
 		// We compare the enums ONLY, we do not care what reason the fail has
@@ -199,7 +207,7 @@ fn convert_player_move_from_string_to_object(raw_player_move: Option<String>) ->
             "1" => Some(Move::Right),
             "2" => Some(Move::Down),
             "3" => Some(Move::Left),
-            wall => match methods::deserialize_wall(&wall) {
+            wall => match deserialize_wall(&wall) {
                 Move::Wall(wall) => Some(Move::Wall(wall)),
                 Move::Invalid { reason } => Some(Move::Invalid { reason }),
                 _ => panic!("Invalid wall"),
@@ -207,4 +215,70 @@ fn convert_player_move_from_string_to_object(raw_player_move: Option<String>) ->
         },
         None => None,
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::game::game_state::{Move, Wall};
+
+    use super::convert_player_move_from_string_to_object;
+
+    #[test]
+    fn correctly_determines_when_to_reverse_player_move() {
+        assert_eq!(
+            super::should_reverse_player_move(true, &Some(Move::Up)),
+            false
+        );
+        assert_eq!(
+            super::should_reverse_player_move(
+                true,
+                &Some(Move::Invalid {
+                    reason: String::new()
+                })
+            ),
+            false
+        );
+        assert_eq!(
+            super::should_reverse_player_move(false, &Some(Move::Up)),
+            true
+        );
+        assert_eq!(
+            super::should_reverse_player_move(
+                false,
+                &Some(Move::Invalid {
+                    reason: String::new()
+                })
+            ),
+            false
+        );
+    }
+
+    #[test]
+    fn correctly_convert_player_move() {
+        assert_eq!(
+            convert_player_move_from_string_to_object(Some(format!("0"))),
+            Some(Move::Up)
+        );
+        assert_eq!(
+            convert_player_move_from_string_to_object(Some(format!("1"))),
+            Some(Move::Right)
+        );
+        assert_eq!(
+            convert_player_move_from_string_to_object(Some(format!("2"))),
+            Some(Move::Down)
+        );
+        assert_eq!(
+            convert_player_move_from_string_to_object(Some(format!("3"))),
+            Some(Move::Left)
+        );
+        assert_eq!(
+            convert_player_move_from_string_to_object(Some(format!("0,0,0,1"))),
+            Some(Move::Wall(Wall {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 1
+            }))
+        );
+    }
 }

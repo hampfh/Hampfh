@@ -1,6 +1,6 @@
 use super::execute_move::execute_move;
-use super::game::{ErrorType, Move, Wall, MAP_SIZE};
-use super::methods::get_active_player_type;
+use super::game::get_active_player_type;
+use super::game_state::{ErrorType, Move, Wall, MAP_SIZE};
 use super::path_find::Pos;
 use super::player::{Player, PlayerType};
 use crate::game::path_find::path_exists_for_players;
@@ -154,7 +154,7 @@ pub(super) fn tile_occupied(
 
 #[cfg(test)]
 mod tests {
-    use crate::game::game::Wall;
+    use crate::game::game_state::Wall;
     use crate::game::player::{Player, PlayerType};
     use crate::game::validation::out_of_bounds;
     use crate::game::validation::tile_occupied;

@@ -3,14 +3,14 @@ use rlua::Lua;
 use crate::{
     external_related::readme_factory::{get_match_from_tiles, write_file},
     game::{
-        game::{ErrorType, Game, GameResult},
-        methods,
+        game,
+        game_state::{ErrorType, Game, GameConfig, GameResult},
         player::{Player, PlayerType},
     },
 };
 
 pub(crate) fn _run_core_test(script: String, script2: String, is_equal: fn(GameResult) -> bool) {
-    let mut game_session = methods::new(load_std());
+    let mut game_session = game::new(load_std(), GameConfig::new());
     _run_test_with_custom_game_session(script, script2, &mut game_session, is_equal);
 }
 
@@ -20,7 +20,7 @@ pub(crate) fn _run_test_with_custom_game_session(
     session: &mut Game,
     is_equal: fn(GameResult) -> bool,
 ) {
-    let (game_state_result, mut turns) = methods::start(session, script, script2);
+    let (game_state_result, mut turns, _) = game::start(session, script, script2);
 
     turns.reverse();
     write_file("test_dump.temp.md", get_match_from_tiles(turns)).unwrap();
@@ -72,6 +72,7 @@ pub(super) fn mock_player(x: i32, y: i32, wall_count: i32, player_type: PlayerTy
     };
 }
 
+#[allow(dead_code)]
 pub(super) fn load_std() -> String {
     return load_script("std");
 }
@@ -89,7 +90,7 @@ pub(super) fn test_std(scripts: Vec<String>, asserts: fn(ctx: rlua::Context) -> 
 }
 
 #[allow(dead_code)]
-pub(super) fn test_std_bool(scripts: Vec<(String, bool)>, game_context: Option<String>) {
+pub(super) fn test_std_conditional(scripts: Vec<(String, bool)>, game_context: Option<String>) {
     let sandbox = Lua::new();
     sandbox.context(|ctx| {
         ctx.load(&load_std()).exec().unwrap();
@@ -117,7 +118,6 @@ fn convert_uuid_to_variable(uuid: String) -> String {
     return uuid.split("-").collect::<Vec<&str>>().join("_");
 }
 
-#[allow(dead_code)]
 pub(super) fn load_script(filename: &str) -> String {
     std::fs::read_to_string(format!("{}{}.lua", "../scripts/", filename))
         .expect("Could not load script")

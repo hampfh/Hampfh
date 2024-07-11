@@ -1,15 +1,15 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::Wall,
+        game_state::Wall,
         player::{Player, PlayerType},
         sandbox::sandbox_executor::create_lua_game_object,
-        tests::util::{test_std, test_std_bool},
+        tests::util::{test_std, test_std_conditional},
     };
 
     #[test]
     fn out_of_bounds_works() {
-        test_std_bool(
+        test_std_conditional(
             vec![
                 (format!("[] STD__CHECK_OUT_OF_BOUNDS(0,0)"), false),
                 (format!("[] STD__CHECK_OUT_OF_BOUNDS(-1,-1)"), true),
@@ -49,7 +49,7 @@ mod tests {
 
     #[test]
     fn player_occupied_works() {
-        test_std_bool(
+        test_std_conditional(
             vec![
                 (format!("[] STD__PLAYER_OCCUPIED([c],4,4)"), true),
                 (format!("[] STD__PLAYER_OCCUPIED([c],4,5)"), false),
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn jump_test() {
-        test_std_bool(
+        test_std_conditional(
             vec![(format!("[] STD__JUMP_POSSIBLE([c],0)"), true)],
             Some(context_player_close()),
         );
@@ -101,7 +101,7 @@ mod tests {
                 wall_count: 0,
             },
         );
-        test_std_bool(
+        test_std_conditional(
             vec![(format!("[] STD__JUMP_POSSIBLE([c],0)"), false)],
             Some(close_game_all_blocked),
         );
@@ -134,7 +134,7 @@ mod tests {
                 wall_count: 0,
             },
         );
-        test_std_bool(
+        test_std_conditional(
             vec![(format!("[] STD__JUMP_POSSIBLE([c],0)"), true)],
             Some(closed_with_left_open),
         );

@@ -8,7 +8,7 @@ use crate::backend::models::submission_model::Submission;
 use crate::backend::models::turn_model::Turn;
 use crate::backend::models::user_model::User;
 use crate::game::board::{board_from_string, Tile};
-use crate::game::game::{GameResult, MAP_SIZE};
+use crate::game::game_state::{GameResult, MAP_SIZE};
 
 use std::borrow::Cow;
 use std::fs::{self, File};

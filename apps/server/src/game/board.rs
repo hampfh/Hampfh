@@ -1,5 +1,5 @@
-use super::game::Wall;
-use super::game::MAP_SIZE;
+use super::game_state::Wall;
+use super::game_state::MAP_SIZE;
 use crate::game::player::Player;
 
 #[derive(std::fmt::Debug, Copy, Clone, PartialEq, Eq)]
@@ -61,7 +61,6 @@ pub fn board_to_string(board: Vec<Tile>) -> String {
     return output;
 }
 
-#[allow(dead_code)]
 pub fn board_from_string(board: String) -> Vec<Tile> {
     let mut output = Vec::new();
     for char in board.chars() {
@@ -80,12 +79,11 @@ pub fn board_from_string(board: String) -> Vec<Tile> {
 mod tests {
 
     use crate::game::{
-        board::board_to_string,
-        game::{Wall, MAP_SIZE},
+        game_state::{Wall, MAP_SIZE},
         player::{Player, PlayerType},
     };
 
-    use super::{board_from_string, create_empty_board, place_tile, Tile};
+    use super::{board_from_string, board_to_string, create_empty_board, place_tile, Tile};
 
     #[test]
     fn populate_board_test() {

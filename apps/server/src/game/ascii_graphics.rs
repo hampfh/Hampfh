@@ -1,7 +1,7 @@
 use super::board::{populate_board, Tile};
-use super::game::{Game, MAP_SIZE};
+use super::game_state::{Game, MAP_SIZE};
 
-pub(crate) fn draw_game(game: &Game) {
+pub(crate) fn draw_game_in_terminal(game: &Game) {
     let buffer = populate_board(&game.player_one, &game.player_two, &game.walls);
 
     let mut count = 0;

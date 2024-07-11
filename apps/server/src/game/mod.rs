@@ -1,10 +1,11 @@
+pub(crate) mod ascii_graphics;
 pub(crate) mod board;
-pub(crate) mod entry_point;
 pub(crate) mod execute_move;
 pub(crate) mod game;
-pub(crate) mod graphics;
+pub(crate) mod game_state;
+pub(crate) mod initialize_game;
 pub(crate) mod map_mirroring;
-pub(crate) mod methods;
+pub(crate) mod parsing;
 pub(crate) mod path_find;
 pub(crate) mod player;
 pub(crate) mod sandbox;
