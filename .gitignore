@@ -12,6 +12,10 @@ storage.sql
 storage.db
 storage.*
 
+tarpaulin-report.html
+
 .DS_Store
 .VSCodeCounter
 hampfh-github-profile
+
+output
