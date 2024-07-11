@@ -1,4 +1,4 @@
-name: cargo
+name: Cargo
 
 on:
   push:
@@ -15,25 +15,48 @@ env:
 
 jobs:
   build:
-    name: build (stable)
+    name: Build (stable)
     runs-on: ubuntu-latest
     strategy:
       matrix:
         toolchain:
           - stable
     steps:
-      - uses: actions/checkout@v4
-      - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-      - run: cargo build --manifest-path apps/server/Cargo.toml --verbose
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+
+      - name: Build Project
+        run: cargo build --manifest-path apps/server/Cargo.toml --verbose
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: target
+
   test:
-    name: test (stable)
+    name: Test (stable)
     runs-on: ubuntu-latest
-    continue-on-error: true
+    needs: build
     strategy:
       matrix:
         toolchain:
           - stable
     steps:
-      - uses: actions/checkout@v4
-      - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-      - run: cargo test --manifest-path apps/server/Cargo.toml --verbose
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: target
+
+      - name: Run Tests
+        run: cargo test --manifest-path apps/server/Cargo.toml --verbose -- --nocapture
