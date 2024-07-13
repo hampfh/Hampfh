@@ -8,9 +8,8 @@ target
 *.temp.lua
 *.temp.md
 *.temp.gif
+*.db
 storage.sql
-storage.db
-storage.*
 
 tarpaulin-report.html
 
