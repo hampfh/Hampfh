@@ -3,14 +3,13 @@ use rlua::Lua;
 use crate::{
     external_related::readme_factory::{get_match_from_tiles, write_file},
     game::{
-        game,
         game_state::{ErrorType, Game, GameConfig, GameResult},
         player::{Player, PlayerType},
     },
 };
 
 pub(crate) fn _run_core_test(script: String, script2: String, is_equal: fn(GameResult) -> bool) {
-    let mut game_session = game::new(load_std(), GameConfig::new());
+    let mut game_session = Game::new(GameConfig::new());
     _run_test_with_custom_game_session(script, script2, &mut game_session, is_equal);
 }
 
@@ -20,7 +19,7 @@ pub(crate) fn _run_test_with_custom_game_session(
     session: &mut Game,
     is_equal: fn(GameResult) -> bool,
 ) {
-    let (game_state_result, mut turns, _) = game::start(session, script, script2);
+    let (game_state_result, mut turns, _) = Game::start(session, script, script2);
 
     turns.reverse();
     write_file("test_dump.temp.md", get_match_from_tiles(turns)).unwrap();
@@ -119,6 +118,6 @@ fn convert_uuid_to_variable(uuid: String) -> String {
 }
 
 pub(super) fn load_script(filename: &str) -> String {
-    std::fs::read_to_string(format!("{}{}.lua", "../scripts/", filename))
+    std::fs::read_to_string(format!("{}{}.lua", "./scripts/", filename))
         .expect("Could not load script")
 }

@@ -3,10 +3,8 @@ use std::{
     time::Duration,
 };
 
-use crate::game::{
-    game::get_active_player_type, game_state::ErrorType,
-    sandbox::terminate_thread::terminate_thread,
-};
+use crate::game::{game::get_active_player_type, game_state::ErrorType};
+use terminate_thread::Thread;
 
 use crate::game::{
     board::{populate_board, serialize_board},
@@ -14,11 +12,6 @@ use crate::game::{
     map_mirroring::{conditionally_reverse_player, conditionally_reverse_walls},
     player::Player,
 };
-
-pub struct ThreadReturn {
-    thread_id: Option<usize>,
-    player_move: Result<String, rlua::Error>,
-}
 
 pub(crate) fn execute_lua_in_sandbox(
     player_one_sandbox_mutex: Arc<Mutex<rlua::Lua>>,
@@ -29,16 +22,10 @@ pub(crate) fn execute_lua_in_sandbox(
     player_one_turn: bool,
     lua_function: String,
 ) -> Result<String, ErrorType> {
-    let (tx, rx) = std::sync::mpsc::channel::<ThreadReturn>();
+    let (tx, rx) = std::sync::mpsc::channel::<Result<String, rlua::Error>>();
     // Sandbox execution of script
     // Limit execution time to 1 second
-    std::thread::spawn(move || {
-        tx.send(ThreadReturn {
-            thread_id: Some(thread_id::get()),
-            player_move: Ok(String::new()),
-        })
-        .unwrap();
-
+    let terminatable_thread = Thread::spawn(move || {
         let starting_script = get_lua_script(
             lua_function,
             create_lua_game_object(walls, player_one_turn, player_one, player_two),
@@ -51,35 +38,19 @@ pub(crate) fn execute_lua_in_sandbox(
         }
 
         if let Err(err) = active_sandbox.context(|ctx| ctx.load(&starting_script).exec()) {
-            tx.send(ThreadReturn {
-                thread_id: None,
-                player_move: Err(err),
-            })
-            .unwrap();
+            tx.send(Err(err)).unwrap();
         }
 
         let raw_player_move =
             active_sandbox.context(|ctx| ctx.globals().get::<_, String>("ExternalGlobalVarResult"));
         drop(active_sandbox);
 
-        tx.send(ThreadReturn {
-            thread_id: None,
-            player_move: raw_player_move,
-        })
-        .unwrap();
+        tx.send(raw_player_move).unwrap();
     });
-
-    // First time we send the thread id through
-    // This does not have to be timed checked since this is before we
-    // execute the script.
-    let sandbox_thread_id = match rx.recv().unwrap().thread_id {
-        Some(id) => id,
-        _ => panic!("Could not get thread id"),
-    };
 
     // Second time we either get the result or a timeout error
     let player_move = match rx.recv_timeout(Duration::from_millis(500)) {
-        Ok(returned) => match returned.player_move {
+        Ok(returned) => match returned {
             Ok(move_string) => move_string,
             Err(error) => {
                 return Err(ErrorType::RuntimeError {
@@ -89,8 +60,7 @@ pub(crate) fn execute_lua_in_sandbox(
             }
         },
         Err(_) => {
-            println!("Timed out");
-            terminate_thread(sandbox_thread_id);
+            terminatable_thread.terminate();
             return Err(ErrorType::TurnTimeout {
                 fault: Some(get_active_player_type(player_one_turn)),
             });
@@ -147,4 +117,85 @@ fn serialize_player(player: &Player) -> String {
         "{{x={}, y={}, wall_count={}}}",
         player.x, player.y, player.wall_count
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::game::{
+        game_state::{ErrorType, Game, GameConfig},
+        load_script_with_validation::load_script_with_validation,
+        player::PlayerType,
+    };
+
+    use super::execute_lua_in_sandbox;
+
+    fn mock_game() -> Game {
+        let config = GameConfig::new();
+        let game = Game::new(config);
+        return game;
+    }
+
+    #[test]
+    fn terminates_thread_on_long_execution() {
+        let game = mock_game();
+
+        load_script_with_validation(
+            &game.player_one_sandbox,
+            r#"
+            function onTurn(context) 
+                return "0"
+            end
+            function onJump(context) 
+                return "0"
+            end
+        "#
+            .to_string(),
+            PlayerType::Flipped,
+        )
+        .unwrap();
+
+        assert!(execute_lua_in_sandbox(
+            game.player_one_sandbox,
+            game.player_two_sandbox,
+            game.walls,
+            game.player_one,
+            game.player_two,
+            true,
+            "onTurn".to_string(),
+        )
+        .is_ok());
+
+        let game = mock_game();
+        load_script_with_validation(
+            &game.player_one_sandbox,
+            r#"
+            function onTurn(context) 
+                while true do
+                end 
+                return "0"
+            end
+            function onJump(context) 
+                return "0"
+            end
+        "#
+            .to_string(),
+            PlayerType::Flipped,
+        )
+        .unwrap();
+
+        match execute_lua_in_sandbox(
+            game.player_one_sandbox,
+            game.player_two_sandbox,
+            game.walls,
+            game.player_one,
+            game.player_two,
+            true,
+            "onTurn".to_string(),
+        ) {
+            Err(ErrorType::TurnTimeout {
+                fault: Some(PlayerType::Flipped),
+            }) => assert!(true),
+            data => panic!("Expected timeout, got {:?}", data),
+        }
+    }
 }

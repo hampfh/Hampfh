@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use crate::game::{
-        game::custom_new,
         game_state::{ErrorType, Game, GameConfig, GameResult, Wall},
         player::{Player, PlayerType},
         tests::util::{_run_core_test, _run_test_with_custom_game_session, aj, at, mock_player},
@@ -79,7 +78,7 @@ mod tests {
     }
 
     fn horizontal_spawn() -> Game {
-        return custom_new(
+        return Game::custom_new(
             Player {
                 x: 0,
                 y: 4,
@@ -173,7 +172,7 @@ mod tests {
         _run_test_with_custom_game_session(
             script.clone(),
             script,
-            &mut custom_new(
+            &mut Game::custom_new(
                 mock_player(0, 4, 0, PlayerType::Regular),
                 mock_player(0, 5, 0, PlayerType::Flipped),
                 vec![Wall {
@@ -206,7 +205,7 @@ mod tests {
         _run_test_with_custom_game_session(
             script.clone(),
             script,
-            &mut custom_new(
+            &mut Game::custom_new(
                 mock_player(0, 0, 0, PlayerType::Regular),
                 mock_player(0, 1, 0, PlayerType::Flipped),
                 Vec::new(),
@@ -230,7 +229,7 @@ mod tests {
         _run_test_with_custom_game_session(
             sideways.clone(),
             sideways,
-            &mut custom_new(
+            &mut Game::custom_new(
                 mock_player(8, 4, 0, PlayerType::Regular),
                 mock_player(7, 4, 0, PlayerType::Flipped),
                 Vec::new(),
