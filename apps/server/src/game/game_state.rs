@@ -4,6 +4,8 @@ use std::{
     time::Duration,
 };
 
+use rlua::Lua;
+
 use super::{
     board::Tile,
     player::{Player, PlayerType},
@@ -64,6 +66,46 @@ pub(crate) struct Game {
     pub(crate) last_move: Option<Move>,
     pub(crate) std: String, // Standard library
     pub(crate) turns: Vec<Vec<Tile>>,
+}
+
+impl Game {
+    pub(crate) fn new(config: GameConfig) -> Game {
+        let p1 = Player::new(
+            MAP_SIZE / 2,
+            MAP_SIZE - 1,
+            INITIAL_WALL_COUNT,
+            PlayerType::Flipped,
+        );
+        let p2 = Player::new(MAP_SIZE / 2, 0, INITIAL_WALL_COUNT, PlayerType::Regular);
+        let walls = Vec::new();
+        let std =
+            std::fs::read_to_string("./scripts/std.lua").expect("Could not load standard library");
+        return Game::custom_new(p1, p2, walls, std, config);
+    }
+
+    pub(crate) fn custom_new(
+        player_one: Player,
+        player_two: Player,
+        walls: Vec<Wall>,
+        std: String,
+        config: GameConfig,
+    ) -> Game {
+        return Game {
+            config,
+            logger: Vec::new(),
+            running: true,
+            game_result: None,
+            player_one,
+            player_two,
+            walls,
+            player_one_sandbox: Arc::new(Mutex::new(Lua::new())),
+            player_two_sandbox: Arc::new(Mutex::new(Lua::new())),
+            player_one_turn: true,
+            last_move: None,
+            std,
+            turns: Vec::new(),
+        };
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
