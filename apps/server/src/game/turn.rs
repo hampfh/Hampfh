@@ -24,6 +24,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
         lua_script_to_run,
         game.get_active_player_type(),
         true,
+        game.config.bot_turn_timeout,
     ) {
         Ok(player_move) => player_move,
         Err(error) => return Err(error),
@@ -107,6 +108,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
             lua_script_to_run,
             game.get_active_player_type(),
             true,
+            game.config.bot_turn_timeout,
         ) {
             Ok(player_move) => player_move,
             Err(error) => return Err(error),

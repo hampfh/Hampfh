@@ -18,6 +18,7 @@ pub(crate) fn execute_lua_in_sandbox(
     lua_script_to_run: String,
     active_player_type: PlayerType,
     expect_return: bool,
+    timeout: Duration,
 ) -> Result<String, ErrorType> {
     let (tx, rx) = std::sync::mpsc::channel::<Result<String, mlua::Error>>();
     // Sandbox execution of script
@@ -42,7 +43,7 @@ pub(crate) fn execute_lua_in_sandbox(
     });
 
     // Second time we either get the result or a timeout error
-    let player_move = match rx.recv_timeout(Duration::from_millis(500)) {
+    let player_move = match rx.recv_timeout(timeout) {
         Ok(returned) => match returned {
             Ok(move_string) => move_string,
             Err(error) => {
@@ -133,6 +134,8 @@ pub(crate) fn assert_lua_core_functions(
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use crate::game::{
         game_state::{ErrorType, Game, GameConfig},
         player::PlayerType,
@@ -174,6 +177,7 @@ mod tests {
             .to_string(),
             PlayerType::Flipped,
             false,
+            Duration::from_millis(500),
         )
         .unwrap();
 
@@ -183,7 +187,8 @@ mod tests {
             game.get_active_sandbox(),
             inject.clone(),
             game.get_active_player_type(),
-            true
+            true,
+            Duration::from_millis(500)
         )
         .is_ok());
 
@@ -203,6 +208,7 @@ mod tests {
             .to_string(),
             PlayerType::Flipped,
             false,
+            Duration::from_millis(500),
         )
         .unwrap();
 
@@ -211,6 +217,7 @@ mod tests {
             inject,
             game.get_active_player_type(),
             true,
+            Duration::from_millis(500),
         ) {
             Err(ErrorType::TurnTimeout {
                 fault: Some(PlayerType::Flipped),

@@ -90,6 +90,12 @@ impl Game {
         std: String,
         config: GameConfig,
     ) -> Game {
+        let p1_lua = Lua::new();
+        let p2_lua = Lua::new();
+
+        p1_lua.sandbox(true).unwrap();
+        p2_lua.sandbox(true).unwrap();
+
         return Game {
             config,
             logger: Vec::new(),
@@ -98,8 +104,8 @@ impl Game {
             player_one,
             player_two,
             walls,
-            player_one_sandbox: Arc::new(Mutex::new(Lua::new())),
-            player_two_sandbox: Arc::new(Mutex::new(Lua::new())),
+            player_one_sandbox: Arc::new(Mutex::new(p1_lua)),
+            player_two_sandbox: Arc::new(Mutex::new(p2_lua)),
             player_one_turn: true,
             last_move: None,
             std,

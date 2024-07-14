@@ -21,14 +21,19 @@ mod tests {
 		"
         );
 
-        _run_core_test(script.clone(), script, |state| match state {
-            GameResult::Error(ErrorType::RuntimeError { reason, fault }) => {
-                reason.contains("onTurn")
-                    && fault.is_some()
-                    && fault.unwrap() == PlayerType::Flipped
-            }
-            _ => false,
-        })
+        _run_core_test(
+            script.clone(),
+            script,
+            |state, _| match state {
+                GameResult::Error(ErrorType::RuntimeError { reason, fault }) => {
+                    reason.contains("onTurn")
+                        && fault.is_some()
+                        && fault.unwrap() == PlayerType::Flipped
+                }
+                _ => false,
+            },
+            true,
+        )
     }
 
     #[test]
@@ -52,9 +57,12 @@ mod tests {
 		"
         ));
 
-        _run_core_test(script.clone(), script, |state| {
-            state == GameResult::PlayerOneWon
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |state, _| state == GameResult::PlayerOneWon,
+            false,
+        );
     }
 
     #[test]
@@ -72,12 +80,17 @@ mod tests {
             "
         ));
 
-        _run_core_test(script.clone(), script, |state| {
-            state == GameResult::Error(ErrorType::GameError {
+        _run_core_test(
+            script.clone(),
+            script,
+            |state, swapped| {
+                state == GameResult::Error(ErrorType::GameError {
                 reason: "Invalid wall format, a wall must consist of two adjacent coordinates: ((0,4), (8,8))".to_string(),
-                fault: Some(PlayerType::Flipped),
+                fault: Some(if swapped {PlayerType::Regular }else { PlayerType::Flipped }),
             })
-        });
+            },
+            false,
+        );
     }
 
     #[test]
@@ -125,13 +138,22 @@ mod tests {
 		"
         ));
 
-        _run_core_test(p1_script, p2_script, |state| {
-            state
-                == GameResult::Error(ErrorType::GameError {
-                    reason: "No path for either bot available".to_string(),
-                    fault: Some(PlayerType::Flipped),
-                })
-        });
+        _run_core_test(
+            p1_script,
+            p2_script,
+            |state, swapped| {
+                state
+                    == GameResult::Error(ErrorType::GameError {
+                        reason: "No path for either bot available".to_string(),
+                        fault: Some(if swapped {
+                            PlayerType::Regular
+                        } else {
+                            PlayerType::Flipped
+                        }),
+                    })
+            },
+            true,
+        );
     }
 
     #[test]
@@ -147,13 +169,18 @@ mod tests {
             end
         "
         ));
-        _run_core_test(script.clone(), script, |game_state| {
-            game_state
-                == GameResult::Error(ErrorType::RuntimeError {
-                    reason: String::from("Invalid input: 100,100,100,100"),
-                    fault: Some(PlayerType::Flipped),
-                })
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |game_state, _| {
+                game_state
+                    == GameResult::Error(ErrorType::RuntimeError {
+                        reason: String::from("Invalid input: 100,100,100,100"),
+                        fault: Some(PlayerType::Flipped),
+                    })
+            },
+            true,
+        );
     }
 
     #[test]
@@ -178,7 +205,7 @@ mod tests {
             "
         ));
 
-        let p2_script = aj(format!(
+        let default_script = aj(format!(
             "
             round = -1
             function onTurn()
@@ -191,12 +218,20 @@ mod tests {
             "
         ));
 
-        _run_core_test(script, p2_script, |game_state| match game_state {
-            GameResult::Error(ErrorType::GameError { reason, fault }) => {
-                reason.contains("walls") && fault.is_some() && fault.unwrap() == PlayerType::Flipped
-            }
-            _ => false,
-        });
+        _run_core_test(
+            script,
+            default_script,
+            |game_state, swapped| match game_state {
+                GameResult::Error(ErrorType::GameError { reason, fault }) => {
+                    reason.contains("walls")
+                        && fault.is_some()
+                        && ((!swapped && fault.clone().unwrap() == PlayerType::Flipped)
+                            || (swapped && fault.unwrap() == PlayerType::Regular))
+                }
+                _ => false,
+            },
+            true,
+        );
     }
 
     #[test]
@@ -211,15 +246,20 @@ mod tests {
             end
             "
         ));
-        _run_core_test(script.clone(), script, |game_state| match game_state {
-            GameResult::Error(ErrorType::GameError { reason, fault }) => {
-                reason.contains("out of bounds")
-                    && reason.contains(&MAP_SIZE.to_string())
-                    && fault.is_some()
-                    && fault.unwrap() == PlayerType::Flipped
-            }
-            _ => false,
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |game_state, _| match game_state {
+                GameResult::Error(ErrorType::GameError { reason, fault }) => {
+                    reason.contains("out of bounds")
+                        && reason.contains(&MAP_SIZE.to_string())
+                        && fault.is_some()
+                        && fault.unwrap() == PlayerType::Flipped
+                }
+                _ => false,
+            },
+            true,
+        );
         let script = aj(format!(
             "
             function onTurn()
@@ -227,15 +267,20 @@ mod tests {
             end
             "
         ));
-        _run_core_test(script.clone(), script, |game_state| match game_state {
-            GameResult::Error(ErrorType::GameError { reason, fault }) => {
-                reason.contains("out of bounds")
-                    && reason.contains(&MAP_SIZE.to_string())
-                    && fault.is_some()
-                    && fault.unwrap() == PlayerType::Flipped
-            }
-            _ => false,
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |game_state, _| match game_state {
+                GameResult::Error(ErrorType::GameError { reason, fault }) => {
+                    reason.contains("out of bounds")
+                        && reason.contains(&MAP_SIZE.to_string())
+                        && fault.is_some()
+                        && fault.unwrap() == PlayerType::Flipped
+                }
+                _ => false,
+            },
+            true,
+        );
         let script = aj(format!(
             "
             function onTurn()
@@ -243,15 +288,20 @@ mod tests {
             end
             "
         ));
-        _run_core_test(script.clone(), script, |game_state| match game_state {
-            GameResult::Error(ErrorType::GameError { reason, fault }) => {
-                reason.contains("out of bounds")
-                    && reason.contains("-1")
-                    && fault.is_some()
-                    && fault.unwrap() == PlayerType::Flipped
-            }
-            _ => false,
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |game_state, _| match game_state {
+                GameResult::Error(ErrorType::GameError { reason, fault }) => {
+                    reason.contains("out of bounds")
+                        && reason.contains("-1")
+                        && fault.is_some()
+                        && fault.unwrap() == PlayerType::Flipped
+                }
+                _ => false,
+            },
+            true,
+        );
     }
 
     #[test]
@@ -308,12 +358,14 @@ mod tests {
             _run_core_test(
                 get_script(x, false),
                 get_script(second_player_x, false),
-                |game_state| game_state == GameResult::PlayerOneWon,
+                |game_state, _| game_state == GameResult::PlayerOneWon,
+                false,
             );
             _run_core_test(
                 get_script(x, true),
                 get_script(second_player_x, false),
-                |game_state| game_state == GameResult::PlayerTwoWon,
+                |game_state, _| game_state == GameResult::PlayerTwoWon,
+                false,
             );
         }
     }
@@ -339,13 +391,18 @@ mod tests {
             "
         ));
 
-        _run_core_test(wall_script, script.clone(), |game_state| match game_state {
-            GameResult::Error(ErrorType::GameError {
-                reason: _,
-                fault: __,
-            }) => true,
-            _ => false,
-        });
+        _run_core_test(
+            wall_script,
+            script.clone(),
+            |game_state, _| match game_state {
+                GameResult::Error(ErrorType::GameError {
+                    reason: _,
+                    fault: __,
+                }) => true,
+                _ => false,
+            },
+            true,
+        );
 
         let wall_script = aj(format!(
             "
@@ -355,13 +412,18 @@ mod tests {
             "
         ));
 
-        _run_core_test(wall_script, script, |game_state| match game_state {
-            GameResult::Error(ErrorType::GameError {
-                reason: _,
-                fault: __,
-            }) => true,
-            _ => false,
-        });
+        _run_core_test(
+            wall_script,
+            script,
+            |game_state, _| match game_state {
+                GameResult::Error(ErrorType::GameError {
+                    reason: _,
+                    fault: __,
+                }) => true,
+                _ => false,
+            },
+            true,
+        );
     }
 
     #[test]
@@ -407,7 +469,8 @@ mod tests {
                 load_std(),
                 GameConfig::new(),
             ),
-            |game_state| game_state == GameResult::PlayerOneWon,
+            |game_state, _| game_state == GameResult::PlayerOneWon,
+            false,
         );
     }
 }

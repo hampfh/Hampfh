@@ -44,6 +44,7 @@ impl Game {
             program1,
             PlayerType::Flipped,
             false,
+            self.config.bot_initialization_timeout,
         ) {
             Ok(_) => (),
             Err(err) => {
@@ -61,6 +62,7 @@ impl Game {
             program2,
             PlayerType::Regular,
             false,
+            self.config.bot_initialization_timeout,
         ) {
             Ok(_) => (),
             Err(err) => {

@@ -25,12 +25,17 @@ mod tests {
 			"
         )));
 
-        _run_core_test(script.clone(), script, |state| {
-            state
-                == GameResult::Error(ErrorType::TurnTimeout {
-                    fault: Some(PlayerType::Flipped),
-                })
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |state, _| {
+                state
+                    == GameResult::Error(ErrorType::TurnTimeout {
+                        fault: Some(PlayerType::Flipped),
+                    })
+            },
+            true,
+        );
     }
 
     #[test]
@@ -48,12 +53,17 @@ mod tests {
 			"
         ));
 
-        _run_core_test(script.clone(), script, |state| {
-            state
-                == GameResult::Error(ErrorType::TurnTimeout {
-                    fault: Some(PlayerType::Flipped),
-                })
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |state, _| {
+                state
+                    == GameResult::Error(ErrorType::TurnTimeout {
+                        fault: Some(PlayerType::Flipped),
+                    })
+            },
+            true,
+        );
     }
 
     #[test]
@@ -76,9 +86,12 @@ mod tests {
             "
         ));
 
-        _run_core_test(script.clone(), script, |state| {
-            state == GameResult::Error(ErrorType::GameDeadlock)
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |state, _| state == GameResult::Error(ErrorType::GameDeadlock),
+            true,
+        );
     }
 
     #[test]
@@ -96,12 +109,17 @@ mod tests {
             "
         )));
 
-        _run_core_test(script.clone(), script, |state| {
-            std::mem::discriminant(&state)
-                == std::mem::discriminant(&GameResult::Error(ErrorType::RuntimeError {
-                    reason: String::new(),
-                    fault: Some(PlayerType::Flipped),
-                }))
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |state, _| {
+                std::mem::discriminant(&state)
+                    == std::mem::discriminant(&GameResult::Error(ErrorType::RuntimeError {
+                        reason: String::new(),
+                        fault: Some(PlayerType::Flipped),
+                    }))
+            },
+            true,
+        );
     }
 }

@@ -23,10 +23,15 @@ mod tests {
 				end
 			"
         );
-        _run_core_test(script.clone(), script, |result| {
-            println!("Result: {:?}", result);
-            result == GameResult::PlayerTwoWon
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |result, _| {
+                println!("Result: {:?}", result);
+                result == GameResult::PlayerTwoWon
+            },
+            false,
+        );
     }
 
     #[test]
@@ -43,10 +48,15 @@ mod tests {
 				end
 			"
         );
-        _run_core_test(script.clone(), script, |result| {
-            println!("Result: {:?}", result);
-            result == GameResult::PlayerOneWon
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |result, _| {
+                println!("Result: {:?}", result);
+                result == GameResult::PlayerOneWon
+            },
+            false,
+        );
     }
 
     #[test]
@@ -68,13 +78,18 @@ mod tests {
 				end
 			"
         );
-        _run_core_test(script.clone(), script, |result| match result {
-            GameResult::Error(ErrorType::GameError {
-                reason: _,
-                fault: __,
-            }) => true,
-            _ => false,
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |result, _| match result {
+                GameResult::Error(ErrorType::GameError {
+                    reason: _,
+                    fault: __,
+                }) => true,
+                _ => false,
+            },
+            false,
+        );
     }
 
     fn horizontal_spawn() -> Game {
@@ -119,23 +134,25 @@ mod tests {
             gen_script(1, 0),
             gen_script(1, 0),
             &mut horizontal_spawn(),
-            |result| match result {
+            |result, _| match result {
                 GameResult::Error(ErrorType::GameError { reason, fault }) => {
                     reason.contains("bounds") && fault.unwrap() == PlayerType::Flipped
                 }
                 _ => false,
             },
+            false,
         );
         _run_test_with_custom_game_session(
             gen_script(1, 1),
             gen_script(1, 1),
             &mut horizontal_spawn(),
-            |result| match result {
+            |result, _| match result {
                 GameResult::Error(ErrorType::GameError { reason, fault }) => {
                     reason.contains("bounds") && fault.unwrap() == PlayerType::Regular
                 }
                 _ => false,
             },
+            false,
         );
     }
 
@@ -150,12 +167,17 @@ mod tests {
             "
         );
 
-        _run_core_test(script.clone(), script, |result| match result {
-            GameResult::Error(ErrorType::RuntimeError { reason, fault: __ }) => {
-                reason.contains("onJump")
-            }
-            _ => false,
-        });
+        _run_core_test(
+            script.clone(),
+            script,
+            |result, _| match result {
+                GameResult::Error(ErrorType::RuntimeError { reason, fault: __ }) => {
+                    reason.contains("onJump")
+                }
+                _ => false,
+            },
+            false,
+        );
     }
 
     #[test]
@@ -184,12 +206,13 @@ mod tests {
                 String::new(),
                 GameConfig::new(),
             ),
-            |result| match result {
+            |result, _| match result {
                 GameResult::Error(ErrorType::GameError { reason, fault }) => {
                     reason.contains("occupied") && fault.unwrap() == PlayerType::Flipped
                 }
                 _ => false,
             },
+            false,
         );
     }
 
@@ -212,7 +235,8 @@ mod tests {
                 String::new(),
                 GameConfig::new(),
             ),
-            |result| result == GameResult::PlayerOneWon,
+            |result, _| result == GameResult::PlayerOneWon,
+            false,
         );
 
         // Attempt to jump out of bounds horizontally
@@ -236,12 +260,13 @@ mod tests {
                 String::new(),
                 GameConfig::new(),
             ),
-            |result| match result {
+            |result, _| match result {
                 GameResult::Error(ErrorType::GameError { reason, fault }) => {
                     reason.contains("bounds") && fault.unwrap() == PlayerType::Flipped
                 }
                 _ => false,
             },
+            true,
         );
     }
 }

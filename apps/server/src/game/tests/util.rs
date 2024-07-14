@@ -8,23 +8,45 @@ use crate::{
     },
 };
 
-pub(crate) fn _run_core_test(script: String, script2: String, is_equal: fn(GameResult) -> bool) {
+pub(crate) fn _run_core_test(
+    script: String,
+    script2: String,
+    is_equal: fn(GameResult, bool) -> bool,
+    swap_scripts: bool,
+) {
     let mut game_session = Game::new(GameConfig::new());
-    _run_test_with_custom_game_session(script, script2, &mut game_session, is_equal);
+    _run_test_with_custom_game_session(
+        script.clone(),
+        script2.clone(),
+        &mut game_session,
+        is_equal,
+        false,
+    );
+    let mut game_session = Game::new(GameConfig::new());
+    if swap_scripts {
+        _run_test_with_custom_game_session(
+            script2.clone(),
+            script.clone(),
+            &mut game_session,
+            is_equal,
+            true,
+        );
+    }
 }
 
 pub(crate) fn _run_test_with_custom_game_session(
     script: String,
     script2: String,
     session: &mut Game,
-    is_equal: fn(GameResult) -> bool,
+    is_equal: fn(GameResult, is_swapped: bool) -> bool,
+    is_swapped: bool,
 ) {
-    let (game_state_result, mut turns, _) = Game::start(session, script, script2);
+    let (game_state_result, mut turns, _) = Game::start(session, script.clone(), script2.clone());
 
     turns.reverse();
     write_file("test_dump.temp.md", get_match_from_tiles(turns)).unwrap();
 
-    if !is_equal(game_state_result.clone()) {
+    if !is_equal(game_state_result.clone(), is_swapped) {
         _capture_test_fail(game_state_result);
     }
 }
