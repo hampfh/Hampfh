@@ -37,4 +37,4 @@ libsqlite3-sys = { version = "0.9.1", features = ["bundled"] }
 gif = "0.12.0"
 clap = { version = "4.5.8", features = ["derive", "cargo"] }
 terminate-thread = "0.3.1"
-mlua = { version = "0.9.9", features = ["lua54", "send"] }
+mlua = { version = "0.9.9", features = ["send", "luau"] }
