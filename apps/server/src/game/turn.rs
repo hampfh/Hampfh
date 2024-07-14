@@ -1,30 +1,29 @@
-use crate::game::game::{self, get_active_player_type};
-
 use super::board::populate_board;
 use super::execute_move::{execute_move, execute_move_jump};
 use super::game_state::{ErrorType, Game, Move};
 use super::map_mirroring::reverse_move;
 use super::parsing::deserialize_wall::deserialize_wall;
-use super::sandbox::sandbox_executor::execute_lua_in_sandbox;
+use super::sandbox::sandbox_executor::{
+    create_lua_game_object, execute_lua_in_sandbox, get_lua_start_inject,
+};
 use super::validation::valid_move;
 
 pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
-    let player_one_sandbox_mutex = game.player_one_sandbox.clone();
-    let player_two_sandbox_mutex = game.player_two_sandbox.clone();
-
     let player_one = game.player_one.clone();
     let player_two = game.player_two.clone();
     let walls = game.walls.clone();
     let player_one_turn = game.player_one_turn;
+    let active_sandbox = game.get_active_sandbox();
 
-    let player_move = match execute_lua_in_sandbox(
-        player_one_sandbox_mutex.clone(),
-        player_two_sandbox_mutex.clone(),
-        walls.clone(),
-        player_one.clone(),
-        player_two.clone(),
-        player_one_turn,
+    let lua_script_to_run = get_lua_start_inject(
         "onTurn".to_string(),
+        create_lua_game_object(&walls, player_one_turn, &player_one, &player_two),
+    );
+    let player_move = match execute_lua_in_sandbox(
+        active_sandbox.clone(),
+        lua_script_to_run,
+        game.get_active_player_type(),
+        true,
     ) {
         Ok(player_move) => player_move,
         Err(error) => return Err(error),
@@ -53,7 +52,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
     if player_move.len() != 1 && player_move.len() != 7 {
         return Err(ErrorType::RuntimeError {
             reason: format!("Invalid input: {}", player_move),
-            fault: Some(get_active_player_type(game.player_one_turn)),
+            fault: Some(game.get_active_player_type()),
         });
     }
 
@@ -61,7 +60,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
     if let Some(Move::Invalid { reason }) = player_move {
         return Err(ErrorType::GameError {
             reason,
-            fault: Some(get_active_player_type(game.player_one_turn)),
+            fault: Some(game.get_active_player_type()),
         });
     }
 
@@ -72,7 +71,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
     if player_move.is_none() {
         return Err(ErrorType::GameError {
             reason: "Player did not return a move".to_string(),
-            fault: Some(get_active_player_type(game.player_one_turn)),
+            fault: Some(game.get_active_player_type()),
         });
     }
 
@@ -85,29 +84,29 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
     };
 
     let run_on_jump = match valid_move(
-        player_one_turn,
         &active_player,
         &opponent,
         &walls,
         player_move.clone().unwrap(),
+        game.get_active_player_type(),
     ) {
         Ok(value) => !value,
         Err(error) => return Err(error),
     };
 
     let mut mutable_walls = game.walls.clone();
-    let (first, other) = game::get_active_player(game);
 
     if run_on_jump {
+        let lua_script_to_run = get_lua_start_inject(
+            "onJump".to_string(),
+            create_lua_game_object(&walls, player_one_turn, &player_one, &player_two),
+        );
         // TODO refactor this, this should recursivly call on turn again, instead of this code repeat
         let on_jump_player_move = match execute_lua_in_sandbox(
-            player_one_sandbox_mutex,
-            player_two_sandbox_mutex,
-            walls.clone(),
-            player_one.clone(),
-            player_two.clone(),
-            player_one_turn,
-            "onJump".to_string(),
+            active_sandbox,
+            lua_script_to_run,
+            game.get_active_player_type(),
+            true,
         ) {
             Ok(player_move) => player_move,
             Err(error) => return Err(error),
@@ -118,7 +117,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
                 reason: format!(
                     "Invalid return format from onJump, return can only be a number between 0-3"
                 ),
-                fault: Some(get_active_player_type(game.player_one_turn)),
+                fault: Some(game.get_active_player_type()),
             });
         }
         let mut converted_on_jump_player_move =
@@ -126,7 +125,7 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
         if let Some(Move::Invalid { reason }) = converted_on_jump_player_move {
             return Err(ErrorType::GameError {
                 reason,
-                fault: Some(get_active_player_type(game.player_one_turn)),
+                fault: Some(game.get_active_player_type()),
             });
         }
 
@@ -138,43 +137,51 @@ pub(super) fn on_turn(game: &mut Game) -> Result<(), ErrorType> {
         if converted_on_jump_player_move.is_none() {
             return Err(ErrorType::GameError {
                 reason: "Player did not return a move".to_string(),
-                fault: Some(get_active_player_type(game.player_one_turn)),
+                fault: Some(game.get_active_player_type()),
             });
         }
 
+        let (active_player, other_player) = game.get_active_player();
+
         if let Err(error) = execute_move_jump(
-            first,
-            other,
+            active_player,
+            other_player,
             &converted_on_jump_player_move.clone().unwrap(),
         ) {
             return Err(error);
         }
 
         // Check that move was correct
-        if first.x == other.x && first.y == other.y {
+        if active_player.x == other_player.x && active_player.y == other_player.y {
             return Err(ErrorType::GameError {
                 reason: format!(
                     "Player ended up on top of opponent in jump at ({}, {})",
-                    first.x, first.y
+                    active_player.x, active_player.y
                 ),
-                fault: Some(get_active_player_type(game.player_one_turn)),
+                fault: Some(game.get_active_player_type()),
             });
         }
 
         for wall in &mutable_walls {
-            if wall.x1 == first.x && wall.y1 == first.y || wall.x2 == first.x && wall.y2 == first.y
+            if wall.x1 == active_player.x && wall.y1 == active_player.y
+                || wall.x2 == active_player.x && wall.y2 == active_player.y
             {
                 return Err(ErrorType::GameError {
                     reason: format!(
                         "Player tried to jump into a wall at ({}, {})",
-                        first.x, first.y
+                        active_player.x, active_player.y
                     ),
-                    fault: Some(get_active_player_type(game.player_one_turn)),
+                    fault: Some(game.get_active_player_type()),
                 });
             }
         }
     } else {
-        execute_move(&mut mutable_walls, first, &player_move.clone().unwrap()).unwrap();
+        execute_move(
+            &mut mutable_walls,
+            game.get_active_player().0,
+            &player_move.clone().unwrap(),
+        )
+        .unwrap();
         // Reassign walls
         game.walls = mutable_walls;
     }

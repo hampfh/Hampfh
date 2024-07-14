@@ -1,5 +1,4 @@
 use super::execute_move::execute_move;
-use super::game::get_active_player_type;
 use super::game_state::{ErrorType, Move, Wall, MAP_SIZE};
 use super::path_find::Pos;
 use super::player::{Player, PlayerType};
@@ -8,11 +7,11 @@ use crate::game::path_find::path_exists_for_players;
 /// Return true: success, no action required
 /// Return false: success, perform jump
 pub(super) fn valid_move(
-    player_one_turn: bool,
     active_player: &Player,
     other: &Player,
     walls: &Vec<Wall>,
     player_move: Move,
+    active_player_type: PlayerType,
 ) -> Result<bool, ErrorType> {
     let mut walls = walls.clone();
     let clousure_walls = walls.clone();
@@ -38,7 +37,7 @@ pub(super) fn valid_move(
                     "Invalid wall format, a wall must consist of two adjacent coordinates: (({},{}), ({},{}))",
                     wall.x1, wall.y1, wall.x2, wall.y2
                 ),
-                fault: Some(get_active_player_type(player_one_turn))
+                fault: Some(active_player_type)
             });
         }
         // Check that wall is not out of bounds
@@ -51,7 +50,7 @@ pub(super) fn valid_move(
                     "Invalid wall placement at (({},{}),({},{})), coordinates are either occupied or out of bounds",
                     wall.x1, wall.y1, wall.x2, wall.y2
                 ),
-                fault: Some(get_active_player_type(player_one_turn))
+                fault: Some(active_player_type)
             });
         }
     }
@@ -65,7 +64,7 @@ pub(super) fn valid_move(
     if result.is_err() {
         return Err(ErrorType::GameError {
             reason: format!("Invalid move: {}", result.err().unwrap()),
-            fault: Some(get_active_player_type(player_one_turn)),
+            fault: Some(active_player_type),
         });
     }
 
@@ -78,7 +77,7 @@ pub(super) fn valid_move(
         {
             return Err(ErrorType::GameError {
                 reason: format!("Invalid move, cannot jump, no free position around opponent"),
-                fault: Some(get_active_player_type(player_one_turn)),
+                fault: Some(active_player_type),
             });
         }
     }
@@ -94,7 +93,7 @@ pub(super) fn valid_move(
         Err(error) => {
             return Err(ErrorType::GameError {
                 reason: error.to_string(),
-                fault: Some(get_active_player_type(player_one_turn)),
+                fault: Some(active_player_type),
             })
         }
     }

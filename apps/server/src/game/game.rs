@@ -1,3 +1,7 @@
+use std::sync::{Arc, Mutex};
+
+use mlua::Lua;
+
 use crate::game::ascii_graphics::draw_game_in_terminal;
 use crate::game::game_state::{ErrorType, Game, Move, MAP_SIZE, MAX_TURNS};
 use crate::game::player::{Player, PlayerType};
@@ -6,7 +10,7 @@ use crate::game::turn;
 use super::board::Tile;
 use super::game_state::GameResult;
 use super::load_script::load_script;
-use super::load_script_with_validation::load_script_with_validation;
+use super::sandbox::sandbox_executor::{assert_lua_core_functions, execute_lua_in_sandbox};
 
 impl Game {
     pub(crate) fn start(
@@ -14,15 +18,58 @@ impl Game {
         program1: String,
         program2: String,
     ) -> (GameResult, Vec<Vec<Tile>>, Vec<Move>) {
-        match load_script_with_validation(&self.player_one_sandbox, program1, PlayerType::Flipped) {
+        match assert_lua_core_functions(program1.clone(), PlayerType::Flipped) {
             Ok(_) => (),
-            Err(err) => return (err, self.turns.clone(), self.logger.clone()),
+            Err(error) => {
+                return (
+                    GameResult::Error(error),
+                    self.turns.clone(),
+                    self.logger.clone(),
+                )
+            }
+        }
+        match assert_lua_core_functions(program2.clone(), PlayerType::Regular) {
+            Ok(_) => (),
+            Err(error) => {
+                return (
+                    GameResult::Error(error),
+                    self.turns.clone(),
+                    self.logger.clone(),
+                )
+            }
+        }
+
+        match execute_lua_in_sandbox(
+            self.player_one_sandbox.clone(),
+            program1,
+            PlayerType::Flipped,
+            false,
+        ) {
+            Ok(_) => (),
+            Err(err) => {
+                return (
+                    GameResult::Error(err),
+                    self.turns.clone(),
+                    self.logger.clone(),
+                )
+            }
         }
         load_script(&self.player_one_sandbox, self.std.clone());
 
-        match load_script_with_validation(&self.player_two_sandbox, program2, PlayerType::Regular) {
+        match execute_lua_in_sandbox(
+            self.player_two_sandbox.clone(),
+            program2,
+            PlayerType::Regular,
+            false,
+        ) {
             Ok(_) => (),
-            Err(err) => return (err, self.turns.clone(), self.logger.clone()),
+            Err(err) => {
+                return (
+                    GameResult::Error(err),
+                    self.turns.clone(),
+                    self.logger.clone(),
+                )
+            }
         }
         load_script(&self.player_two_sandbox, self.std.clone());
 
@@ -73,21 +120,29 @@ impl Game {
             round += 1;
         }
     }
-}
 
-/**
- * Returns a tuple, the first player is always the active one
- * the second is the non-active player
- */
-pub(crate) fn get_active_player(game: &mut Game) -> (&mut Player, &Player) {
-    if game.player_one_turn {
-        return (&mut game.player_one, &game.player_two);
+    pub(crate) fn get_active_sandbox(&self) -> Arc<Mutex<Lua>> {
+        if self.player_one_turn {
+            return self.player_one_sandbox.clone();
+        } else {
+            return self.player_two_sandbox.clone();
+        }
     }
-    return (&mut game.player_two, &game.player_one);
-}
-pub fn get_active_player_type(player_one_turn: bool) -> PlayerType {
-    if player_one_turn {
-        return PlayerType::Flipped;
+    /**
+     * Returns a tuple, the first player is always the active one
+     * the second is the non-active player
+     */
+    pub(crate) fn get_active_player(&mut self) -> (&mut Player, &Player) {
+        if self.player_one_turn {
+            return (&mut self.player_one, &self.player_two);
+        }
+        return (&mut self.player_two, &self.player_one);
     }
-    return PlayerType::Regular;
+
+    pub(crate) fn get_active_player_type(&self) -> PlayerType {
+        if self.player_one_turn {
+            return PlayerType::Flipped;
+        }
+        return PlayerType::Regular;
+    }
 }

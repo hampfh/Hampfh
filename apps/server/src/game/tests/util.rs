@@ -1,4 +1,4 @@
-use rlua::Lua;
+use mlua::Lua;
 
 use crate::{
     external_related::readme_factory::{get_match_from_tiles, write_file},
@@ -77,25 +77,23 @@ pub(super) fn load_std() -> String {
 }
 
 #[allow(dead_code)]
-pub(super) fn test_std(scripts: Vec<String>, asserts: fn(ctx: rlua::Context) -> Result<(), ()>) {
+pub(super) fn test_std(scripts: Vec<String>, asserts: fn(ctx: mlua::Lua) -> Result<(), ()>) {
     let sandbox = Lua::new();
-    sandbox.context(|ctx| {
-        ctx.load(&load_std()).exec().unwrap();
-        for script in scripts {
-            ctx.load(&script).exec().unwrap();
-        }
-        asserts(ctx).unwrap();
-    });
+    sandbox.load(&load_std()).exec().unwrap();
+    for script in scripts {
+        sandbox.load(&script).exec().unwrap();
+    }
+    asserts(sandbox).unwrap();
 }
 
 #[allow(dead_code)]
 pub(super) fn test_std_conditional(scripts: Vec<(String, bool)>, game_context: Option<String>) {
     let sandbox = Lua::new();
-    sandbox.context(|ctx| {
-        ctx.load(&load_std()).exec().unwrap();
-        for (script, expected_result) in scripts {
-            let var = convert_uuid_to_variable(uuid::Uuid::new_v4().to_string());
-            ctx.load(&script.replace("[]", &format!("{} = ", var)).replace(
+    sandbox.load(&load_std()).exec().unwrap();
+    for (script, expected_result) in scripts {
+        let var = convert_uuid_to_variable(uuid::Uuid::new_v4().to_string());
+        sandbox
+            .load(&script.replace("[]", &format!("{} = ", var)).replace(
                 "[c]",
                 &if game_context.is_some() {
                     format!("{}", game_context.as_ref().unwrap())
@@ -105,9 +103,11 @@ pub(super) fn test_std_conditional(scripts: Vec<(String, bool)>, game_context: O
             ))
             .exec()
             .unwrap();
-            assert_eq!(ctx.globals().get::<_, bool>(var).unwrap(), expected_result);
-        }
-    });
+        assert_eq!(
+            sandbox.globals().get::<_, bool>(var).unwrap(),
+            expected_result
+        );
+    }
 }
 
 #[allow(dead_code)]

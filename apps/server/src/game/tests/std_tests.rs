@@ -67,7 +67,7 @@ mod tests {
             Some(context_player_close()),
         );
         let close_game_all_blocked = create_lua_game_object(
-            vec![
+            &vec![
                 Wall {
                     x1: 3,
                     y1: 4,
@@ -88,13 +88,13 @@ mod tests {
                 },
             ],
             true,
-            Player {
+            &Player {
                 player_type: PlayerType::Flipped,
                 x: 4,
                 y: 5,
                 wall_count: 0,
             },
-            Player {
+            &Player {
                 player_type: PlayerType::Regular,
                 x: 4,
                 y: 4,
@@ -106,7 +106,7 @@ mod tests {
             Some(close_game_all_blocked),
         );
         let closed_with_left_open = create_lua_game_object(
-            vec![
+            &vec![
                 Wall {
                     x1: 5,
                     y1: 4,
@@ -121,13 +121,13 @@ mod tests {
                 },
             ],
             true,
-            Player {
+            &Player {
                 player_type: PlayerType::Flipped,
                 x: 4,
                 y: 5,
                 wall_count: 0,
             },
-            Player {
+            &Player {
                 player_type: PlayerType::Regular,
                 x: 4,
                 y: 4,
@@ -163,20 +163,20 @@ mod tests {
 
     fn context_player_close() -> String {
         return create_lua_game_object(
-            vec![Wall {
+            &vec![Wall {
                 x1: 0,
                 y1: 0,
                 x2: 0,
                 y2: 1,
             }],
             true,
-            Player {
+            &Player {
                 player_type: PlayerType::Flipped,
                 x: 4,
                 y: 5,
                 wall_count: 0,
             },
-            Player {
+            &Player {
                 player_type: PlayerType::Regular,
                 x: 4,
                 y: 4,

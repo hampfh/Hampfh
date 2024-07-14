@@ -5,7 +5,6 @@ pub(crate) mod game;
 pub(crate) mod game_state;
 pub(crate) mod initialize_game;
 pub(crate) mod load_script;
-pub(crate) mod load_script_with_validation;
 pub(crate) mod map_mirroring;
 pub(crate) mod parsing;
 pub(crate) mod path_find;

@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     /// No jump function
-    fn nu_jump_function() {
+    fn no_jump_function() {
         let script = format!(
             "
                 function onTurn()

@@ -1,11 +1,7 @@
 use std::sync::{Arc, Mutex};
 
-use rlua::Lua;
+use mlua::Lua;
 
 pub(crate) fn load_script(sandbox: &Arc<Mutex<Lua>>, script: String) {
-    sandbox
-        .lock()
-        .unwrap()
-        .context(|ctx| ctx.load(&script).exec())
-        .unwrap();
+    sandbox.lock().unwrap().load(&script).exec().unwrap();
 }

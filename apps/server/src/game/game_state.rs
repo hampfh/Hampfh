@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use rlua::Lua;
+use mlua::Lua;
 
 use super::{
     board::Tile,
@@ -60,8 +60,8 @@ pub(crate) struct Game {
 
     pub(crate) walls: Vec<Wall>,
 
-    pub(crate) player_one_sandbox: Arc<Mutex<rlua::Lua>>,
-    pub(crate) player_two_sandbox: Arc<Mutex<rlua::Lua>>,
+    pub(crate) player_one_sandbox: Arc<Mutex<mlua::Lua>>,
+    pub(crate) player_two_sandbox: Arc<Mutex<mlua::Lua>>,
     pub(crate) player_one_turn: bool,
     pub(crate) last_move: Option<Move>,
     pub(crate) std: String, // Standard library
