@@ -1032,7 +1032,6 @@ dependencies = [
  "pathfinding",
  "rand",
  "reqwest",
- "rlua",
  "serde",
  "serde_json",
  "terminate-thread",
@@ -1918,30 +1917,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "winreg",
-]
-
-[[package]]
-name = "rlua"
-version = "0.19.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3120d9610f84b17da849f5cc8c089bb74299285515bb4a6114550bbc39ddb1e7"
-dependencies = [
- "bitflags 2.6.0",
- "bstr",
- "libc",
- "num-traits",
- "rlua-lua54-sys",
-]
-
-[[package]]
-name = "rlua-lua54-sys"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7aafabafe1895cb4a2be81a56d7ff3d46bf4b5d2f9cfdbea2ed404cdabe96474"
-dependencies = [
- "cc",
- "libc",
- "pkg-config",
 ]
 
 [[package]]
