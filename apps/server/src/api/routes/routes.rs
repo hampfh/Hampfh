@@ -1,7 +1,7 @@
 use actix_web::web;
 
 use super::{
-    core::submit_challenge, match_data::get_match_route, matches::get_matches_route,
+    challenge::submit_challenge, match_data::get_match_route, matches::get_matches_route,
     ping::get_api_ping,
 };
 

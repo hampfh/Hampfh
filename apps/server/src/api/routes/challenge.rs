@@ -115,3 +115,32 @@ pub async fn submit_challenge(
 fn valid_request(action: &String, labels: &Vec<Label>) -> bool {
     return action == "opened" && labels.iter().any(|current| current.name == "challenger");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{test, App};
+
+    #[actix_web::test]
+    async fn test_valid_request() {
+        let action = "opened".to_string();
+        let labels = vec![Label {
+            name: "challenger".to_string(),
+            node_id: todo!(),
+            url: todo!(),
+            color: todo!(),
+            default: todo!(),
+            description: todo!(),
+        }];
+        assert_eq!(valid_request(&action, &labels), true);
+    }
+
+    /*     #[actix_web::test]
+    async fn test_invalid_request() {
+        let action = "closed".to_string();
+        let labels = vec![Label {
+            name: "challenger".to_string(),
+        }];
+        assert_eq!(valid_request(&action, &labels), false);
+    } */
+}

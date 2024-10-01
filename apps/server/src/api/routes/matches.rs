@@ -9,7 +9,7 @@ pub(crate) struct HttpResponseStruct {
 }
 
 #[get("/api/matches")]
-pub(super) async fn get_matches_route() -> actix_web::Result<Json<HttpResponseStruct>> {
+pub(routes) async fn get_matches_route() -> actix_web::Result<Json<HttpResponseStruct>> {
     let conn = api::db::establish_connection().get().unwrap();
 
     let matches = Match::list_ids(&conn);

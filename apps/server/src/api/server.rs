@@ -1,6 +1,6 @@
 use actix_web::{web::Data, App, HttpServer};
 
-use crate::api::{self, db::run_migrations, services::routes::routes};
+use crate::api::{self, db::run_migrations, routes::routes::routes};
 
 pub(crate) async fn start_server(port: u16, host: String) -> Result<(), std::io::Error> {
     migrations();
