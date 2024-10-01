@@ -1,6 +1,6 @@
-use crate::backend::db::DbPool;
-use crate::backend::models::submission_model::Submission;
-use crate::backend::models::user_model::User;
+use crate::api::db::DbPool;
+use crate::api::models::submission_model::Submission;
+use crate::api::models::user_model::User;
 use crate::external_related::code_unwrapper::unwrap_code;
 use crate::external_related::github::close_issue::{close_issue, CloseType};
 use crate::external_related::github::create_issue_comment::create_issue_comment;

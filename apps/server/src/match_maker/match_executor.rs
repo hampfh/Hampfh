@@ -1,7 +1,7 @@
 use diesel::SqliteConnection;
 
 use crate::{
-    backend::models::{match_model::Match, submission_model::Submission, turn_model::Turn},
+    api::models::{match_model::Match, submission_model::Submission, turn_model::Turn},
     external_related::repo_updater::get_issue_url,
     game::{
         board::{board_to_string, Tile},

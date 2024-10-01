@@ -1,9 +1,9 @@
 use std::process;
 
-use crate::{backend, match_maker::scheduler::run_scheduled_matchmaking};
+use crate::{api, match_maker::scheduler::run_scheduled_matchmaking};
 
 pub(crate) fn run_match_make() {
-    let db_connection = backend::db::establish_connection();
+    let db_connection = api::db::establish_connection();
     let conn = match db_connection.get() {
         Ok(conn) => conn,
         Err(error) => {

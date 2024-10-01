@@ -1,7 +1,7 @@
 use diesel::SqliteConnection;
 
 use crate::{
-    backend::models::{
+    api::models::{
         match_model::Match, submission_model::Submission, turn_model::Turn, user_model::User,
     },
     external_related::{

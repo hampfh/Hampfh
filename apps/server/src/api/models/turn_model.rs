@@ -1,5 +1,5 @@
-use crate::backend::schema::Turns::dsl::Turns as turns_dsl;
-use crate::backend::{self, schema::Turns};
+use crate::api::schema::Turns::dsl::Turns as turns_dsl;
+use crate::api::{self, schema::Turns};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -29,7 +29,7 @@ impl Turn {
     }
 
     pub fn by_match_id(param_match_id: &str, conn: &SqliteConnection) -> Option<Vec<Self>> {
-        use backend::schema::Turns::*;
+        use api::schema::Turns::*;
 
         if let Ok(record) = turns_dsl
             .filter(match_id.eq(param_match_id))

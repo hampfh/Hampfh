@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::backend::models::submission_model::Submission;
+use crate::api::models::submission_model::Submission;
 
 pub(crate) fn create_match_making_queue(
     submissions: Vec<Submission>,

@@ -2,11 +2,11 @@ use chrono::NaiveDateTime;
 use diesel::SqliteConnection;
 use gif::{Encoder, Frame, Repeat};
 
-use crate::backend;
-use crate::backend::models::match_model::Match;
-use crate::backend::models::submission_model::Submission;
-use crate::backend::models::turn_model::Turn;
-use crate::backend::models::user_model::User;
+use crate::api;
+use crate::api::models::match_model::Match;
+use crate::api::models::submission_model::Submission;
+use crate::api::models::turn_model::Turn;
+use crate::api::models::user_model::User;
 use crate::game::board::{board_from_string, Tile};
 use crate::game::game_state::{GameResult, MAP_SIZE};
 
@@ -235,7 +235,7 @@ fn generate_board(board: Vec<Tile>) -> String {
 }
 
 pub(crate) fn build_match_log_wrapper() {
-    let conn = backend::db::establish_connection().get().unwrap();
+    let conn = api::db::establish_connection().get().unwrap();
     match write_file(
         "../../data/match_log.md",
         create_match_log(&conn, &Match::list(&conn)),
@@ -279,7 +279,7 @@ fn create_match_log(conn: &SqliteConnection, matches: &Vec<Match>) -> String {
 }
 
 pub(crate) fn build_submission_log_wrapper() {
-    let conn = backend::db::establish_connection().get().unwrap();
+    let conn = api::db::establish_connection().get().unwrap();
     match write_file(
         "../../data/submission_log.md",
         create_submission_log(&conn, &Submission::list(&conn)),
@@ -360,7 +360,7 @@ fn generate_score_board(submissions: &Vec<Submission>, players: &Vec<User>) -> S
 }
 
 pub fn build_match_files_wrapper() {
-    let conn = backend::db::establish_connection().get().unwrap();
+    let conn = api::db::establish_connection().get().unwrap();
     build_match_files(&conn, Match::list(&conn));
 }
 fn build_match_files(conn: &SqliteConnection, matches: Vec<Match>) {

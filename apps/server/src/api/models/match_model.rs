@@ -1,6 +1,6 @@
-use crate::backend::schema::Matches::dsl::Matches as matches_dsl;
-use crate::backend::schema::Turns::dsl::Turns as turns_dsl;
-use crate::backend::{self, schema::Matches};
+use crate::api::schema::Matches::dsl::Matches as matches_dsl;
+use crate::api::schema::Turns::dsl::Turns as turns_dsl;
+use crate::api::{self, schema::Matches};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -27,7 +27,7 @@ impl Match {
 
     pub fn list_ids(conn: &SqliteConnection) -> Vec<String> {
         matches_dsl
-            .select(backend::schema::Matches::id)
+            .select(api::schema::Matches::id)
             .load::<String>(conn)
             .expect("Error loading matches")
     }
@@ -73,7 +73,7 @@ impl Match {
     }
 
     pub fn get_turns(target_match_id: &str, conn: &SqliteConnection) -> Option<Vec<Turn>> {
-        use crate::backend::schema::Turns::dsl::match_id;
+        use crate::api::schema::Turns::dsl::match_id;
         match turns_dsl
             .filter(match_id.eq(target_match_id))
             .load::<Turn>(conn)

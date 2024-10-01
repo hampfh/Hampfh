@@ -4,7 +4,7 @@ use actix_web::{
 };
 use serde::Serialize;
 
-use crate::backend::{
+use crate::api::{
     self,
     models::{
         match_model::Match, submission_model::Submission, turn_model::Turn, user_model::User,
@@ -34,7 +34,7 @@ pub(crate) struct HttpResponseStruct {
 pub(super) async fn get_match_route(
     path: web::Path<String>,
 ) -> actix_web::Result<Json<HttpResponseStruct>> {
-    let conn = backend::db::establish_connection().get().unwrap();
+    let conn = api::db::establish_connection().get().unwrap();
     let id = path.into_inner();
 
     let target_match = if let Some(target_match) = Match::by_id(&id, &conn) {

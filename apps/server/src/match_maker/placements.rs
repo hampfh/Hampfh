@@ -1,4 +1,4 @@
-use crate::backend::models::submission_model::Submission;
+use crate::api::models::submission_model::Submission;
 use diesel::SqliteConnection;
 
 use super::match_executor::{execute_match_queue, MatchReport};

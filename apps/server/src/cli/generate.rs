@@ -1,7 +1,7 @@
 use clap::ArgMatches;
 
 use crate::{
-    backend::{
+    api::{
         self,
         models::{
             match_model::Match, submission_model::Submission, turn_model::Turn, user_model::User,
@@ -37,7 +37,7 @@ pub(crate) fn generate(matches: &ArgMatches) {
 }
 
 fn generate_main() {
-    let conn = backend::db::establish_connection().get().unwrap();
+    let conn = api::db::establish_connection().get().unwrap();
     write_file(
         "../../README.md",
         generate_readme(

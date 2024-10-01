@@ -1,6 +1,6 @@
-use crate::backend::schema::Submissions::dsl::Submissions as submission_dsl;
+use crate::api::schema::Submissions::dsl::Submissions as submission_dsl;
 use crate::match_maker::constants::MMR_START_RATING;
-use crate::{backend::schema::Submissions, external_related::repo_updater::is_plagiarism_enabled};
+use crate::{api::schema::Submissions, external_related::repo_updater::is_plagiarism_enabled};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -35,7 +35,7 @@ impl Submission {
         }
     }
     pub fn by_script(script_str: &str, conn: &SqliteConnection) -> Option<Self> {
-        use crate::backend::schema::Submissions::dsl::script;
+        use crate::api::schema::Submissions::dsl::script;
         if let Ok(record) = submission_dsl
             .filter(script.eq(script_str))
             .first::<Submission>(conn)
@@ -47,7 +47,7 @@ impl Submission {
     }
 
     pub fn by_score(wins_value: i32, conn: &SqliteConnection) -> Option<Self> {
-        use crate::backend::schema::Submissions::dsl::wins;
+        use crate::api::schema::Submissions::dsl::wins;
         if let Ok(record) = submission_dsl
             .filter(wins.eq(wins_value))
             .order(Submissions::created_at.asc())
@@ -95,7 +95,7 @@ impl Submission {
     }
 
     pub fn save(&self, conn: &SqliteConnection) {
-        use crate::backend::schema::Submissions::dsl::{
+        use crate::api::schema::Submissions::dsl::{
             disqualified, id, matches_played, mmr, updated_at, wins,
         };
         diesel::update(submission_dsl.filter(id.eq(&self.id)))

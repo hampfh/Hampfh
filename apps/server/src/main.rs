@@ -6,7 +6,7 @@ extern crate diesel;
 extern crate diesel_migrations;
 embed_migrations!();
 
-mod backend;
+mod api;
 mod cli;
 mod external_related;
 mod game;
