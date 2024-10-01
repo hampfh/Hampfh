@@ -3,13 +3,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct GithubPayload {
     pub action: String,
-    pub issue: Issue,
-    pub repository: Repository,
-    pub sender: User,
+    pub issue: GithubIssue,
+    pub repository: GithubRepository,
+    pub sender: GithubUser,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Issue {
+pub struct GithubIssue {
     pub url: String,
     pub repository_url: String,
     pub labels_url: String,
@@ -20,8 +20,8 @@ pub struct Issue {
     pub node_id: String,
     pub number: i32,
     pub title: String,
-    pub user: User,
-    pub labels: Vec<Label>,
+    pub user: GithubUser,
+    pub labels: Vec<GithubLabel>,
     pub state: String,
     pub locked: bool,
     //pub assignee: null,
@@ -34,14 +34,14 @@ pub struct Issue {
     pub author_association: String,
     //pub active_lock_reason: null,
     pub body: String, // This is where the code will come from
-    pub reactions: Reactions,
+    pub reactions: GithubReactions,
     pub timeline_url: String,
     //pub performed_via_github_app: null,
     //pub state_reason: null
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Reactions {
+pub struct GithubReactions {
     pub url: String,
     pub total_count: i32,
     //pub "+1": i32,
@@ -55,7 +55,7 @@ pub struct Reactions {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct User {
+pub struct GithubUser {
     pub login: String, // Github username
     pub id: i32,
     pub node_id: String,
@@ -77,14 +77,14 @@ pub struct User {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Repository {
+pub struct GithubRepository {
     pub id: i32,
     pub name: String,
     pub full_name: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Label {
+pub struct GithubLabel {
     //pub id: String,
     pub node_id: String,
     pub url: String,

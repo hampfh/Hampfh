@@ -4,7 +4,7 @@ use crate::api::models::user_model::User;
 use crate::external_related::code_unwrapper::unwrap_code;
 use crate::external_related::github::close_issue::{close_issue, CloseType};
 use crate::external_related::github::create_issue_comment::create_issue_comment;
-use crate::external_related::github::webhook_schema::{GithubPayload, Label};
+use crate::external_related::github::webhook_schema::{GithubLabel, GithubPayload};
 use crate::match_maker::match_executor::MatchReport;
 use crate::match_maker::placements::run_placements;
 use crate::match_maker::regenerate_markdown_files::regen_markdown_files_and_update_repo;
@@ -112,35 +112,26 @@ pub async fn submit_challenge(
     }
 }
 
-fn valid_request(action: &String, labels: &Vec<Label>) -> bool {
+fn valid_request(action: &String, labels: &Vec<GithubLabel>) -> bool {
     return action == "opened" && labels.iter().any(|current| current.name == "challenger");
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::{test, App};
 
     #[actix_web::test]
     async fn test_valid_request() {
         let action = "opened".to_string();
-        let labels = vec![Label {
+        let labels = vec![GithubLabel {
             name: "challenger".to_string(),
-            node_id: todo!(),
-            url: todo!(),
-            color: todo!(),
-            default: todo!(),
-            description: todo!(),
+            node_id: String::new(),
+            url: String::new(),
+            color: String::new(),
+            default: false,
+            description: String::new(),
         }];
         assert_eq!(valid_request(&action, &labels), true);
+        assert_eq!(valid_request(&"closed".to_string(), &labels), false);
     }
-
-    /*     #[actix_web::test]
-    async fn test_invalid_request() {
-        let action = "closed".to_string();
-        let labels = vec![Label {
-            name: "challenger".to_string(),
-        }];
-        assert_eq!(valid_request(&action, &labels), false);
-    } */
 }
